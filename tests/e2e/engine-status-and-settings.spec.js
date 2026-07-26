@@ -1,6 +1,14 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Engine Status and Settings Acceptance Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('api_key', 'leerpret-local-dev');
+      localStorage.setItem('active_role', 'technologist');
+      localStorage.setItem('leerpret.poc.role', 'technologist');
+    });
+  });
+
   test('should render engine status page on /engine', async ({ page }) => {
     await page.goto('/engine');
     await expect(page).toHaveURL(/\/engine/);

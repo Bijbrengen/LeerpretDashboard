@@ -1,6 +1,14 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Editor and Integrations Acceptance Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('api_key', 'leerpret-local-dev');
+      localStorage.setItem('active_role', 'architect');
+      localStorage.setItem('leerpret.poc.role', 'architect');
+    });
+  });
+
   test('should render editor iframe wrapper on /editor', async ({ page }) => {
     await page.goto('/editor');
     const iframe = page.locator('#editor-page-iframe');

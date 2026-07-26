@@ -2,6 +2,23 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Dashboard Homepage Acceptance Tests', () => {
   test.beforeEach(async ({ page }) => {
+    await page.route('**/api/access/blocks*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          role: 'architect',
+          authenticated: true,
+          pages: {},
+        }),
+      });
+    });
+
+    await page.addInitScript(() => {
+      localStorage.setItem('api_key', 'leerpret-local-dev');
+      localStorage.setItem('active_role', 'architect');
+      localStorage.setItem('leerpret.poc.role', 'architect');
+    });
     await page.goto('/');
   });
 

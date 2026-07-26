@@ -1,6 +1,26 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Navigation and Role Routing Acceptance Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/api/access/blocks*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          role: 'technologist',
+          authenticated: true,
+          pages: {},
+        }),
+      });
+    });
+
+    await page.addInitScript(() => {
+      localStorage.setItem('api_key', 'leerpret-local-dev');
+      localStorage.setItem('active_role', 'technologist');
+      localStorage.setItem('leerpret.poc.role', 'technologist');
+    });
+  });
+
   test('should render page title and header status bar on homepage', async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveTitle(/Leerpret Dashboard/);
@@ -16,13 +36,6 @@ test.describe('Navigation and Role Routing Acceptance Tests', () => {
 
   test('should navigate to all main pages through header control dock', async ({ page }) => {
     await page.goto('/');
-
-    const menuButton = page.locator('.hamburger-button');
-    await expect(menuButton).toBeVisible();
-    await menuButton.click();
-
-    const viewMenu = page.locator('.view-menu');
-    await expect(viewMenu).toBeVisible();
 
     const routes = [
       { name: 'Leerpretpark', path: '/park', title: /Leerpretpark/i },

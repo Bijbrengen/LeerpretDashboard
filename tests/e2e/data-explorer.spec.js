@@ -2,6 +2,34 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Data Explorer Acceptance Tests', () => {
   test.beforeEach(async ({ page }) => {
+    await page.route('**/api/access/blocks*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          role: 'technologist',
+          authenticated: true,
+          pages: {
+            data: {
+              default: 'source',
+              blocks: {
+                source: { allowed: true },
+                test: { allowed: true },
+                report: { allowed: true },
+                analytics: { allowed: true },
+                ai_validation: { allowed: true },
+              },
+            },
+          },
+        }),
+      });
+    });
+
+    await page.addInitScript(() => {
+      localStorage.setItem('api_key', 'leerpret-local-dev');
+      localStorage.setItem('active_role', 'technologist');
+      localStorage.setItem('leerpret.poc.role', 'technologist');
+    });
     await page.goto('/data');
   });
 
