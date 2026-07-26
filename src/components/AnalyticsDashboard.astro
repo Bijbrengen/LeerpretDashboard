@@ -1,0 +1,111 @@
+﻿<div class="analytics-layout analytics-layout-content-only">
+    <main class="analytics-content">
+      <header class="analytics-header">
+        <div>
+          <span class="eyebrow">Inzicht zonder persoonsgegevens</span>
+          <h2 class="section-title">Leerpret Analytics</h2>
+          <p class="muted-text" id="analytics-context">Phile Â· alle actieve lerenden Â· laatste 6 weken</p>
+        </div>
+        <div class="analytics-live-state"><span></span> Geaggregeerde momentopname</div>
+      </header>
+
+      <section class="analytics-kpi-grid" aria-label="Belangrijkste statistieken">
+        <article class="analytics-kpi-card score">
+          <div class="kpi-heading"><span class="kpi-icon" aria-hidden="true">â˜º</span><span class="kpi-trend positive" id="kpi-score-trend">+4,8%</span></div>
+          <strong id="kpi-score">72%</strong><h3>Gemiddelde Leerpret</h3><p>Samengestelde score uit T, A, V, R en S.</p>
+        </article>
+        <article class="analytics-kpi-card learners">
+          <div class="kpi-heading"><span class="kpi-icon" aria-hidden="true">â—</span><span class="kpi-trend positive" id="kpi-active-trend">+12</span></div>
+          <strong id="kpi-active">184</strong><h3>Actieve lerenden</h3><p>Unieke actieve sessies in deze periode.</p>
+        </article>
+        <article class="analytics-kpi-card best">
+          <div class="kpi-heading"><span class="kpi-icon" aria-hidden="true">â˜…</span><span class="kpi-trend neutral" id="kpi-best-score">81%</span></div>
+          <strong class="kpi-name" id="kpi-best">Phile</strong><h3>Effectiefste Leerbox</h3><p>Hoogste betrokkenheid en succesvolle doorstroom.</p>
+        </article>
+        <article class="analytics-kpi-card friction">
+          <div class="kpi-heading"><span class="kpi-icon" aria-hidden="true">!</span><span class="kpi-trend positive" id="kpi-friction-trend">âˆ’2</span></div>
+          <strong id="kpi-friction">7</strong><h3>Onopgeloste knelpunten</h3><p>Weerstandsobjecten met actuele vertraging.</p>
+        </article>
+      </section>
+
+      <section class="analytics-panel active" data-analytics-panel="development">
+        <article class="analytics-chart-card">
+          <header class="chart-card-heading">
+            <div><span class="eyebrow">Leerontwikkeling over tijd</span><h3>Voortgang en alpha-waarde</h3><p>Vergelijk de gerealiseerde voortgang met de berekende leerbetrokkenheid.</p></div>
+            <div class="chart-legend-note"><i class="progress"></i> Voortgang <i class="alpha"></i> Alpha</div>
+          </header>
+          <div class="chart-shell"><canvas id="analytics-development-chart" aria-label="Lijndiagram met voortgang en alpha-waarden"></canvas></div>
+          <footer class="chart-insight" id="development-insight"><strong>Stijgende leercurve</strong><span>De alpha-waarde groeit mee met de voortgang.</span></footer>
+        </article>
+      </section>
+
+      <section class="analytics-panel" data-analytics-panel="resistance" hidden>
+        <article class="analytics-chart-card">
+          <header class="chart-card-heading">
+            <div><span class="eyebrow">Impact van weerstandsobjecten</span><h3>Frictie en extra leertijd</h3><p>Hogere balken vragen om ontwerpcontrole of aanvullende begeleiding.</p></div>
+            <div class="impact-toggle" role="group" aria-label="Weerstandsmaat kiezen">
+              <button type="button" class="active" data-impact-metric="friction" aria-pressed="true">Frictie</button>
+              <button type="button" data-impact-metric="delay" aria-pressed="false">Leertijd</button>
+            </div>
+          </header>
+          <div class="chart-shell resistance-chart-shell"><canvas id="analytics-resistance-chart" aria-label="Staafdiagram met impact van weerstandsobjecten"></canvas></div>
+          <footer class="chart-insight warning" id="resistance-insight"><strong>Grootste knelpunt</strong><span>Selecteer een balk voor details.</span></footer>
+        </article>
+      </section>
+
+      <section class="analytics-panel" data-analytics-panel="flow" hidden>
+        <article class="analytics-chart-card">
+          <header class="chart-card-heading">
+            <div><span class="eyebrow">Voortgangs- en conversiestroom</span><h3>Doorstroom door de Leerbox</h3><p>Van start tot herhaling: waar gaan lerenden door en waar haken zij af?</p></div>
+          </header>
+          <div class="learning-funnel" id="analytics-funnel" aria-label="Conversiestroom door leerboxfasen"></div>
+          <footer class="chart-insight" id="funnel-insight"><strong>Belangrijkste uitvalmoment</strong><span>Wordt berekend uit de geselecteerde groep.</span></footer>
+        </article>
+      </section>
+    </main>
+  </div>
+
+<script>
+  import { initializeAnalyticsDashboard } from '../js/analyticsDashboard.js';
+  window.addEventListener('DOMContentLoaded', initializeAnalyticsDashboard);
+</script>
+
+<style is:global>
+  .analytics-layout{align-items:start;display:grid;gap:18px}.analytics-menu{display:grid;gap:14px}.analytics-menu-heading{border-bottom:1px solid var(--line);display:grid;gap:4px;padding-bottom:14px;position:relative}.analytics-menu-heading h2{font-size:1.25rem;margin:0}.mock-badge{background:#fef3c7;border:1px solid #fcd34d;border-radius:999px;color:#92400e;font-size:.62rem;font-weight:850;padding:4px 7px;position:absolute;right:0;top:0;text-transform:uppercase}.analytics-filter-group{display:grid;gap:6px}.analytics-filter-group label,.analytics-menu-label{color:var(--muted);font-size:.68rem;font-weight:850;letter-spacing:.05em;text-transform:uppercase}.analytics-filter-group label:not(:first-child){margin-top:7px}.analytics-menu-label{border-top:1px solid var(--line);margin:0;padding-top:14px}.analytics-view-menu{display:grid;gap:6px}.analytics-view-menu button{align-items:center;background:#f8fafc;border:1px solid var(--line);border-radius:10px;color:var(--ink);cursor:pointer;display:grid;font:inherit;gap:9px;grid-template-columns:30px 1fr;padding:9px;text-align:left}.analytics-view-menu button.active{background:rgba(0,128,128,.08);border-color:var(--teal);box-shadow:inset 3px 0 var(--teal)}.analytics-view-menu button span:last-child{display:grid;gap:2px}.analytics-view-menu strong{font-size:.76rem}.analytics-view-menu small{color:var(--muted);font-size:.64rem}.analytics-menu-icon{align-items:center;background:white;border:1px solid var(--line);border-radius:7px;color:var(--teal);display:flex;font-weight:900;height:28px;justify-content:center;width:28px}.analytics-data-note{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:10px}.analytics-data-note strong{font-size:.7rem}.analytics-data-note p{color:var(--muted);font-size:.64rem;line-height:1.5;margin:4px 0 0}.analytics-content{display:grid;gap:16px;min-width:0}.analytics-header{align-items:end;display:flex;gap:18px;justify-content:space-between}.analytics-header h2{margin-bottom:3px}.analytics-header p{margin:0}.analytics-live-state{align-items:center;background:white;border:1px solid var(--line);border-radius:999px;color:var(--muted);display:flex;font-size:.68rem;font-weight:750;gap:6px;padding:7px 10px;white-space:nowrap}.analytics-live-state span{background:var(--green);border-radius:50%;box-shadow:0 0 0 4px rgba(34,197,94,.12);height:7px;width:7px}.analytics-kpi-grid{display:grid;gap:10px;grid-template-columns:repeat(4,minmax(0,1fr))}.analytics-kpi-card{background:white;border:1px solid var(--line);border-radius:14px;box-shadow:0 5px 18px rgba(15,23,42,.04);display:grid;gap:3px;min-width:0;padding:14px;position:relative}.analytics-kpi-card::after{background:var(--kpi-color,var(--teal));border-radius:0 0 14px 14px;bottom:0;content:'';height:3px;left:0;position:absolute;right:0}.analytics-kpi-card.score{--kpi-color:#008080}.analytics-kpi-card.learners{--kpi-color:#2563eb}.analytics-kpi-card.best{--kpi-color:#7c3aed}.analytics-kpi-card.friction{--kpi-color:#d97706}.kpi-heading{align-items:center;display:flex;justify-content:space-between}.kpi-icon{align-items:center;background:color-mix(in srgb,var(--kpi-color) 12%,white);border-radius:8px;color:var(--kpi-color);display:flex;font-size:.8rem;font-weight:900;height:28px;justify-content:center;width:28px}.kpi-trend{border-radius:999px;font-size:.62rem;font-weight:850;padding:4px 6px}.kpi-trend.positive{background:#dcfce7;color:#166534}.kpi-trend.neutral{background:#ede9fe;color:#5b21b6}.analytics-kpi-card>strong{font-size:1.65rem;line-height:1.2;margin-top:5px}.analytics-kpi-card>strong.kpi-name{font-size:1.08rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.analytics-kpi-card h3{font-size:.73rem;margin:0}.analytics-kpi-card p{color:var(--muted);font-size:.61rem;line-height:1.4;margin:2px 0 0}.analytics-panel:not(.active){display:none}.analytics-chart-card{background:white;border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 24px rgba(15,23,42,.05);overflow:hidden}.chart-card-heading{align-items:start;border-bottom:1px solid var(--line);display:flex;gap:14px;justify-content:space-between;padding:16px}.chart-card-heading h3{font-size:1.02rem;margin:4px 0}.chart-card-heading p{color:var(--muted);font-size:.7rem;line-height:1.5;margin:0}.chart-legend-note{align-items:center;color:var(--muted);display:flex;font-size:.66rem;font-weight:750;gap:5px;white-space:nowrap}.chart-legend-note i{border-radius:50%;height:8px;margin-left:5px;width:8px}.chart-legend-note i.progress{background:#008080}.chart-legend-note i.alpha{background:#7c3aed}.chart-shell{height:390px;padding:14px 18px;position:relative}.chart-insight{align-items:center;background:#f0fdfa;border-top:1px solid #99f6e4;display:flex;gap:10px;padding:10px 16px}.chart-insight strong{color:#115e59;font-size:.7rem}.chart-insight span{color:#475569;font-size:.66rem}.chart-insight.warning{background:#fffbeb;border-color:#fde68a}.chart-insight.warning strong{color:#92400e}.impact-toggle{background:#f1f5f9;border-radius:8px;display:flex;padding:3px}.impact-toggle button{background:transparent;border:0;border-radius:6px;color:var(--muted);cursor:pointer;font:inherit;font-size:.65rem;font-weight:800;padding:6px 9px}.impact-toggle button.active{background:white;box-shadow:0 1px 4px rgba(15,23,42,.12);color:var(--ink)}.learning-funnel{display:grid;gap:9px;padding:22px}.funnel-stage{align-items:center;display:grid;gap:10px;grid-template-columns:minmax(105px,145px) minmax(120px,1fr) 58px}.funnel-label{display:grid;gap:2px}.funnel-label strong{font-size:.72rem}.funnel-label small{color:var(--muted);font-size:.6rem}.funnel-track{background:#eef2f6;border-radius:7px;height:34px;overflow:hidden}.funnel-fill{align-items:center;background:linear-gradient(90deg,#008080,#23a6a6);border-radius:7px;color:white;display:flex;font-size:.65rem;font-weight:850;height:100%;justify-content:flex-end;min-width:34px;padding-right:9px;transition:width .35s ease}.funnel-stage:nth-child(2) .funnel-fill{background:linear-gradient(90deg,#167d91,#38a3b7)}.funnel-stage:nth-child(3) .funnel-fill{background:linear-gradient(90deg,#4f6ca7,#7189bd)}.funnel-stage:nth-child(4) .funnel-fill{background:linear-gradient(90deg,#7655a6,#9474bd)}.funnel-stage:nth-child(5) .funnel-fill{background:linear-gradient(90deg,#9a547f,#b9749d)}.funnel-drop{color:#b45309;font-size:.62rem;font-weight:800;text-align:right}@media(min-width:980px){.analytics-layout{grid-template-columns:minmax(220px,270px) minmax(0,1fr)}.analytics-menu{max-height:calc(100vh - 32px);overflow:auto;position:sticky;top:16px}}@media(max-width:1050px){.analytics-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:650px){.analytics-header,.chart-card-heading{align-items:stretch;flex-direction:column}.analytics-live-state{align-self:start}.analytics-kpi-grid{grid-template-columns:1fr}.chart-shell{height:330px;padding:10px}.funnel-stage{grid-template-columns:90px minmax(100px,1fr);}.funnel-drop{grid-column:2}.chart-insight{align-items:flex-start;flex-direction:column;gap:3px}}
+  /* Dark command-dashboard theme; keep every analytics surface inside the same visual system. */
+  .analytics-layout-content-only { display:block; }
+  .analytics-filter-group select { background:#07171c; border-color:#31545d; color:var(--ink); }
+  .analytics-view-menu button { background:#10262d; border-color:#294b54; }
+  .analytics-view-menu button:hover { background:#15323a; border-color:#3b6972; }
+  .analytics-view-menu button.active { background:#10343a; border-color:var(--teal); box-shadow:inset 4px 0 var(--teal); }
+  .analytics-menu-icon { background:#07171c; border-color:#31545d; }
+  .analytics-data-note { background:#0c2026; border-color:#294b54; }
+  .analytics-live-state { background:#10262d; border-color:#31545d; }
+  .analytics-kpi-card { background:#10262d; border-color:#294b54; box-shadow:0 7px 20px rgba(0,0,0,.18); }
+  .kpi-icon { background:color-mix(in srgb,var(--kpi-color) 18%,#0c2026); }
+  .kpi-trend.positive { background:#14372c; color:#79dfb1; }
+  .kpi-trend.neutral { background:#2b2145; color:#c5b3ff; }
+  .analytics-chart-card { background:#0c2026; border-color:#294b54; box-shadow:0 10px 26px rgba(0,0,0,.2); }
+  .chart-card-heading { background:#10262d; border-color:#294b54; }
+  .chart-shell { background:#09191e; }
+  .chart-insight { background:#10332c; border-color:#2f806d; }
+  .chart-insight strong { color:#79dfb1; }
+  .chart-insight span { color:var(--muted); }
+  .chart-insight.warning { background:#352814; border-color:#8b6727; }
+  .chart-insight.warning strong { color:#ffc66d; }
+  .impact-toggle { background:#07171c; border:1px solid #294b54; }
+  .impact-toggle button.active { background:#17323a; color:#8cece5; box-shadow:none; }
+  .funnel-track { background:#1c3941; }
+  .funnel-stage { grid-template-columns:minmax(190px,230px) minmax(180px,1fr) 68px; gap:14px; }
+  .funnel-label { align-items:baseline; display:grid; gap:8px; grid-template-columns:minmax(0,1fr) auto; }
+  .funnel-label strong { overflow-wrap:anywhere; }
+  .funnel-label small { white-space:nowrap; }
+  .funnel-drop { color:#ffc66d; font-variant-numeric:tabular-nums; }
+  @media(max-width:650px){
+    .funnel-stage{grid-template-columns:1fr;gap:7px}
+    .funnel-track,.funnel-drop{grid-column:1}
+    .funnel-drop{text-align:left}
+  }
+</style>
+
+

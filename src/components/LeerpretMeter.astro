@@ -1,0 +1,299 @@
+---
+interface Props {
+  initialScore?: number;
+  initialArchetype?: string;
+  className?: string;
+}
+
+const { initialScore = 75, initialArchetype = "Volger", className = "" } = Astro.props;
+---
+
+<div class={`leerpret-meter-container mobile-card ${className}`} id="leerpret-meter">
+  <div class="meter-header">
+    <span class="eyebrow">Persoonlijke Voortgang</span>
+    <h3 class="meter-title">Mijn Leerpret-meter</h3>
+  </div>
+
+  <div class="meter-layout">
+    <!-- SVG Radial Gauge -->
+    <div class="gauge-wrapper">
+      <svg class="radial-gauge" viewBox="0 0 120 120">
+        <defs>
+          <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="var(--teal)" />
+            <stop offset="100%" stop-color="var(--green)" />
+          </linearGradient>
+        </defs>
+        <!-- Background circle -->
+        <circle class="gauge-bg" cx="60" cy="60" r="50"></circle>
+        <!-- Progress circle -->
+        <circle class="gauge-progress" cx="60" cy="60" r="50" style={`stroke-dashoffset: ${314 - (314 * initialScore) / 100}`}></circle>
+      </svg>
+      <div class="gauge-info">
+        <span class="gauge-value" id="meter-score-value">{initialScore}</span>
+        <span class="gauge-percent">%</span>
+        <span class="gauge-label">Score</span>
+      </div>
+    </div>
+
+    <!-- Archetype badge -->
+    <div class="archetype-badge-container">
+      <span class="muted-text">Mijn Leerprofiel</span>
+      <div class="archetype-badge" id="meter-archetype-badge">{initialArchetype}</div>
+    </div>
+  </div>
+
+  <!-- Vertically stacked factor details for mobile -->
+  <div class="factors-grid">
+    <div class="factor-row">
+      <div class="factor-meta">
+        <span class="factor-letter">T</span>
+        <span class="factor-name">Tijd (Duration)</span>
+      </div>
+      <div class="factor-progress-bar">
+        <div class="progress-fill" id="factor-fill-t" style="width: 70%"></div>
+      </div>
+      <span class="factor-val" id="factor-val-t">420s</span>
+    </div>
+
+    <div class="factor-row">
+      <div class="factor-meta">
+        <span class="factor-letter">A</span>
+        <span class="factor-name">Acties (Actions)</span>
+      </div>
+      <div class="factor-progress-bar">
+        <div class="progress-fill" id="factor-fill-a" style="width: 55%"></div>
+      </div>
+      <span class="factor-val" id="factor-val-a">32</span>
+    </div>
+
+    <div class="factor-row">
+      <div class="factor-meta">
+        <span class="factor-letter">V</span>
+        <span class="factor-name">Verkenning (Unique Targets)</span>
+      </div>
+      <div class="factor-progress-bar">
+        <div class="progress-fill" id="factor-fill-v" style="width: 80%"></div>
+      </div>
+      <span class="factor-val" id="factor-val-v">14</span>
+    </div>
+
+    <div class="factor-row">
+      <div class="factor-meta">
+        <span class="factor-letter">R</span>
+        <span class="factor-name">Herstel (Recoveries/Frictions)</span>
+      </div>
+      <div class="factor-progress-bar">
+        <div class="progress-fill" id="factor-fill-r" style="width: 45%"></div>
+      </div>
+      <span class="factor-val" id="factor-val-r">4 / 5</span>
+    </div>
+
+    <div class="factor-row">
+      <div class="factor-meta">
+        <span class="factor-letter">S</span>
+        <span class="factor-name">Succes (Successes)</span>
+      </div>
+      <div class="factor-progress-bar">
+        <div class="progress-fill" id="factor-fill-s" style="width: 90%"></div>
+      </div>
+      <span class="factor-val" id="factor-val-s">1</span>
+    </div>
+  </div>
+</div>
+
+<style>
+  .leerpret-meter-container {
+    width: 100%;
+    background: linear-gradient(180deg, var(--panel) 0%, #fcfdfd 100%);
+    border: 1px solid var(--line);
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+  }
+
+  .meter-header {
+    margin-bottom: 20px;
+  }
+
+  .meter-title {
+    font-size: 1.3rem;
+    color: var(--plum);
+    margin: 0;
+  }
+
+  .meter-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  /* Radial SVG Gauge styling */
+  .gauge-wrapper {
+    position: relative;
+    width: 150px;
+    height: 150px;
+  }
+
+  .radial-gauge {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+
+  .gauge-bg {
+    fill: none;
+    stroke: #f1f5f9;
+    stroke-width: 8;
+  }
+
+  .gauge-progress {
+    fill: none;
+    stroke: url(#gaugeGrad);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 314;
+    transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .gauge-info {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .gauge-value {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1;
+    font-family: var(--font-heading);
+  }
+
+  .gauge-percent {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--muted);
+    position: absolute;
+    top: 6px;
+    right: -14px;
+  }
+
+  .gauge-label {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-weight: 700;
+    margin-top: 2px;
+  }
+
+  /* Archetype Badge */
+  .archetype-badge-container {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .archetype-badge {
+    background: var(--plum);
+    color: white;
+    padding: 6px 16px;
+    border-radius: 9999px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 12px rgba(116, 64, 95, 0.2);
+    font-family: var(--font-heading);
+  }
+
+  /* Factors detail vertical stacking */
+  .factors-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+
+  .factor-row {
+    display: grid;
+    grid-template-columns: minmax(110px, 1fr) 2fr 48px;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .factor-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .factor-letter {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: var(--ink);
+    font-weight: 800;
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line);
+  }
+
+  .factor-name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .factor-progress-bar {
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--teal);
+    border-radius: 9999px;
+    transition: width 0.6s ease;
+  }
+
+  .factor-val {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: right;
+    color: var(--ink);
+  }
+
+  /* Desktop optimization */
+  @media (min-width: 768px) {
+    .meter-layout {
+      flex-direction: row;
+      justify-content: space-around;
+      gap: 30px;
+    }
+    
+    .factors-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    
+    .factor-row {
+      grid-template-columns: minmax(120px, auto) 1fr 50px;
+    }
+  }
+</style>

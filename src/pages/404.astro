@@ -1,0 +1,21 @@
+---
+const role = Astro.url.searchParams.get('role') || 'learner';
+---
+
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Terug naar Home | Leerpret Dashboard</title>
+    <script is:inline src="/role-routing.js"></script>
+  </head>
+  <body>
+    <p>Deze pagina bestaat niet voor deze rol. <a id="home-link" href={`/?role=${encodeURIComponent(role)}`}>Ga naar Home</a>.</p>
+    <script is:inline>
+      const router = window.LeerpretRoleRouting;
+      const homeLink = document.getElementById('home-link');
+      if (router && homeLink) homeLink.setAttribute('href', router.homeForRole(router.activeRole()));
+    </script>
+  </body>
+</html>

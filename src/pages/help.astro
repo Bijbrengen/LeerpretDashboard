@@ -1,0 +1,895 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="HELP" description="Lees uitleg over de begrippen en vind ondersteuning per dashboardonderdeel.">
+  
+  <div class="help-header-block">
+    <span class="eyebrow" id="help-eyebrow">Kennisbank</span>
+    <h2 class="section-title" id="help-title">HELP</h2>
+    <p class="muted-text" id="help-desc">Verken de theorie, spelelementen en werking van de Leerpretengine.</p>
+  </div>
+
+  <!-- Motorproefstand Intro block for Lerende / Leerattractie -->
+  <div id="help-intro-container" class="mobile-card intro-card" style="margin-bottom: 24px; border-left: 4px solid var(--blue);" hidden>
+    <h3 style="margin: 0 0 10px 0; font-size: 1.15rem; color: var(--ink); font-weight: 700;">Motorproefstand voor de Leerpret-engine</h3>
+    <p style="margin: 0 0 14px 0; font-size: 0.86rem; color: var(--muted); line-height: 1.5;">
+      Deze app is de proefstand voor de Leerpret-engine. Net zoals een motorproefstand of dynamometer een losse motor belast, meet en vergelijkt voordat er een carrosserie omheen zit, test deze app de Leerpret-engine voordat zij in volledige leerboxen wordt toegepast.
+    </p>
+    
+    <div class="intro-grid" style="display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px;">
+      <div class="intro-sub-block">
+        <h4 style="margin: 0 0 4px 0; font-size: 0.95rem; color: var(--ink); font-weight: 700;">Wat is leerpret?</h4>
+        <p style="margin: 0; font-size: 0.8rem; color: var(--muted); line-height: 1.45;">
+          Leerpret is hier geen algemene tevredenheid achteraf, maar een actief gedragspatroon: een lerende begint, probeert, varieert, botst op weerstand, houdt vol en ervaart een betekenisvolle voortgang of doorbraak. De engine probeert precies dat patroon te meten.
+        </p>
+      </div>
+      <div class="intro-sub-block">
+        <h4 style="margin: 0 0 4px 0; font-size: 0.95rem; color: var(--ink); font-weight: 700;">Wat meet de engine?</h4>
+        <p style="margin: 0; font-size: 0.8rem; color: var(--muted); line-height: 1.45;">
+          De proof of concept gebruikt vijf gedragsmarkers: <strong>T</strong> voor tijd/verblijftijd, <strong>A</strong> voor activiteit, <strong>V</strong> voor variatie, <strong>R</strong> voor resilience of volharding na weerstand, en <strong>S</strong> voor succes of doorbraak. Samen vormen deze markers de sensorinput waarmee de engine een leerpretscore <span class="math-inline">LP<sub>eng</sub></span> berekent.
+        </p>
+      </div>
+      <div class="intro-sub-block">
+        <h4 style="margin: 0 0 4px 0; font-size: 0.95rem; color: var(--ink); font-weight: 700;">Waarom deze proefstand belangrijk is</h4>
+        <p style="margin: 0; font-size: 0.8rem; color: var(--muted); line-height: 1.45;">
+          De proefstand maakt drie controles zichtbaar: of een losse invoer logisch scoort, hoe een gesimuleerd profiel zich door de tijd ontwikkelt, en hoe datasets met verwachte leerpret zich verhouden tot de formule-uitkomst van de engine. Daarmee kun je de formule, de statistiek, de brondata en de vertaling naar leerboxgedrag apart controleren.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic selector for learner/user roles -->
+  <div id="help-selector-container" class="mobile-card" style="margin-bottom: 24px;" hidden>
+    <div class="input-group">
+      <label for="help-article-select">Kies Hoofdstuk / Onderdeel</label>
+      <select id="help-article-select" class="spacious-select">
+        <option value="">Laden...</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Dynamic Role-based Proof view (shown for learner/user) -->
+  <div class="help-grid" id="role-proof-view" hidden style="margin-bottom: 32px;">
+    <div class="help-column" style="grid-column: span 2;">
+      <h3 class="column-title" id="proof-column-title">Actuele Beoordeling</h3>
+      <div class="mobile-card" id="proof-card-accent" style="border-left: 4px solid var(--blue);">
+        <div class="role-proof-output-container" id="role-proof-output">
+          <p class="muted-text">Beoordeling inladen...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Automatically catalogued and filtered Help Articles & Concepts -->
+  <div class="help-catalog-section" id="help-catalog-section">
+    <div class="catalog-header">
+      <h3 class="column-title" id="catalog-section-title">📚 Catalogus</h3>
+      <div class="catalog-search-row">
+        <input type="text" id="catalog-search" class="spacious-select" style="max-width: 320px; font-size: 0.85rem;" placeholder="Zoek op titel of concept..." />
+      </div>
+    </div>
+
+    <div class="help-topic-workspace">
+      <aside class="help-topic-menu" id="help-topic-menu" aria-label="Helponderwerpen">
+        <div class="help-topic-loading">Onderwerpen laden...</div>
+      </aside>
+      <section class="help-topic-canvas" id="concepts-gallery" aria-live="polite">
+        <div class="park-empty-state">
+          <strong>Concepten catalogiseren...</strong>
+          <span>Gegevens worden opgehaald uit de kennisbank...</span>
+        </div>
+      </section>
+    </div>
+  </div>
+
+</Layout>
+
+<script>
+  import { apiGet, initSettings, escapeHtml } from '../js/api.js';
+
+  let loadedSteps = [];
+  let loadedConcepts = [];
+  let currentRole = 'architect';
+  let selectedConceptId = '';
+
+  async function initHelpPage() {
+    initSettings();
+
+    currentRole = localStorage.getItem('active_role') || localStorage.getItem('leerpret.poc.role') || 'architect';
+    const isDev = currentRole === 'technologist' || currentRole === 'architect';
+
+    const introContainer = document.getElementById('help-intro-container');
+    const selectContainer = document.getElementById('help-selector-container');
+    const dynamicView = document.getElementById('role-proof-view');
+    const eyebrow = document.getElementById('help-eyebrow');
+    const title = document.getElementById('help-title');
+    const desc = document.getElementById('help-desc');
+    const accentCard = document.getElementById('proof-card-accent');
+
+    // 1. Setup role-based text and visible states
+    if (isDev) {
+      if (introContainer) introContainer.hidden = true;
+      if (selectContainer) selectContainer.hidden = true;
+      if (dynamicView) dynamicView.hidden = true;
+      if (title) title.textContent = 'Ontwikkelaars Kennisbank';
+      if (desc) desc.textContent = 'Volledig theoretisch en technisch overzicht van de Leerpret-architectuur.';
+    } else {
+      if (introContainer) {
+        introContainer.hidden = false;
+        introContainer.style.borderLeftColor = roleColors[currentRole] || 'var(--blue)';
+      }
+      if (selectContainer) selectContainer.hidden = false;
+      if (dynamicView) dynamicView.hidden = false;
+
+      const roleLabels = {
+        user: 'Leerattractie HELP',
+        gebruiker: 'Leerattractie HELP',
+        learner: 'Lerende HELP',
+        lerende: 'Lerende HELP'
+      };
+
+      const roleDescs = {
+        user: 'Technische specificaties van uw Leerbox-koppeling en didactische parameters.',
+        gebruiker: 'Technische specificaties van uw Leerbox-koppeling en didactische parameters.',
+        learner: 'Ontdek wat leerpret betekent en hoe de verschillende spelelementen samenwerken.'
+      };
+
+      const roleColors = {
+        user: 'var(--coral)',
+        gebruiker: 'var(--coral)',
+        learner: 'var(--violet)',
+        lerende: 'var(--violet)'
+      };
+
+      if (eyebrow) eyebrow.textContent = 'Feedback & Help';
+      if (title) title.textContent = roleLabels[currentRole] || 'HELP';
+      if (desc) desc.textContent = roleDescs[currentRole] || 'Uitleg en beoordeling.';
+      if (accentCard) accentCard.style.borderLeftColor = roleColors[currentRole] || 'var(--blue)';
+    }
+
+    // 2. Fetch steps for reviews dropdown
+    if (!isDev) {
+      try {
+        const publicGuest = localStorage.getItem('leerpret.loggedOut') === 'true';
+        const response = await apiGet(publicGuest ? '/help/articles?role=guest' : '/developer/steps');
+        loadedSteps = publicGuest ? (response.articles || []) : (response.steps || []);
+        populateDropdown();
+      } catch (err) {
+        const output = document.getElementById('role-proof-output');
+        if (output) output.innerHTML = `<p class="muted-text" style="color: var(--coral);">Fout bij verbinding met service: ${err.message}</p>`;
+      }
+    }
+
+    // 3. Fetch concepts for the catalog and filter dynamically
+    try {
+      const conceptsResponse = await apiGet('/help/concepts');
+      loadedConcepts = conceptsResponse.concepts || [];
+      updateHelpMetrics();
+      renderCatalog();
+      setupSearch();
+    } catch (err) {
+      const gallery = document.getElementById('concepts-gallery');
+      if (gallery) {
+        gallery.innerHTML = `
+          <div class="park-empty-state">
+            <strong>Fout bij laden catalogus</strong>
+            <span>Kan geen verbinding maken met de API service.</span>
+          </div>
+        `;
+      }
+    }
+  }
+
+  function populateDropdown() {
+    const select = document.getElementById('help-article-select') as HTMLSelectElement;
+    if (!select) return;
+
+    if (loadedSteps.length === 0) {
+      select.innerHTML = '<option value="">Geen onderdelen beschikbaar</option>';
+      return;
+    }
+
+    select.innerHTML = loadedSteps.map((step) => `
+      <option value="${step.id}">${step.title || step.id}</option>
+    `).join('');
+
+    select.addEventListener('change', () => {
+      renderRoleProof();
+    });
+
+    renderRoleProof();
+  }
+
+  function renderRoleProof() {
+    const select = document.getElementById('help-article-select') as HTMLSelectElement;
+    const output = document.getElementById('role-proof-output');
+    if (!select || !output) return;
+
+    const stepId = select.value;
+    const step = loadedSteps.find(s => s.id === stepId);
+    if (!step) {
+      output.innerHTML = '<p class="muted-text">Kies een onderdeel.</p>';
+      return;
+    }
+
+    output.innerHTML = getProofHTML(currentRole, step);
+  }
+
+  function getProofHTML(roleId, step) {
+    if (roleId === 'user' || roleId === 'gebruiker') {
+      const concepts = (step.concepts || []).slice(0, 4).map(c => `
+        <div class="concept-item">
+          <strong>${escapeHtml(c.title)}</strong>
+          <small>${escapeHtml(c.explanation || "")}</small>
+        </div>
+      `).join('') || '<p class="muted-text">Geen concepten beschikbaar.</p>';
+
+      const apiBase = localStorage.getItem('api_base') || window.LEERPRET_CONFIG.apiBase;
+      const images = (step.images || []).slice(0, 2).map(img => `
+        <div class="image-thumbnail">
+          <img src="${apiBase}/help/assets/${encodeURIComponent(img)}" alt="Attractie preview" />
+        </div>
+      `).join('') || '<div class="no-images" style="padding: 12px; background: var(--bg); border: 1px dashed var(--line); border-radius: 8px; font-size: 0.8rem; text-align: center; color: var(--muted);">Geen beeldmateriaal beschikbaar.</div>';
+
+      return `
+        <div class="proof-stacked-layout" style="display: flex; flex-direction: column; gap: 16px;">
+          <div class="proof-sub-block">
+            <h4 class="block-title" style="font-size: 0.95rem; margin-bottom: 8px;">Visuele Impressies</h4>
+            <div class="images-thumbnail-grid">${images}</div>
+          </div>
+          <div class="proof-sub-block">
+            <h4 class="block-title" style="font-size: 0.95rem; margin-bottom: 8px;">Aantrekkingskracht</h4>
+            <div class="concept-items-list">${concepts}</div>
+          </div>
+          <a href="/park" class="btn btn-secondary btn-sm" style="margin-top: 8px; display: inline-block;">Bekijk Park</a>
+        </div>
+      `;
+    }
+
+    if (roleId === 'learner' || roleId === 'lerende') {
+      const actionFields = [
+        ['person_id', 'Wie beweegt door de leerbox.'],
+        ['leerbox_id', 'Welke leerattractie actief is.'],
+        ['leerobject_id', 'Waar de actie plaatsvindt.'],
+        ['timestamp', 'Wanneer de actie plaatsvindt.']
+      ];
+      
+      return `
+        <div class="proof-stacked-layout" style="display: flex; flex-direction: column; gap: 16px;">
+          <div class="learner-meter-unavailable">
+            <strong>Leerpretmeter nog niet aangesloten op echte meetdata</strong>
+            <p>De backend heeft nog geen endpoint dat individuele meetwaarden per lerende teruggeeft. Daarom toont deze pagina geen gefingeerde score, tijd, acties of verkenning meer.</p>
+          </div>
+          <div class="learner-proof-grid">
+            <section class="proof-sub-block">
+              <h4 class="block-title" style="font-size: 0.95rem; margin-bottom: 8px;">Acties</h4>
+              <div class="learner-compact-list">
+                ${actionFields.map(([field, description]) => `
+                  <div class="learner-list-item">
+                    <strong>${escapeHtml(field)}</strong>
+                    <small>${escapeHtml(description)}</small>
+                  </div>
+                `).join('')}
+              </div>
+            </section>
+            <section class="proof-sub-block">
+              <h4 class="block-title" style="font-size: 0.95rem; margin-bottom: 8px;">Leerpret terug</h4>
+              <div class="learner-compact-list">
+                <div class="learner-list-item">
+                  <strong>${escapeHtml(step.title || "Artikel")}</strong>
+                  <small>${escapeHtml(step.core_question || step.summary || "Leerpret wordt uit acties en leerboxcontext berekend.")}</small>
+                </div>
+                <div class="learner-list-item">
+                  <strong>Feedback</strong>
+                  <small>De lerende krijgt directe leerpret in plaats van een architectuurrapport.</small>
+                </div>
+              </div>
+            </section>
+          </div>
+          <div class="test-actions" style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <a href="/park" class="btn btn-primary btn-sm">Bekijk park</a>
+            <a href="/data" class="btn btn-secondary btn-sm">Bekijk data</a>
+          </div>
+        </div>
+      `;
+    }
+
+    return `<p class="muted-text">Geen specifieke feedback voor deze rol.</p>`;
+  }
+
+  // Automatically catalog and render concepts
+  function updateHelpMetrics() {
+    const pages = new Set(loadedConcepts.map(concept => concept.chapter).filter(value => value !== undefined && value !== null));
+    const images = loadedConcepts.filter(concept => Boolean(concept.image)).length;
+    document.querySelector('#status-metric-attractions .metric-num')?.replaceChildren(String(pages.size));
+    document.querySelector('#status-metric-objects .metric-num')?.replaceChildren(String(images));
+    document.querySelector('#status-metric-routes .metric-num')?.replaceChildren(String(loadedConcepts.length));
+  }
+
+  function renderCatalog(filterQuery = '') {
+    const gallery = document.getElementById('concepts-gallery');
+    const menu = document.getElementById('help-topic-menu');
+    if (!gallery || !menu) return;
+
+    // Filter by role focus
+    let filtered = [...loadedConcepts];
+
+    if (currentRole === 'learner' || currentRole === 'lerende') {
+      // Focus on game elements and general meaning of Leerpret (Chapter 1: Definitie and Chapter 3: Typering)
+      filtered = filtered.filter(c => c.chapter === 1 || c.chapter === 3);
+    } else if (currentRole === 'user' || currentRole === 'gebruiker') {
+      // Focus on technical explanation of Learning Boxes (Chapter 2: Activatie and Chapter 4: Formule)
+      filtered = filtered.filter(c => c.chapter === 2 || c.chapter === 4);
+    }
+
+    // Search query filter
+    if (filterQuery.trim()) {
+      const q = filterQuery.toLowerCase();
+      filtered = filtered.filter(c => 
+        (c.title || '').toLowerCase().includes(q) || 
+        (c.explanation || '').toLowerCase().includes(q) ||
+        (c.category || '').toLowerCase().includes(q)
+      );
+    }
+
+    if (filtered.length === 0) {
+      menu.innerHTML = '<div class="help-topic-loading">Geen onderwerpen</div>';
+      gallery.innerHTML = `
+        <div class="park-empty-state">
+          <strong>Geen concepten gevonden</strong>
+          <span>Probeer een andere zoekopdracht.</span>
+        </div>
+      `;
+      return;
+    }
+
+    const apiBase = localStorage.getItem('api_base') || window.LEERPRET_CONFIG.apiBase;
+    if (!filtered.some(concept => conceptId(concept) === selectedConceptId)) selectedConceptId = conceptId(filtered[0]);
+
+    menu.innerHTML = filtered.map((concept, index) => `
+      <button class="help-topic-button ${conceptId(concept) === selectedConceptId ? 'active' : ''}" type="button" data-help-concept="${escapeHtml(conceptId(concept))}">
+        <img src="${apiBase}/help/assets/${encodeURIComponent(concept.image)}" alt="" loading="lazy" />
+        <span><small>${escapeHtml(concept.category || `Onderwerp ${index + 1}`)}</small><strong>${escapeHtml(concept.title)}</strong></span>
+      </button>
+    `).join('');
+
+    menu.querySelectorAll('[data-help-concept]').forEach(button => button.addEventListener('click', () => {
+      selectedConceptId = button.getAttribute('data-help-concept') || selectedConceptId;
+      renderCatalog(filterQuery);
+    }));
+
+    renderConceptCanvas(filtered.find(concept => conceptId(concept) === selectedConceptId) || filtered[0], apiBase);
+  }
+
+  function conceptId(concept) {
+    return String(concept.id || concept.slug || `${concept.chapter || 'help'}-${concept.title || 'onderwerp'}`);
+  }
+
+  function renderConceptCanvas(concept, apiBase) {
+    const gallery = document.getElementById('concepts-gallery');
+    if (!gallery || !concept) return;
+    const showGameType = ['learner', 'lerende', 'architect', 'technologist'].includes(currentRole);
+    const showTechDetails = ['user', 'gebruiker', 'architect', 'technologist'].includes(currentRole);
+    const reflectionStorageKey = `leerpret.help.reflection.${conceptId(concept)}`;
+    const reflectionAnswer = localStorage.getItem(reflectionStorageKey) || '';
+    gallery.innerHTML = `
+      <article class="concept-detail-card">
+        <header class="concept-detail-intro">
+          <div class="concept-badges-row">
+            <span class="badge badge-category">${escapeHtml(concept.category || 'Algemeen')}</span>
+            ${showGameType && concept.gameType ? `<span class="badge badge-game">${escapeHtml(concept.gameType)}</span>` : ''}
+          </div>
+          <h4 class="concept-card-title">${escapeHtml(concept.title)}</h4>
+          ${concept.reflectionQuestion ? `
+            <div class="reflection-block"><strong>Reflectievraag:</strong><p>${escapeHtml(concept.reflectionQuestion)}</p></div>
+            <label class="reflection-answer-field">
+              <span>Jouw antwoord</span>
+              <textarea rows="4" data-reflection-answer placeholder="Schrijf hier je antwoord...">${escapeHtml(reflectionAnswer)}</textarea>
+              <small>Wordt automatisch op dit apparaat bewaard.</small>
+            </label>
+          ` : concept.gameType ? `<div class="concept-game-prompt"><strong>Spelvorm</strong><p>${escapeHtml(concept.gameType)}</p></div>` : ''}
+        </header>
+        <div class="concept-detail-image">
+          <img src="${apiBase}/help/assets/${encodeURIComponent(concept.image)}" alt="${escapeHtml(concept.title)}" />
+        </div>
+        <div class="concept-card-body">
+          <p class="concept-card-text">${escapeHtml(concept.explanation)}</p>
+          ${showTechDetails && concept.chapter === 2 ? `<div class="tech-spec-block"><strong>Systeem:</strong><code>StatementPayload [chapter ${concept.chapter}]</code></div>` : ''}
+        </div>
+      </article>
+    `;
+    gallery.querySelector('[data-reflection-answer]')?.addEventListener('input', (event) => {
+      localStorage.setItem(reflectionStorageKey, (event.target as HTMLTextAreaElement).value);
+    });
+  }
+
+  function setupSearch() {
+    const searchInput = document.getElementById('catalog-search') as HTMLInputElement;
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        const val = (e.target as HTMLInputElement).value;
+        renderCatalog(val);
+      });
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    initHelpPage();
+  });
+</script>
+
+<style is:global>
+  .help-header-block {
+    margin-bottom: 28px;
+  }
+
+  .catalog-header {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 12px;
+  }
+
+  .catalog-search-row {
+    width: 100%;
+  }
+
+  .help-topic-workspace {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+  }
+
+  .help-topic-menu {
+    position: sticky;
+    top: 16px;
+    display: grid;
+    gap: 7px;
+    max-height: calc(100vh - 32px);
+    padding: 10px;
+    overflow-y: auto;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #09191e;
+  }
+
+  .help-topic-button {
+    display: grid;
+    grid-template-columns: 74px minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    min-height: 68px;
+    padding: 6px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: #10262d;
+    color: var(--ink);
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .help-topic-button:hover { border-color: #3b6972; background: #15323a; }
+  .help-topic-button.active { border-color: var(--teal); background: #12343a; box-shadow: inset 4px 0 var(--teal); }
+  .help-topic-button img { width: 74px; height: 56px; border-radius: 7px; object-fit: cover; background: #061419; }
+  .help-topic-button > span { display: grid; gap: 3px; min-width: 0; }
+  .help-topic-button small { color: var(--amber); font-size: .58rem; font-weight: 800; text-transform: uppercase; }
+  .help-topic-button strong { overflow: hidden; color: var(--ink); font-size: .75rem; line-height: 1.2; text-overflow: ellipsis; }
+  .help-topic-loading { padding: 12px 8px; color: var(--muted); font-size: .75rem; }
+
+  .help-topic-canvas {
+    min-width: 0;
+    min-height: 620px;
+    padding: 18px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: linear-gradient(145deg, #0c2026, #09191e);
+  }
+
+  .concept-detail-card {
+    overflow: hidden;
+    border: 1px solid #2b4c55;
+    border-radius: 13px;
+    background: #10262d;
+  }
+
+  .concept-detail-intro {
+    display: grid;
+    gap: 12px;
+    padding: 18px;
+    background: #10262d;
+  }
+
+  .concept-detail-image {
+    width: 100%;
+    aspect-ratio: 16 / 8;
+    overflow: hidden;
+    border-bottom: 1px solid var(--line);
+    background: #061419;
+  }
+
+  .concept-detail-image img { width: 100%; height: 100%; object-fit: cover; }
+
+  .concepts-gallery-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .concept-gallery-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0 !important;
+  }
+
+  .concept-image-container {
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-bottom: 1px solid var(--line);
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .concept-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .concept-gallery-card:hover .concept-image-container img {
+    transform: scale(1.03);
+  }
+
+  .concept-card-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .concept-badges-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 9999px;
+  }
+
+  .badge-category {
+    background: #123743;
+    color: #7edff4;
+  }
+
+  .badge-game {
+    background: #3b2d14;
+    color: #ffc66d;
+  }
+
+  .concept-card-title {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--ink);
+    font-family: var(--font-heading);
+    font-weight: 700;
+  }
+
+  .concept-card-text {
+    margin: 0;
+    font-size: 0.84rem;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  .reflection-block {
+    background: #0c1d23;
+    border-left: 3px solid var(--violet);
+    padding: 10px 12px;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.78rem;
+  }
+
+  .reflection-block strong {
+    color: var(--violet);
+  }
+
+  .reflection-block p {
+    margin: 4px 0 0 0;
+    color: var(--ink);
+  }
+
+  .concept-game-prompt {
+    padding: 10px 12px;
+    border-left: 3px solid var(--amber);
+    border-radius: 0 6px 6px 0;
+    background: #261f12;
+  }
+
+  .concept-game-prompt strong { color: #ffc66d; }
+  .concept-game-prompt p { margin: 4px 0 0; color: var(--ink); }
+
+  .reflection-answer-field {
+    display: grid;
+    gap: 7px;
+  }
+
+  .reflection-answer-field > span {
+    color: var(--ink);
+    font-size: .76rem;
+    font-weight: 800;
+  }
+
+  .reflection-answer-field textarea {
+    width: 100%;
+    min-height: 92px;
+    resize: vertical;
+    border: 1px solid #31545d;
+    border-radius: 9px;
+    background: #07171c;
+    color: var(--ink);
+    font: inherit;
+    font-size: .8rem;
+    line-height: 1.45;
+    padding: 11px 12px;
+  }
+
+  .reflection-answer-field textarea:focus {
+    border-color: var(--teal);
+    outline: 2px solid rgba(50, 221, 210, .18);
+  }
+
+  .reflection-answer-field small { color: var(--muted); font-size: .62rem; }
+
+  .tech-spec-block {
+    background: #0c1d23;
+    border-left: 3px solid var(--teal);
+    padding: 8px 12px;
+    border-radius: 0 6px 6px 0;
+    font-size: 0.75rem;
+  }
+
+  .tech-spec-block strong {
+    color: var(--teal);
+  }
+
+  .tech-spec-block code {
+    display: block;
+    margin-top: 4px;
+    background: #061419;
+    color: #8cece5;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+  }
+
+  /* Shuffled styles from article.astro */
+  .concept-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .concept-item {
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .concept-item strong {
+    font-size: 0.88rem;
+    color: var(--ink);
+  }
+
+  .concept-item small {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .learner-meter-unavailable {
+    display: grid;
+    gap: 6px;
+    padding: 14px;
+    border: 1px solid #fbbf24;
+    border-left: 4px solid #d97706;
+    border-radius: 12px;
+    background: #fffbeb;
+    color: #92400e;
+  }
+
+  .learner-meter-unavailable strong {
+    color: #78350f;
+    font-size: 0.95rem;
+  }
+
+  .learner-meter-unavailable p {
+    margin: 0;
+    color: #92400e;
+    font-size: 0.84rem;
+    line-height: 1.45;
+  }
+
+  .learner-proof-grid {
+    display: grid;
+    gap: 14px;
+  }
+
+  .learner-compact-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .learner-list-item {
+    display: grid;
+    gap: 5px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #f8fafc;
+  }
+
+  .learner-list-item strong {
+    color: var(--ink);
+    font-size: 0.88rem;
+    line-height: 1.25;
+  }
+
+  .learner-list-item small {
+    color: var(--muted);
+    font-size: 0.74rem;
+    line-height: 1.35;
+  }
+
+  @media (min-width: 760px) {
+    .learner-proof-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .images-thumbnail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .image-thumbnail {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    aspect-ratio: 4/3;
+  }
+
+  .image-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .full-width-meter-block {
+    background: #faf5ff;
+    border: 1px solid #e9d5ff;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .meter-layout-mini {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .gauge-wrapper-mini {
+    position: relative;
+    width: 80px;
+    height: 80px;
+  }
+
+  .radial-gauge-mini {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+
+  .gauge-bg-mini {
+    fill: none;
+    stroke: #ebdff7;
+    stroke-width: 8;
+  }
+
+  .gauge-info-mini {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    line-height: 1;
+  }
+
+  .gauge-value-mini {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--plum);
+  }
+
+  .gauge-percent-mini {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .archetype-badge-mini {
+    color: white;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .metrics-quick-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-top: 1px dashed #ebdff7;
+    padding-top: 12px;
+  }
+
+  .metric-row-mini {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+  }
+
+  .metric-row-mini span {
+    color: var(--muted);
+  }
+
+  .metric-row-mini strong {
+    color: var(--ink);
+  }
+
+  @media (min-width: 768px) {
+    .catalog-header {
+      flex-direction: row;
+      align-items: center;
+    }
+    .catalog-search-row {
+      width: auto;
+    }
+    .concepts-gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .intro-grid {
+      display: grid !important;
+      grid-template-columns: repeat(3, 1fr) !important;
+      gap: 20px !important;
+    }
+  }
+
+  @media (max-width: 800px) {
+    .help-topic-workspace { grid-template-columns: 1fr; }
+    .help-topic-menu { position: static; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); max-height: 310px; }
+    .help-topic-canvas { min-height: 0; padding: 12px; }
+  }
+</style>

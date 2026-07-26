@@ -1,0 +1,24 @@
+{
+  "name": "leerpret-dashboard",
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "config": "python scripts/generate_runtime_config.py",
+    "dev": "powershell -ExecutionPolicy Bypass -File scripts/dev_dashboard.ps1",
+    "prebuild": "npm run config",
+    "build": "astro build",
+    "start": "powershell -ExecutionPolicy Bypass -File scripts/start_dashboard.ps1",
+    "restart": "powershell -ExecutionPolicy Bypass -File scripts/restart_dashboard.ps1",
+    "astro": "astro",
+    "test:roles": "node tests/role-routing.test.mjs",
+    "test:symbols": "node tests/source-symbols.test.mjs",
+    "test:data-structure": "node tests/data-structure.test.mjs",
+    "test": "npm run test:roles && npm run test:symbols && npm run test:data-structure"
+  },
+  "dependencies": {
+    "astro": "^5.2.2",
+    "chart.js": "^4.5.1",
+    "d3": "^7.9.0",
+    "plotly.js-dist-min": "^3.7.0"
+  }
+}

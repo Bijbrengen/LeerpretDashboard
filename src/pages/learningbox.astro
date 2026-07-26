@@ -1,0 +1,3408 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Leerbox" description="Kies een leerbox om relaties te bekijken, te simuleren of in de editor te openen.">
+  
+  <div class="workbench-layout">
+    <aside class="workbench-tabs-bar" aria-label="Werkbank weergave" data-i18n-aria-label="workbench.view" id="workbench-tabs-bar">
+      <div class="workbench-sidebar-context">
+        <span class="eyebrow">Leerbox</span>
+        <label for="workbench-twin-select" data-i18n="menu.activeLeerbox">Actieve Leerbox</label>
+        <select id="workbench-twin-select" class="spacious-select">
+          <option value="" data-i18n="menu.loading">Laden...</option>
+        </select>
+        <div class="leerbox-context-actions">
+          <button class="leerbox-context-action active" id="view-description-action" type="button" aria-label="Beschrijving bekijken" title="Beschrijving bekijken" data-i18n-aria-label="menu.description" data-i18n-title="menu.description">
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6V4a2 2 0 0 1 2-2h8l4 4v11a2 2 0 0 1-2 2h-2"/><rect x="2" y="6" width="16" height="16" rx="2"/><path d="M6 11h8M6 15h8M6 19h5"/></svg><small data-i18n="workbench.description">Beschrijving</small>
+          </button>
+          <a class="leerbox-context-action" id="edit-leerbox-action" href="/editor" aria-label="Leerbox bewerken" title="Leerbox bewerken" data-i18n-aria-label="workbench.edit.title" data-i18n-title="workbench.edit.title" hidden>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z"/><path d="m14 7 3 3M5.5 16l3 3"/></svg><small data-i18n="workbench.edit">Bewerken</small>
+          </a>
+          <a class="leerbox-context-action" id="preview-leerbox-action" href="/preview" aria-label="Preview openen" title="Preview openen" data-i18n-aria-label="workbench.preview.title" data-i18n-title="workbench.preview.title" hidden>
+            <svg aria-hidden="true" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><small data-i18n="workbench.preview">Preview</small>
+          </a>
+          <div class="twin-status-badge status-concept" id="twin-status-text" role="progressbar" aria-label="Voortgang leerbox" data-i18n-aria-label="menu.progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">concept</div>
+        </div>
+      </div>
+      <!-- Instellingen voor de simulatie. De onderdelenlijst is vervangen door
+           tabbladen boven de inhoud rechts. -->
+      <div id="workbench-settings-slot">
+      <!-- Simulatie-instellingen: hoeveel acties over hoeveel minuten, uit welke bron,
+           en de knop die de simulatie voorbereidt. -->
+      <div class="leerbox-sim-card" id="simulation-clock-controls">
+        <span class="eyebrow">Simulatie</span>
+        <div class="simulation-clock" id="simulation-config-clock">
+          <label class="simulation-value-control" for="simulation-action-count">
+            <span>ACTIES</span>
+            <button type="button" class="simulation-stepper" data-sim-step="actions:up" aria-label="Acties verhogen">&#9650;</button>
+            <input id="simulation-action-count" type="number" min="1" max="1000" step="10" value="1000" inputmode="numeric" />
+            <button type="button" class="simulation-stepper" data-sim-step="actions:down" aria-label="Acties verlagen">&#9660;</button>
+          </label>
+          <label class="simulation-value-control" for="simulation-duration-minutes">
+            <span>MINUTEN</span>
+            <button type="button" class="simulation-stepper" data-sim-step="duration:up" aria-label="Minuten verhogen">&#9650;</button>
+            <input id="simulation-duration-minutes" type="number" min="1" max="1440" step="5" value="30" inputmode="numeric" />
+            <button type="button" class="simulation-stepper" data-sim-step="duration:down" aria-label="Minuten verlagen">&#9660;</button>
+          </label>
+          <button type="button" id="btn-run-leerbox-test" class="simulation-play-button" data-sim-control="play" aria-label="Simulatie voorbereiden" title="Simulatie voorbereiden">&#9658;</button>
+        </div>
+        <p class="sim-hint">Zoveel acties verdeeld over zoveel minuten vormen de actiereeks die de engine doorrekent.</p>
+        <fieldset class="test-source-toggle" aria-label="Simulatiebron">
+          <legend>Bron</legend>
+          <label class="test-source-option active" for="test-source-data">
+            <input type="radio" id="test-source-data" name="simulation-source" value="data" checked />
+            <span>Bestaande data</span>
+          </label>
+          <label class="test-source-option" for="test-source-ai">
+            <input type="radio" id="test-source-ai" name="simulation-source" value="ai" />
+            <span>Nieuwe AI-data</span>
+          </label>
+        </fieldset>
+        <p class="test-valve-message" id="test-valve-message" role="status"></p>
+        <div class="leerbox-test-output" id="leerbox-test-output" aria-live="polite">
+          <p class="muted-text">De datastatus wordt gecontroleerd.</p>
+        </div>
+      </div>
+
+      <dialog class="simulation-cost-dialog" id="simulation-cost-dialog" aria-labelledby="simulation-cost-title">
+        <form method="dialog" class="simulation-cost-card">
+          <span class="eyebrow">Tokentoestemming vereist</span>
+          <h3 id="simulation-cost-title">AI-simulatie ramen</h3>
+          <p>Er wordt nog niets naar het model verstuurd. De raming hieronder is lokaal berekend over de daadwerkelijke prompt.</p>
+          <label for="simulation-model-select">Model</label>
+          <select id="simulation-model-select" class="spacious-select"></select>
+          <div class="simulation-cost-grid">
+            <span><small>Input</small><strong id="simulation-input-tokens">–</strong></span>
+            <span><small>Max. output</small><strong id="simulation-output-tokens">–</strong></span>
+            <span><small>Geschat totaal</small><strong id="simulation-total-tokens">–</strong></span>
+            <span class="simulation-cost-total"><small>Geschatte kosten</small><strong id="simulation-estimated-cost">–</strong></span>
+          </div>
+          <p class="simulation-price-note" id="simulation-price-note"></p>
+          <p class="test-error" id="simulation-quote-error" hidden></p>
+          <div class="simulation-cost-actions">
+            <button type="button" class="btn" id="simulation-cost-cancel">Annuleren</button>
+            <button type="button" class="btn btn-primary" id="simulation-cost-confirm" disabled>Simulatie starten</button>
+          </div>
+        </form>
+      </dialog>
+
+      </div>
+    </aside>
+
+    <!-- Het gekozen werkbankonderdeel verschijnt rechts. -->
+    <div class="workbench-content-area">
+
+    <div class="workbench-pane-tabs" role="tablist" id="workbench-pane-tabs">
+      <button class="workbench-pane-tab" type="button" role="tab" data-tab="bezoekverhaal">Bezoekverhaal</button>
+      <button class="workbench-pane-tab" type="button" role="tab" data-tab="objectklok">Objectklok</button>
+      <button class="workbench-pane-tab" type="button" role="tab" data-tab="catalogus">Catalogus</button>
+      <button class="workbench-pane-tab" type="button" role="tab" data-tab="meetfocus">Meetfocus</button>
+      <button class="workbench-pane-tab" type="button" role="tab" data-tab="vat">Vat</button>
+      <button class="workbench-pane-tab" type="button" role="tab" data-tab="validatie">Validatie</button>
+      <button class="workbench-pane-tab" type="button" role="tab" data-tab="oppervlakken">UI-oppervlakken</button>
+      <button class="workbench-pane-tab" type="button" role="tab" data-tab="bestanden">Bestanden</button>
+      <button class="workbench-pane-tab" type="button" role="tab" data-tab="eventtabel">Eventtabel</button>
+    </div>
+    
+    <!-- Tab 1: VAT (Objects & Routes) -->
+    <div class="tab-panel active" id="panel-vat">
+      <div class="mobile-card">
+        <span class="eyebrow">Vat</span>
+        <h3>Leerobjecten & Onderlinge Route</h3>
+        
+        <div class="leerbox-visual-flow" id="vat-visual-flow">
+          <!-- Flow nodes rendered vertically -->
+          <p class="muted-text">Geen route gedefinieerd.</p>
+        </div>
+
+        <div class="vat-details-grid">
+          <div class="details-section">
+            <h4>Leerobjecten</h4>
+            <div class="pills-grid" id="vat-objects-pills">
+              <!-- Pills loaded dynamically -->
+            </div>
+          </div>
+          
+          <div class="details-section">
+            <h4>Gedefinieerde Route</h4>
+            <ol class="ordered-route-list" id="vat-route-list">
+              <!-- Route items loaded dynamically -->
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: SIMULATOR (Datasets) -->
+    <!-- Tabblad Bestanden -->
+    <div class="tab-panel" id="panel-bestanden">
+      <div class="mobile-card">
+        <span class="eyebrow">Meten is Weten</span>
+        <h3>Gekoppelde JSON-bestanden</h3>
+        <p class="muted-text">De testdatasets die door pilots van deze leerbox zijn gegenereerd.</p>
+
+        <div class="workbench-stats-strip" id="simulator-stats-strip">
+          <div><strong id="sim-stat-groups">-</strong><span>Groepen</span></div>
+          <div><strong id="sim-stat-files">-</strong><span>Bestanden</span></div>
+        </div>
+
+        <div class="vertical-item-list" id="simulator-files-list">
+          <p class="muted-text">Laden...</p>
+        </div>
+
+        <div class="bestand-inhoud" id="bestand-inhoud" hidden></div>
+      </div>
+    </div>
+
+    <!-- Tabblad Meetfocus -->
+    <div class="tab-panel" id="panel-meetfocus">
+      <div class="mobile-card">
+        <span class="eyebrow">Meetfocus</span>
+        <h3>Gedragsmarkers T/A/V/R/S</h3>
+        <p class="muted-text">Gebruik eerdere data wanneer de leerbox niet is gewijzigd. Als objecten of routes zijn aangepast, kunnen oude runs minder representatief zijn.</p>
+        <ul class="surface-list" id="simulator-meetfocus-list">
+          <p class="muted-text">Laden...</p>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Tabblad Bezoekverhaal -->
+    <div class="tab-panel" id="panel-bezoekverhaal">
+      <div class="mobile-card path-map-card">
+        <section class="visit-route-panel">
+          <p class="muted-text">Een compacte routekaart: begin, weerstand, succes, eind en terugkeer worden als bezoekverhaal getekend.</p>
+          <div class="path-map-meta" id="path-map-meta">Padgegevens laden...</div>
+          <div class="path-map-plot" id="path-map-plot" aria-label="Bewandeld pad routekaart"></div>
+          <div class="lp-story-strip" id="path-map-story-strip"></div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Tabblad Objectklok: welk object wanneer werd aangeraakt, polair uitgezet. -->
+    <div class="tab-panel" id="panel-objectklok">
+      <div class="mobile-card object-clock-card">
+        <p class="muted-text">Elk leerobject krijgt een sector; hoe verder naar buiten, hoe later in het bezoek de interactie plaatsvond.</p>
+        <div class="object-clock-plot" id="object-clock-plot" aria-label="Objectklok polair interactiediagram"></div>
+      </div>
+    </div>
+
+
+    <!-- Tabblad Validatie -->
+    <div class="tab-panel" id="panel-validatie">
+      <div class="mobile-card validation-report-card">
+        <span class="eyebrow">Validatie</span>
+        <h3>Validatie & Testrapport</h3>
+        <p class="muted-text">Elk JSON-bestand in backend/simulator/testdata levert automatisch een validatieset op.</p>
+        <div class="validation-controls">
+          <div class="validation-mode-toggle" role="radiogroup" aria-label="Rapportmodus">
+            <label><input type="radio" name="validation-mode" value="single" checked /> Een dataset</label>
+            <label><input type="radio" name="validation-mode" value="all" /> Alle JSON-testsets</label>
+          </div>
+          <select id="validation-dataset-select" class="spacious-select">
+            <option value="">Validatiesets laden...</option>
+          </select>
+          <button class="btn btn-primary" type="button" id="btn-generate-validation-report">Genereer Testrapport (LaTeX/Tabel)</button>
+        </div>
+        <div id="validation-report-output" class="validation-report-output">
+          <p class="muted-text">Kies een validatieset en genereer een rapport.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabblad Eventtabel: de technische eventreeks achter het bezoekverhaal. -->
+    <div class="tab-panel" id="panel-eventtabel">
+      <div class="mobile-card">
+        <span class="eyebrow">Bezoekverhaal</span>
+        <h3>Technische eventtabel</h3>
+        <p class="muted-text">Elke geregistreerde gebeurtenis uit het gekozen databestand, in volgorde.</p>
+              <div class="table-wrapper">
+                <table class="path-event-table">
+                  <thead>
+                    <tr>
+                      <th>Stap</th>
+                      <th>Tijd</th>
+                      <th>Attractie</th>
+                      <th>Object</th>
+                      <th>Functie</th>
+                      <th>Actie</th>
+                      <th>Resultaat</th>
+                    </tr>
+                  </thead>
+                  <tbody id="path-map-table-body">
+                    <tr><td colspan="7">Nog geen padgegevens geladen.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: BESCHRIJVING (Computertaal) -->
+    <div class="tab-panel" id="panel-description">
+      <div class="mobile-card">
+        <span class="eyebrow">Computertaal</span>
+        <h3>DSL Declaratie</h3>
+        <p class="muted-text">De formele beschrijvingstaal voor deze digitale leerbox:</p>
+        
+        <pre class="dsl-code-block" id="dsl-code-block"><code>// Laden...</code></pre>
+        
+        <h4>Declaratieverklaringen</h4>
+        <ul class="declarations-bullet-list" id="dsl-declarations-list">
+          <!-- Declarations bullets loaded dynamically -->
+        </ul>
+      </div>
+    </div>
+
+    <!-- De voormalige ingebedde Editor verwijst nu naar de zelfstandige pagina. -->
+    <div class="tab-panel" id="panel-editor">
+      <div class="mobile-card">
+        <span class="eyebrow">Ontwerp</span>
+        <h3>Open de zelfstandige Editor</h3>
+        <p class="muted-text">De ontwerp-, controle- en simulatiefuncties staan op een eigen pagina.</p>
+        <a class="btn btn-primary" href="/editor" id="open-standalone-editor">Open Editor</a>
+      </div>
+    </div>
+
+    <!-- UI-oppervlakken en catalogus: twee tabbladen, alleen architect/technoloog. -->
+    <div class="tab-panel" id="panel-oppervlakken">
+      <div class="mobile-card">
+        <span class="eyebrow">Frontend als kapstok</span>
+        <h3>UI-oppervlakken</h3>
+        <p class="muted-text">Overzicht van dashboardweergaven, simulator-pagina's, losse tools en legacy render-functies.</p>
+        <div class="workbench-stats-strip kapstok-stats-strip" id="kapstok-stats-strip">
+          <div><strong id="kapstok-stat-views">-</strong><span>Frontend-weergaven</span></div>
+          <div><strong id="kapstok-stat-pages">-</strong><span>Simulator-pagina's</span></div>
+          <div><strong id="kapstok-stat-tools">-</strong><span>Tools</span></div>
+          <div><strong id="kapstok-stat-apps">-</strong><span>Leerbox-apps</span></div>
+        </div>
+        <div class="surface-section" id="kapstok-tools-list">
+          <p class="muted-text">Laden...</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="tab-panel" id="panel-catalogus">
+      <div class="mobile-card">
+        <span class="eyebrow">Alle leerboxen</span>
+        <h3>Leerboxcatalogus</h3>
+        <p class="muted-text">Alle digitale tweelingen tegelijk, elk met uitklapbare declaraties, objecten en route.</p>
+        <div class="twin-catalog-list" id="twin-catalog-list">
+          <p class="muted-text">Laden...</p>
+        </div>
+      </div>
+    </div>
+
+    </div>
+  </div>
+
+  <script>
+    import { apiGet, apiPost, state, initSettings, escapeHtml, formatBytes, safeJsonParse, apiRootUrl, editorRootUrl, renderMath } from '../js/api.js';
+
+    /* Welke rol welk tabblad ziet. Bezoekverhaal en Catalogus zijn er voor iedereen;
+       de analysetabbladen voor de twee bouwrollen; de ruwe data alleen voor de
+       Leerprettechnoloog. Deze tabel staat boven de functies die hem lezen. */
+    const TABBLADEN_PER_ROL = {
+      bezoekverhaal: ['guest', 'learner', 'user', 'architect', 'technologist'],
+      objectklok: ['guest', 'learner', 'user', 'architect', 'technologist'],
+      catalogus: ['guest', 'learner', 'user', 'architect', 'technologist'],
+      meetfocus: ['guest', 'learner', 'user', 'architect', 'technologist'],
+      vat: ['architect', 'technologist'],
+      validatie: ['architect', 'technologist'],
+      oppervlakken: ['architect', 'technologist'],
+      bestanden: ['technologist'],
+      eventtabel: ['technologist'],
+      description: ['architect', 'technologist'],
+      editor: ['architect', 'technologist']
+    };
+
+    function magTabblad(naam, rol) {
+      return Boolean(TABBLADEN_PER_ROL[naam]?.includes(rol));
+    }
+
+    let currentTwinId = '';
+    let currentTab = 'bezoekverhaal';
+    let loadedTwins = [];
+    let loadedGroups = [];
+    let surfacesData = null;
+    let activeRoleGlobal = 'architect';
+    let loadedPersonas = [];
+    let loadedValidationDatasets = [];
+    let currentEditorView = localStorage.getItem('leerpret.leerbox.editor.view') || 'description';
+
+    async function initWorkbench() {
+      initSettings();
+
+      // Read initial state
+      const urlParams = new URLSearchParams(window.location.search);
+      currentTwinId = urlParams.get('id') || localStorage.getItem('leerpret.leerbox.id') || '';
+      // Bezoekverhaal is het beginpunt; een onbekende onthouden naam valt daarop terug.
+      const onthoudenTab = localStorage.getItem('leerpret.leerbox.view');
+      currentTab = TABBLADEN_PER_ROL[onthoudenTab] ? onthoudenTab : 'bezoekverhaal';
+      
+      // Enforce role authorization
+      const activeRole = urlParams.get('role') || localStorage.getItem('active_role') || localStorage.getItem('leerpret.poc.role') || 'architect';
+      activeRoleGlobal = activeRole;
+      state.activeRole = activeRole;
+      localStorage.setItem('active_role', activeRole);
+      localStorage.setItem('leerpret.poc.role', activeRole);
+      if (activeRole === 'learner') {
+        const previewQuery = new URLSearchParams({ role: 'learner' });
+        if (currentTwinId) previewQuery.set('id', currentTwinId);
+        window.location.replace(`/preview?${previewQuery.toString()}`);
+        return;
+      }
+      const editAction = document.getElementById('edit-leerbox-action');
+      if (editAction) editAction.hidden = !['architect', 'technologist'].includes(activeRole);
+      const previewAction = document.getElementById('preview-leerbox-action');
+      if (previewAction) previewAction.hidden = false;
+      updateEditorLinks();
+      document.querySelectorAll('[data-tab]').forEach((tab) => {
+        const naam = tab.getAttribute('data-tab');
+        if (TABBLADEN_PER_ROL[naam]) tab.hidden = !TABBLADEN_PER_ROL[naam].includes(activeRole);
+      });
+
+      if (activeRole === 'user') {
+        document.getElementById('view-description-action')?.setAttribute('hidden', '');
+      } else {
+        const eyebrow = document.querySelector('.workbench-sidebar-context .eyebrow');
+        if (eyebrow) eyebrow.textContent = 'Leerbox';
+      }
+
+      // Terugval wanneer de onthouden keuze niet bij deze rol past of niet meer bestaat.
+      if (!magTabblad(currentTab, activeRole)) currentTab = 'bezoekverhaal';
+
+      updateWorkbenchMenuState();
+
+      await loadTwinsAndData();
+    }
+
+    function sortTwinsByStatus(twins) {
+      const rank = {
+        af: 4,
+        digital_twin: 4,
+        active: 4,
+        actief: 4,
+        definitief: 4,
+        afgerond: 4,
+        pilot: 3,
+        proto_leerbox: 2,
+        prototype: 2,
+        concept: 1
+      };
+      return [...twins].sort((a, b) => {
+        const statusDiff = (rank[String(b.status || '').toLowerCase()] || 0) - (rank[String(a.status || '').toLowerCase()] || 0);
+        if (statusDiff) return statusDiff;
+        return String(a.title || a.id).localeCompare(String(b.title || b.id), 'nl', { sensitivity: 'base' });
+      });
+    }
+
+    async function loadTwinsAndData() {
+      const select = document.getElementById('workbench-twin-select') as HTMLSelectElement;
+      if (!select) return;
+
+      try {
+        const response = await apiGet('/simulator/datasets');
+        state.simulator = response;
+        loadedTwins = sortTwinsByStatus(response.leerbox_twins || []);
+        loadedGroups = response.groups || [];
+
+        try {
+          surfacesData = await apiGet('/ui/surfaces');
+        } catch (surfaceError) {
+          surfacesData = null;
+        }
+
+        if (loadedTwins.length === 0) {
+          select.innerHTML = '<option value="">Geen twins beschikbaar</option>';
+          return;
+        }
+
+        // Hydrate select dropdown
+        select.innerHTML = loadedTwins.map(t => `
+          <option value="${t.id}" ${t.id === currentTwinId || (!currentTwinId && loadedTwins[0].id === t.id) ? 'selected' : ''}>
+            ${t.title || t.id}
+          </option>
+        `).join('');
+        
+        // Add option to create a new draft
+        select.innerHTML += '<option value="__new">Nieuwe leerbox aanmaken</option>';
+
+        if (!currentTwinId && loadedTwins.length > 0) {
+          currentTwinId = loadedTwins[0].id;
+        }
+
+        // Bind dropdown change
+        select.addEventListener('change', () => {
+          currentTwinId = select.value;
+          localStorage.setItem('leerpret.leerbox.id', currentTwinId);
+          const url = new URL(window.location.href);
+          url.searchParams.set('id', currentTwinId);
+          history.replaceState({}, '', url);
+          updateEditorLinks();
+          renderWorkbench();
+        });
+
+        renderWorkbench();
+      } catch (error) {
+        select.innerHTML = '<option value="">Fout bij verbinding met service</option>';
+      }
+    }
+
+    function updateWorkbenchMenuState() {
+      document.querySelectorAll('.workbench-pane-tab').forEach(btn => {
+        const actief = btn.getAttribute('data-tab') === currentTab;
+        btn.classList.toggle('is-active', actief);
+        btn.setAttribute('aria-selected', String(actief));
+      });
+      document.getElementById('view-description-action')?.classList.toggle('active', currentTab === 'description');
+      document.querySelectorAll('[data-editor-view]').forEach(btn => {
+        const active = currentTab === 'editor' && btn.getAttribute('data-editor-view') === currentEditorView;
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-current', active ? 'page' : 'false');
+      });
+    }
+
+    function updateEditorLinks() {
+      const query = new URLSearchParams({ role: activeRoleGlobal });
+      if (currentTwinId) query.set('id', currentTwinId);
+      const href = `/editor?${query.toString()}`;
+      document.getElementById('edit-leerbox-action')?.setAttribute('href', href);
+      document.getElementById('preview-leerbox-action')?.setAttribute('href', `/preview?${query.toString()}`);
+      document.getElementById('open-standalone-editor')?.setAttribute('href', href);
+    }
+
+    function leerboxStatus(status) {
+      const key = String(status || 'concept').trim().toLowerCase();
+      const labels = {
+        proto_leerbox: 'prototype',
+        concept: 'concept',
+        pilot: 'pilot',
+        af: 'af',
+        digital_twin: 'af',
+        active: 'af',
+        actief: 'af',
+        definitief: 'af',
+        afgerond: 'af'
+      };
+      const progress = { concept: 0, proto_leerbox: 25, pilot: 60, af: 100, digital_twin: 100, active: 100, actief: 100, definitief: 100, afgerond: 100 };
+      return {
+        label: labels[key] || key.replaceAll('_', ' '),
+        className: `status-${key.replaceAll('_', '-')}`,
+        progress: progress[key] ?? 0
+      };
+    }
+
+    function roleCanPreviewTwin(role, status) {
+      if (!['learner', 'guest'].includes(role)) return true;
+      return ['pilot', 'digital_twin', 'active', 'actief', 'definitief', 'afgerond', 'af'].includes(String(status || '').toLowerCase());
+    }
+
+    function selectWorkbenchTab(tabName) {
+      currentTab = tabName;
+      localStorage.setItem('leerpret.leerbox.view', currentTab);
+      if (currentTab === 'editor') {
+        const submenu = document.getElementById('editor-submenu');
+        const toggle = document.getElementById('editor-menu-toggle');
+        if (submenu) submenu.hidden = false;
+        toggle?.setAttribute('aria-expanded', 'true');
+        toggle?.setAttribute('aria-label', 'Editoronderdelen inklappen');
+        if (toggle) toggle.textContent = 'v';
+      }
+      updateWorkbenchMenuState();
+      renderWorkbench();
+    }
+
+    function renderWorkbench() {
+      // Find selected twin (or mock if __new)
+      let twin = loadedTwins.find(t => t.id === currentTwinId);
+      if (currentTwinId === '__new') {
+        twin = {
+          id: "__new",
+          title: "Nieuwe leerbox",
+          status: "concept",
+          domain: "onbekend",
+          summary: "Lokale conceptontwerp.",
+          central_learning_goal: "Nog te bepalen",
+          central_discovery: "Nog te bepalen",
+          success_definition: "Nog te bepalen",
+          main_barrier: "Nog te bepalen",
+          required_event_fields: ["timestamp", "user_id", "learning_object_id"],
+          marker_mapping: { T: "", A: "", V: "", R: "", S: "" },
+          objects: [],
+          route: [],
+          declarations: ["Nieuw conceptontwerp."],
+          metrics: { objects: 0, route_steps: 0, action_types: 0 }
+        };
+      }
+
+      if (!twin) return;
+
+      updateEditorLinks();
+      const previewAction = document.getElementById('preview-leerbox-action');
+      if (previewAction) previewAction.hidden = !roleCanPreviewTwin(activeRoleGlobal, twin.status);
+
+      // Onbekende of niet-toegestane keuze: terug naar het beginpunt.
+      if (!magTabblad(currentTab, activeRoleGlobal)) {
+        currentTab = 'bezoekverhaal';
+        localStorage.setItem('leerpret.leerbox.view', currentTab);
+        updateWorkbenchMenuState();
+      }
+
+      // Update badge status
+      const statusText = document.getElementById('twin-status-text');
+      if (statusText) {
+        const status = leerboxStatus(twin.status);
+        statusText.textContent = status.label;
+        statusText.className = `twin-status-badge ${status.className}`;
+        statusText.setAttribute('aria-valuenow', String(status.progress));
+        statusText.setAttribute('aria-valuetext', status.label);
+      }
+
+      // Load draft elements if any
+      state.leerboxDrafts = safeJsonParse(localStorage.getItem('leerpret.leerbox.drafts'), {});
+      const draft = state.leerboxDrafts[twin.id] || { objects: [], route: [] };
+      
+      const combinedObjects = [...(twin.objects || []), ...(draft.objects || [])];
+      const combinedRoute = [...(twin.route || []), ...(draft.route || [])];
+
+      // Hide all panels, show the active one
+      document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.remove('active');
+      });
+      const activePanel = document.getElementById(`panel-${currentTab}`);
+      if (activePanel) activePanel.classList.add('active');
+
+      /* De simulatie-instellingen staan in het linkermenu en horen dus bij elk
+         tabblad, niet alleen bij het tabblad dat toevallig openstaat. */
+      renderSimulatorPanel(twin);
+
+      if (currentTab === 'vat') {
+        renderVatPanel(twin, combinedObjects, combinedRoute);
+      } else if (currentTab === 'description') {
+        renderDescriptionPanel(twin, combinedObjects, combinedRoute);
+      } else if (currentTab === 'editor') {
+        renderEditorPanel(twin, draft);
+      } else if (currentTab === 'oppervlakken' || currentTab === 'catalogus') {
+        renderKapstokPanel(surfacesData, loadedTwins);
+      }
+    }
+
+    function renderVatPanel(twin, objects, route) {
+      // 1. Render Flow nodes vertically
+      const flow = document.getElementById('vat-visual-flow');
+      if (!flow) return;
+
+      if (objects.length === 0) {
+        flow.innerHTML = '<p class="muted-text">Voeg elementen toe in de Editor om het visualisatie-vat te vullen.</p>';
+      } else {
+        const renderList = route.length > 0 ? route : objects.map((o, idx) => ({ step: idx+1, object_id: o.id }));
+        
+        flow.innerHTML = `
+          <div class="visual-spine-line"></div>
+          ${renderList.map((item, idx) => {
+            const obj = objects.find(o => o.id === item.object_id) || {};
+            const label = obj.label || item.object_id || "Leerobject";
+            const role = item.participant_action || obj.role || "action";
+            return `
+              <div class="visual-flow-node">
+                <span class="node-index">${item.step || idx+1}</span>
+                <div class="node-card">
+                  <strong>${escapeHtml(label)}</strong>
+                  <small>${escapeHtml(role)}</small>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        `;
+      }
+
+      // 2. Render Objects pills
+      const pills = document.getElementById('vat-objects-pills');
+      if (pills) {
+        pills.innerHTML = objects.map(o => `
+          <div class="object-item-pill">
+            <strong>${escapeHtml(o.label || o.id)}</strong>
+            <small>${escapeHtml(o.role || "object")}</small>
+          </div>
+        `).join('') || '<p class="muted-text">Geen objecten.</p>';
+      }
+
+      // 3. Render Route Steps
+      const routeList = document.getElementById('vat-route-list');
+      if (routeList) {
+        routeList.innerHTML = route.map(step => `
+          <li>
+            <strong>Stap ${step.step}: ${escapeHtml(step.object_id)}</strong>
+            <span class="route-action-span">${escapeHtml(step.participant_action || "")}</span>
+            <small>${escapeHtml(step.action_type || "")} → ${escapeHtml(step.expected_feedback || "")}</small>
+          </li>
+        `).join('') || '<li>Niet geconfigureerd</li>';
+      }
+    }
+
+    async function renderSimulatorPanel(twin) {
+      const gStat = document.getElementById('sim-stat-groups');
+      const fStat = document.getElementById('sim-stat-files');
+      const fileList = document.getElementById('simulator-files-list');
+      const meetfocusList = document.getElementById('simulator-meetfocus-list');
+
+      if (meetfocusList) {
+        const markerMapping = twin.marker_mapping || {};
+        const entries = Object.entries(markerMapping);
+        meetfocusList.innerHTML = entries.length
+          ? entries.map(([marker, text]) => `
+              <li><span>${escapeHtml(marker)}</span><small>${escapeHtml(text || "Nog niet ingevuld")}</small></li>
+            `).join('')
+          : '<p class="muted-text">Geen meetfocus gedefinieerd voor deze leerbox.</p>';
+      }
+
+      if (gStat) gStat.textContent = loadedGroups.length.toString();
+      
+      const totalFiles = loadedGroups.reduce((sum, g) => sum + Number(g.file_count || 0), 0);
+      if (fStat) fStat.textContent = totalFiles.toString();
+
+      // Find files for this twin
+      const slug = String(twin.id || "").replace(/^leerbox-/, "");
+      const matchedGroups = loadedGroups.filter((group) => {
+        const groupId = String(group.id || "");
+        const groupTitle = String(group.title || "").toLowerCase();
+        return groupId.includes(slug) || groupTitle.includes(slug.replaceAll("-", " "));
+      });
+      /* Eerder viel deze lijst terug op álle datasets zodra er geen bij deze leerbox
+         hoorde. Bezoekverhaal en Objectklok tekenden dan gegevens van een willekeurige
+         andere leerbox, zonder dat je dat kon zien. Liever niets tonen dan het
+         verkeerde: alleen datasets die bij deze leerbox horen tellen mee. */
+      const visibleGroups = matchedGroups;
+      let allFiles = [];
+
+      if (fileList) {
+        if (visibleGroups.length === 0) {
+          fileList.innerHTML = `<p class="muted-text">Er is geen testdata gekoppeld aan ${escapeHtml(twin.title || twin.id)}.</p>`;
+          const inhoud = document.getElementById('bestand-inhoud');
+          if (inhoud) { inhoud.hidden = true; inhoud.innerHTML = ''; }
+          await renderBestPathMap([]);
+          return;
+        }
+
+        allFiles = visibleGroups.flatMap(group => 
+          (group.files || []).map(file => ({ ...file, groupId: group.id, groupTitle: group.title }))
+        );
+
+        fileList.innerHTML = allFiles.map(file => `
+          <button class="data-file-item path-file-trigger" type="button" data-group-id="${escapeHtml(file.groupId || '')}" data-filename="${escapeHtml(file.name)}">
+            <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+            <div class="file-details">
+              <strong>${escapeHtml(file.name)}</strong>
+              <small>${escapeHtml(file.groupTitle)} • ${formatBytes(file.bytes)} • ${file.items || 0} acties</small>
+            </div>
+          </button>
+        `).join('');
+
+        fileList.querySelectorAll('.path-file-trigger').forEach((button) => {
+          button.addEventListener('click', async () => {
+            const groupId = button.getAttribute('data-group-id');
+            const filename = button.getAttribute('data-filename');
+            fileList.querySelectorAll('.path-file-trigger').forEach((b) => b.classList.toggle('is-active', b === button));
+            // Het bezoekverhaal volgt de keuze, en de inhoud zelf komt eronder in beeld.
+            await renderPathMapForFile(groupId, filename);
+            await toonBestandsinhoud(groupId, filename);
+          });
+        });
+      }
+
+      await renderBestPathMap(allFiles);
+      setupLeerboxTestPanel(twin);
+      await setupValidationReportPanel();
+    }
+
+    /* Klikken op een bestand liet alleen het bezoekverhaal bijwerken, en dat staat sinds
+       de tabbladen op een ander scherm. Daardoor leek klikken niets te doen. De inhoud
+       van het bestand verschijnt nu onder de lijst. */
+    async function toonBestandsinhoud(groupId, filename) {
+      const doel = document.getElementById('bestand-inhoud');
+      if (!doel || !groupId || !filename) return;
+
+      doel.hidden = false;
+      doel.innerHTML = `<p class="muted-text">${escapeHtml(filename)} laden...</p>`;
+      try {
+        const payload = await apiGet(`/simulator/datasets/${encodeURIComponent(groupId)}/files/${encodeURIComponent(filename)}`);
+        doel.innerHTML = `
+          <div class="bestand-inhoud-kop">
+            <strong>${escapeHtml(filename)}</strong>
+            <a class="btn btn-sm" href="${apiRootUrl()}/simulator/datasets/${encodeURIComponent(groupId)}/files/${encodeURIComponent(filename)}" target="_blank" rel="noopener">Open apart</a>
+          </div>
+          <pre class="bestand-inhoud-json">${escapeHtml(JSON.stringify(payload, null, 2))}</pre>
+        `;
+      } catch (error) {
+        doel.innerHTML = `<p class="muted-text">Kon ${escapeHtml(filename)} niet laden.</p>`;
+      }
+    }
+
+    async function renderBestPathMap(files) {
+      const meta = document.getElementById('path-map-meta');
+      const plot = document.getElementById('path-map-plot');
+      const story = document.getElementById('path-map-story-strip');
+      const table = document.getElementById('path-map-table-body');
+      const clock = document.getElementById('object-clock-plot');
+      if (!meta || !plot || !story || !table) return;
+
+      meta.textContent = 'Padgegevens zoeken in gekoppelde testdata...';
+      plot.innerHTML = '';
+      story.innerHTML = '';
+      table.innerHTML = '<tr><td colspan="7">Padgegevens laden...</td></tr>';
+      if (clock) clock.innerHTML = '<div class="objectklok-laden" role="status" aria-label="Objectklok laden"></div>';
+
+      // Zonder gekoppelde bestanden hoort hier niets te staan, ook geen oude tekening.
+      if (!files.length) {
+        meta.textContent = 'Aan deze leerbox is geen testdata gekoppeld.';
+        table.innerHTML = '<tr><td colspan="7">Geen gekoppelde testdata.</td></tr>';
+        renderObjectClock({ object_clock: [] });
+        return;
+      }
+
+      for (const file of files.filter(file => file.groupId && file.name)) {
+        const payload = await fetchPathMapPayload(file.groupId, file.name);
+        if (payload?.rows?.length) {
+          await renderPathMap(payload);
+          return;
+        }
+      }
+
+      meta.textContent = 'Geen event-reeks gevonden in de gekoppelde testdata.';
+      table.innerHTML = '<tr><td colspan="7">Deze dataset bevat geen bezoekverhaal-events.</td></tr>';
+      renderObjectClock({ object_clock: [] });
+    }
+
+    async function renderPathMapForFile(groupId, filename) {
+      if (!groupId || !filename) return;
+      const payload = await fetchPathMapPayload(groupId, filename);
+      if (payload?.rows?.length) {
+        await renderPathMap(payload);
+        return;
+      }
+
+      const meta = document.getElementById('path-map-meta');
+      const plot = document.getElementById('path-map-plot');
+      const story = document.getElementById('path-map-story-strip');
+      const table = document.getElementById('path-map-table-body');
+      if (meta) meta.textContent = `${filename}: geen bezoekverhaal-events gevonden.`;
+      if (plot) plot.innerHTML = '';
+      if (story) story.innerHTML = '';
+      if (table) table.innerHTML = '<tr><td colspan="7">Deze dataset bevat geen routekaart-events.</td></tr>';
+      renderObjectClock({ object_clock: [] });
+    }
+
+    async function fetchPathMapPayload(groupId, filename) {
+      try {
+        return await apiGet(`/simulator/datasets/${encodeURIComponent(groupId)}/path?filename=${encodeURIComponent(filename)}`);
+      } catch {
+        return null;
+      }
+    }
+
+    async function renderPathMap(payload) {
+      const rows = payload.rows || [];
+      const legend = payload.legend || {};
+      const meta = document.getElementById('path-map-meta');
+      const plot = document.getElementById('path-map-plot');
+      const story = document.getElementById('path-map-story-strip');
+      const table = document.getElementById('path-map-table-body');
+      if (!plot || !meta || !story || !table) return;
+      await renderObjectClock(payload);
+
+      meta.textContent = `${payload.filename} - ${rows.length} stappen${payload.repeat_objects?.length ? `, terugkeer: ${payload.repeat_objects.join(', ')}` : ''}`;
+      table.innerHTML = rows.map(row => `
+        <tr>
+          <td>${row.step}</td>
+          <td>${escapeHtml(row.time || '')}</td>
+          <td>${escapeHtml(row.attraction || '')}</td>
+          <td>${escapeHtml(row.object || '')}</td>
+          <td>${escapeHtml(row.function_label || row.function || '')}</td>
+          <td>${escapeHtml(row.action || '')}</td>
+          <td>${escapeHtml(row.result || '')}</td>
+        </tr>
+      `).join('');
+
+      const functions = payload.summary?.functions || {};
+      story.innerHTML = Object.keys(legend).map(key => {
+        const count = Number(functions[key] || 0);
+        if (!count) return '';
+        return `<span class="lp-story-pill" style="border-color:${escapeHtml(legend[key].color)}">${escapeHtml(legend[key].label)}: ${count}</span>`;
+      }).join('') + ((payload.repeat_objects || []).length
+        ? `<span class="lp-story-pill">Terugkeer: ${escapeHtml(payload.repeat_objects.join(', '))}</span>`
+        : '');
+
+      const repeatSet = new Set(payload.repeat_objects || []);
+      const annotations = [];
+      const shapes = [];
+
+      for (let index = 0; index < rows.length - 1; index += 1) {
+        const current = rows[index];
+        const following = rows[index + 1];
+        annotations.push({
+          x: following.x,
+          y: following.y,
+          ax: current.x,
+          ay: current.y,
+          xref: 'x',
+          yref: 'y',
+          axref: 'x',
+          ayref: 'y',
+          showarrow: true,
+          arrowhead: 3,
+          arrowsize: 1,
+          arrowwidth: 2,
+          arrowcolor: 'rgba(71, 85, 105, 0.68)',
+          opacity: 0.9,
+        });
+      }
+
+      (payload.repeat_objects || []).forEach((objectId) => {
+        const objectRows = rows.filter(row => row.object === objectId);
+        if (objectRows.length < 2) return;
+        const first = objectRows[0];
+        const last = objectRows[objectRows.length - 1];
+        const midX = (Number(first.x) + Number(last.x)) / 2;
+        const arcY = Math.max(Number(first.y), Number(last.y)) + 0.62;
+        annotations.push({
+          x: midX,
+          y: arcY,
+          text: `lus naar ${objectId}`,
+          showarrow: false,
+          font: { size: 12, color: '#334155' },
+          bgcolor: 'rgba(255,255,255,0.82)',
+          bordercolor: 'rgba(148,163,184,0.55)',
+          borderpad: 3,
+        });
+        shapes.push({
+          type: 'path',
+          path: `M ${Number(first.x)},${Number(first.y) + 0.18} Q ${midX},${Math.max(Number(first.y), Number(last.y)) + 1.18} ${Number(last.x)},${Number(last.y) + 0.18}`,
+          line: { color: '#334155', width: 2, dash: 'dot' },
+        });
+      });
+
+      const traces = [{
+        x: rows.map(row => row.x),
+        y: rows.map(row => row.y),
+        mode: 'lines',
+        line: { color: 'rgba(148, 163, 184, 0.25)', width: 16 },
+        hoverinfo: 'skip',
+        showlegend: false,
+      }];
+
+      Object.keys(legend).forEach((role) => {
+        const roleRows = rows.filter(row => row.function === role);
+        if (!roleRows.length) return;
+        traces.push({
+          x: roleRows.map(row => row.x),
+          y: roleRows.map(row => row.y),
+          mode: 'markers+text',
+          text: roleRows.map(row => `${row.step}<br>${row.object}`),
+          textposition: 'middle center',
+          name: legend[role].label,
+          marker: {
+            size: roleRows.map(row => repeatSet.has(row.object) ? 58 : 48),
+            color: legend[role].color,
+            symbol: legend[role].symbol,
+            line: { color: '#ffffff', width: 2 },
+          },
+          textfont: { color: '#ffffff', size: 11 },
+          hoverinfo: 'text',
+          hovertext: roleRows.map(row => `Stap ${row.step}<br>Object: ${row.object}<br>Functie: ${row.function_label}<br>Actie: ${row.action}<br>Resultaat: ${row.result}`),
+        });
+      });
+
+      const Plotly = await loadPlotly();
+      Plotly.newPlot(plot, traces, {
+        height: 390,
+        margin: { t: 24, b: 10, l: 10, r: 10 },
+        xaxis: { visible: false, range: [-0.75, 5.75] },
+        yaxis: { visible: false, range: [Math.min(...rows.map(row => row.y)) - 0.8, 0.85] },
+        legend: { title: { text: 'Functie' } },
+        annotations,
+        shapes,
+        plot_bgcolor: 'rgba(248,250,252,0.72)',
+        paper_bgcolor: 'rgba(0,0,0,0)',
+      }, { responsive: true, displayModeBar: false });
+    }
+
+    /* Objectklok als donut.
+       De vorige versie was een Plotly-barpolar: staven met een eigen lengte per waarde,
+       die daardoor door de buitenrand heen staken, met donkere tickteksten op een
+       donkere ondergrond en de gele standaardtooltip. Deze versie tekent zelf SVG, zodat
+       de buitenring altijd heel blijft en het middelpunt de focus draagt. */
+
+    const OBJECTKLOK_PALET = ['#5b3fd1', '#7b46d8', '#8f4fd0', '#6f5ae0', '#4a6fe3', '#2f8fd8', '#22a8c9', '#1fc0b4', '#39d4a0', '#8fdc7a', '#d8d264', '#f3b64a'];
+
+    function objectklokKleur(index, totaal) {
+      // Verdeel het palet over het aantal segmenten, zodat het altijd één familie blijft.
+      if (totaal <= 1) return OBJECTKLOK_PALET[0];
+      const positie = (index / (totaal - 1)) * (OBJECTKLOK_PALET.length - 1);
+      return OBJECTKLOK_PALET[Math.round(positie)];
+    }
+
+    function kortLabel(tekst, maximum = 16) {
+      const schoon = String(tekst || 'Object');
+      return schoon.length > maximum ? `${schoon.slice(0, maximum - 1)}…` : schoon;
+    }
+
+    function ringSegment(cx, cy, rBuiten, rBinnen, hoekStart, hoekEind) {
+      const naarPunt = (r, graden) => {
+        const rad = ((graden - 90) * Math.PI) / 180;
+        return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+      };
+      const groot = hoekEind - hoekStart > 180 ? 1 : 0;
+      const [bx1, by1] = naarPunt(rBuiten, hoekStart);
+      const [bx2, by2] = naarPunt(rBuiten, hoekEind);
+      const [ix2, iy2] = naarPunt(rBinnen, hoekEind);
+      const [ix1, iy1] = naarPunt(rBinnen, hoekStart);
+      return `M ${bx1.toFixed(2)} ${by1.toFixed(2)}`
+        + ` A ${rBuiten} ${rBuiten} 0 ${groot} 1 ${bx2.toFixed(2)} ${by2.toFixed(2)}`
+        + ` L ${ix2.toFixed(2)} ${iy2.toFixed(2)}`
+        + ` A ${rBinnen} ${rBinnen} 0 ${groot} 0 ${ix1.toFixed(2)} ${iy1.toFixed(2)} Z`;
+    }
+
+    function renderObjectClock(payload) {
+      const plot = document.getElementById('object-clock-plot');
+      if (!plot) return;
+
+      const alle = (payload.object_clock || [])
+        .map(item => ({ naam: String(item.target || 'Object'), waarde: Number(item.count || 0) }))
+        .filter(item => item.waarde > 0)
+        .sort((a, b) => b.waarde - a.waarde);
+
+      if (!alle.length) {
+        plot.innerHTML = '<p class="objectklok-leeg">Geen objectinteracties gevonden voor de objectklok.</p>';
+        return;
+      }
+
+      /* Meer dan tien segmenten levert onleesbare labels op; de staart wordt gebundeld
+         zodat het totaal blijft kloppen. */
+      let segmenten = alle;
+      if (alle.length > 10) {
+        const kop = alle.slice(0, 9);
+        const staart = alle.slice(9).reduce((som, item) => som + item.waarde, 0);
+        segmenten = [...kop, { naam: `Overige ${alle.length - 9}`, waarde: staart }];
+      }
+
+      const totaal = segmenten.reduce((som, item) => som + item.waarde, 0);
+      const cx = 260;
+      const cy = 260;
+      const rBuiten = 144;
+      const rBinnen = 92;
+      const tussenruimte = segmenten.length > 1 ? 1.2 : 0;
+
+      let hoek = 0;
+      const delen = segmenten.map((item, index) => {
+        const grootte = (item.waarde / totaal) * 360;
+        const start = hoek + tussenruimte / 2;
+        const eind = hoek + grootte - tussenruimte / 2;
+        hoek += grootte;
+        return { ...item, index, start, eind, midden: (start + eind) / 2, kleur: objectklokKleur(index, segmenten.length) };
+      });
+
+      const paden = delen.map(deel => `
+        <path class="objectklok-segment" d="${ringSegment(cx, cy, rBuiten, rBinnen, deel.start, deel.eind)}"
+              fill="${deel.kleur}" data-naam="${escapeHtml(deel.naam)}" data-waarde="${deel.waarde}"
+              style="--segment-color:${deel.kleur};"
+              tabindex="0" role="img" aria-label="${escapeHtml(deel.naam)}: ${deel.waarde} interacties"></path>
+      `).join('');
+
+      // Labels buiten de ring, met een dunne gidslijn naar het bijbehorende segment.
+      const labels = delen.map(deel => {
+        const rad = ((deel.midden - 90) * Math.PI) / 180;
+        const rechts = Math.cos(rad) >= 0;
+        const x1 = cx + (rBuiten + 7) * Math.cos(rad);
+        const y1 = cy + (rBuiten + 7) * Math.sin(rad);
+        const x2 = cx + (rBuiten + 31) * Math.cos(rad);
+        const y2 = cy + (rBuiten + 31) * Math.sin(rad);
+        const x3 = x2 + (rechts ? 22 : -22);
+        return `
+          <g class="objectklok-label" data-index="${deel.index}" style="--segment-color:${deel.kleur};">
+            <path d="M ${x1.toFixed(1)} ${y1.toFixed(1)} L ${x2.toFixed(1)} ${y2.toFixed(1)} L ${x3.toFixed(1)} ${y2.toFixed(1)}" />
+            <text x="${(x3 + (rechts ? 5 : -5)).toFixed(1)}" y="${(y2 + 3.5).toFixed(1)}"
+                  text-anchor="${rechts ? 'start' : 'end'}">${escapeHtml(kortLabel(deel.naam))}</text>
+          </g>
+        `;
+      }).join('');
+
+      plot.innerHTML = `
+        <svg class="objectklok-svg" viewBox="0 0 520 520" role="group" aria-label="Objectklok: interacties per leerobject">
+          <defs>
+            <filter id="objectklok-soft-glow" x="-35%" y="-35%" width="170%" height="170%">
+              <feGaussianBlur stdDeviation="3.5" result="blur" />
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="objectklok-active-glow" x="-55%" y="-55%" width="210%" height="210%">
+              <feGaussianBlur stdDeviation="7" result="blur" />
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <radialGradient id="objectklok-center-grad" cx="50%" cy="45%" r="62%">
+              <stop offset="0%" stop-color="#173d45"/>
+              <stop offset="70%" stop-color="#0a2229"/>
+              <stop offset="100%" stop-color="#06151a"/>
+            </radialGradient>
+          </defs>
+          <circle class="objectklok-backplate" cx="${cx}" cy="${cy}" r="${rBuiten + 40}" />
+          <circle class="objectklok-ring" cx="${cx}" cy="${cy}" r="${rBuiten + 3}" />
+          <g class="objectklok-segmenten" filter="url(#objectklok-soft-glow)">${paden}</g>
+          <circle class="objectklok-ring-buitenlijn" cx="${cx}" cy="${cy}" r="${rBuiten + 3}" />
+          <circle class="objectklok-ring-binnen" cx="${cx}" cy="${cy}" r="${rBinnen - 2}" />
+          <circle class="objectklok-center-disc" cx="${cx}" cy="${cy}" r="${rBinnen - 13}" />
+          <g class="objectklok-labels">${labels}</g>
+          <text class="objectklok-midden-kicker" x="${cx}" y="${cy - 37}" text-anchor="middle">TOTAAL</text>
+          <text class="objectklok-midden-titel" x="${cx}" y="${cy - 5}" text-anchor="middle">${totaal}</text>
+          <text class="objectklok-midden-sub" x="${cx}" y="${cy + 24}" text-anchor="middle">interacties</text>
+        </svg>
+      `;
+
+      const titel = plot.querySelector('.objectklok-midden-titel');
+      const sub = plot.querySelector('.objectklok-midden-sub');
+      const herstel = () => {
+        titel.textContent = String(totaal);
+        sub.textContent = 'interacties';
+        plot.querySelectorAll('.objectklok-segment').forEach(p => p.classList.remove('is-actief'));
+        plot.querySelectorAll('.objectklok-label').forEach(l => l.classList.remove('is-actief'));
+      };
+
+      plot.querySelectorAll('.objectklok-segment').forEach((pad, index) => {
+        const toon = () => {
+          titel.textContent = kortLabel(pad.dataset.naam, 18);
+          sub.textContent = `${pad.dataset.waarde} interacties`;
+          plot.querySelectorAll('.objectklok-segment').forEach(p => p.classList.toggle('is-actief', p === pad));
+          plot.querySelectorAll('.objectklok-label').forEach(l => l.classList.toggle('is-actief', l.dataset.index === String(index)));
+        };
+        pad.addEventListener('mouseenter', toon);
+        pad.addEventListener('focus', toon);
+        pad.addEventListener('mouseleave', herstel);
+        pad.addEventListener('blur', herstel);
+      });
+    }
+
+    async function loadPlotly() {
+      if (window.__leerpretPlotly) return window.__leerpretPlotly;
+      const module = await import('plotly.js-dist-min');
+      window.__leerpretPlotly = module.default || module;
+      return window.__leerpretPlotly;
+    }
+
+    let selectedTestSource = 'data';
+    let simulationStatusPayload = null;
+    let currentSimulationQuote = null;
+
+    function applySimulationSourceUI(source, canRun = ['architect', 'technologist'].includes(activeRoleGlobal)) {
+      const ai = document.getElementById('test-source-ai') as HTMLInputElement;
+      const data = document.getElementById('test-source-data') as HTMLInputElement;
+      const run = document.getElementById('btn-run-leerbox-test') as HTMLButtonElement;
+      selectedTestSource = source;
+      if (ai) ai.checked = source === 'ai';
+      if (data) data.checked = source === 'data';
+      ai?.closest('.test-source-option')?.classList.toggle('active', source === 'ai');
+      data?.closest('.test-source-option')?.classList.toggle('active', source === 'data');
+      run?.setAttribute('aria-label', source === 'ai' ? 'AI-kosten ramen' : 'Simuleren met bestaande data');
+      if (run) run.title = canRun ? (source === 'ai' ? 'AI-kosten ramen' : 'Simulatie voorbereiden') : 'Deze rol kan alleen resultaten bekijken';
+    }
+
+    function setupLeerboxTestPanel(twin) {
+      const ai = document.getElementById('test-source-ai') as HTMLInputElement;
+      const data = document.getElementById('test-source-data') as HTMLInputElement;
+      const run = document.getElementById('btn-run-leerbox-test') as HTMLButtonElement;
+      const actions = document.getElementById('simulation-action-count') as HTMLInputElement;
+      const duration = document.getElementById('simulation-duration-minutes') as HTMLInputElement;
+      /* Deze controle keek eerder naar een element dat bij de herinrichting is
+         vervallen. Daardoor stopte de functie hier en werd geen enkele knop
+         gekoppeld: het wisselen naar AI-data deed niets. */
+      const controls = document.getElementById('simulation-clock-controls');
+      if (!ai || !data || !run || !actions || !duration) return;
+      const canRun = ['architect', 'technologist'].includes(activeRoleGlobal);
+      if (controls) controls.hidden = !canRun;
+      run.disabled = !canRun;
+      run.title = canRun ? 'Simulatie voorbereiden' : 'Deze rol kan alleen resultaten bekijken';
+
+      const selectSource = (source) => {
+        if (!canRun) return;
+        applySimulationSourceUI(source, canRun);
+      };
+      if (!run.dataset.bound) {
+        ai.addEventListener('change', () => selectSource('ai'));
+        data.addEventListener('change', () => selectSource('data'));
+        run.addEventListener('click', runLeerboxClockSimulation);
+        [actions, duration].forEach(input => input.addEventListener('input', updateSimulationClockReadout));
+        document.querySelectorAll('[data-sim-step]').forEach((button) => {
+          button.addEventListener('click', () => stepSimulationValue((button as HTMLButtonElement).dataset.simStep || ''));
+        });
+        bindSimulationCostDialog();
+        run.dataset.bound = 'true';
+      }
+      updateSimulationClockReadout();
+      applySimulationSourceUI(selectedTestSource, canRun);
+      loadSimulationClockStatus(twin);
+    }
+
+    function updateSimulationClockReadout() {
+      const actions = Math.max(1, Math.min(1000, Number((document.getElementById('simulation-action-count') as HTMLInputElement)?.value || 1000)));
+      const duration = Math.max(1, Math.min(1440, Number((document.getElementById('simulation-duration-minutes') as HTMLInputElement)?.value || 30)));
+      /* De ronde wijzerplaat met losse aflezingen is vervallen; de invoervelden tonen
+         de waarden nu zelf. Alleen de begrenzing blijft nodig, zodat wat je typt niet
+         buiten het toegestane bereik valt. */
+      const actionInput = document.getElementById('simulation-action-count') as HTMLInputElement;
+      const durationInput = document.getElementById('simulation-duration-minutes') as HTMLInputElement;
+      if (actionInput && String(actions) !== actionInput.value && document.activeElement !== actionInput) {
+        actionInput.value = String(actions);
+      }
+      if (durationInput && String(duration) !== durationInput.value && document.activeElement !== durationInput) {
+        durationInput.value = String(duration);
+      }
+    }
+
+    function stepSimulationValue(command) {
+      const [field, direction] = String(command).split(':');
+      const input = document.getElementById(field === 'duration' ? 'simulation-duration-minutes' : 'simulation-action-count') as HTMLInputElement;
+      if (!input) return;
+      const min = Number(input.min || 1);
+      const max = Number(input.max || 1000);
+      const step = Number(input.step || 1);
+      const current = Number(input.value || min);
+      const next = Math.max(min, Math.min(max, current + (direction === 'up' ? step : -step)));
+      input.value = String(next);
+      updateSimulationClockReadout();
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    async function loadSimulationClockStatus(twin) {
+      const output = document.getElementById('leerbox-test-output');
+      const valve = document.getElementById('test-valve-message');
+      if (!twin || !output || !valve) return;
+      try {
+        simulationStatusPayload = await apiGet(`/leerbox-simulations/${encodeURIComponent(twin.id)}?role=${encodeURIComponent(activeRoleGlobal)}`);
+        const validity = simulationStatusPayload.validity || {};
+        const labels = {
+          current: 'Actueel: opgeslagen simulatiedata past exact bij deze leerbox.',
+          minor_changes: 'Bruikbaar: alleen kleine tekstwijzigingen; bestaande data blijft behouden.',
+          stale: 'Verouderd: de leerboxstructuur is gewijzigd. Nieuwe AI-data kan na toestemming worden gemaakt.',
+          missing: 'Geen opgeslagen simulatiedata. AI kan nieuwe data maken, maar uitsluitend na toestemming.',
+        };
+        valve.className = `test-valve-message simulation-validity-${escapeHtml(validity.state || 'missing')}`;
+        valve.textContent = labels[validity.state] || validity.reason || 'Datastatus onbekend.';
+        const ai = document.getElementById('test-source-ai') as HTMLInputElement;
+        const dataKnop = document.getElementById('test-source-data') as HTMLInputElement;
+        const models = simulationStatusPayload.models || [];
+
+        /* Een AI-simulatie starten is voorbehouden aan de twee bouwrollen; de backend
+           bevestigt dat nog eens via can_run_ai. */
+        const magSimuleren = ['architect', 'technologist'].includes(activeRoleGlobal);
+        ai.disabled = !magSimuleren || !simulationStatusPayload.permissions?.can_run_ai || !models.length;
+        ai.title = magSimuleren ? '' : 'Alleen de Leerpretarchitect en de Leerprettechnoloog kunnen een AI-simulatie starten';
+        ai.closest('.test-source-option')?.classList.toggle('is-disabled', ai.disabled);
+
+        /* Zonder opgeslagen data valt er niets te hergebruiken. De knop wordt dan grijs
+           in plaats van dat je erop drukt en er niets gebeurt. */
+        const geenBestaandeData = !simulationStatusPayload.has_reusable_data;
+        if (dataKnop) {
+          dataKnop.disabled = geenBestaandeData;
+          dataKnop.title = geenBestaandeData ? 'Er is geen opgeslagen simulatiedata om te hergebruiken' : '';
+          dataKnop.closest('.test-source-option')?.classList.toggle('is-disabled', dataKnop.disabled);
+          if (geenBestaandeData && selectedTestSource === 'data' && !ai.disabled) {
+            selectedTestSource = 'ai';
+            applySimulationSourceUI('ai', magSimuleren);
+          }
+        }
+
+        populateSimulationModels(models);
+        if (simulationStatusPayload.latest_run) {
+          renderClockSimulationResult({ run: simulationStatusPayload.latest_run, reused: true }, output);
+        } else {
+          output.innerHTML = `<p class="muted-text">${simulationStatusPayload.has_reusable_data ? 'Bestaande bron- of previewdata is beschikbaar.' : 'Nog geen simulatieresultaat opgeslagen.'}</p>`;
+        }
+        if (!simulationStatusPayload.has_reusable_data && models.length && simulationStatusPayload.permissions?.can_run_ai) {
+          selectedTestSource = 'ai';
+          applySimulationSourceUI('ai', magSimuleren);
+        }
+      } catch (error) {
+        valve.className = 'test-valve-message is-not-gevat';
+        valve.textContent = error.message || 'Datastatus kon niet worden gecontroleerd.';
+        output.innerHTML = '<p class="test-error">Simulatieresultaten zijn niet beschikbaar voor deze rol.</p>';
+      }
+    }
+
+    async function runLeerboxClockSimulation() {
+      if (!['architect', 'technologist'].includes(activeRoleGlobal)) return;
+      const output = document.getElementById('leerbox-test-output');
+      const run = document.getElementById('btn-run-leerbox-test') as HTMLButtonElement;
+      if (!output || !run || !currentTwinId) return;
+      if (selectedTestSource === 'ai') {
+        await openAISimulationCostDialog();
+        return;
+      }
+      run.disabled = true;
+      output.innerHTML = '<p class="muted-text">Geschikte bestaande data wordt gecontroleerd en hergebruikt…</p>';
+      try {
+        const response = await apiPost('/leerbox-simulations/run', simulationRunPayload('data'));
+        renderClockSimulationResult(response, output);
+        await loadSimulationClockStatus(loadedTwins.find(item => item.id === currentTwinId));
+      } catch (error) {
+        output.innerHTML = `<p class="test-error">${escapeHtml(error.message || String(error))}</p>`;
+      } finally {
+        run.disabled = false;
+      }
+    }
+
+    function simulationRunPayload(type) {
+      return {
+        leerbox_id: currentTwinId,
+        role: activeRoleGlobal,
+        simulation_type: type,
+        model: (document.getElementById('simulation-model-select') as HTMLSelectElement)?.value || null,
+        action_count: Number((document.getElementById('simulation-action-count') as HTMLInputElement)?.value || 1000),
+        duration_minutes: Number((document.getElementById('simulation-duration-minutes') as HTMLInputElement)?.value || 30),
+        consent: false,
+        quote_id: null,
+      };
+    }
+
+    function populateSimulationModels(models) {
+      const select = document.getElementById('simulation-model-select') as HTMLSelectElement;
+      if (!select) return;
+      const previous = select.value;
+      select.innerHTML = models.map(model => `<option value="${escapeHtml(model.id)}">${escapeHtml(model.label)}</option>`).join('');
+      if (models.some(model => model.id === previous)) select.value = previous;
+    }
+
+    function bindSimulationCostDialog() {
+      const dialog = document.getElementById('simulation-cost-dialog') as HTMLDialogElement;
+      const model = document.getElementById('simulation-model-select') as HTMLSelectElement;
+      document.getElementById('simulation-cost-cancel')?.addEventListener('click', () => dialog?.close());
+      document.getElementById('simulation-cost-confirm')?.addEventListener('click', runConfirmedAISimulation);
+      model?.addEventListener('change', requestSimulationQuote);
+    }
+
+    async function openAISimulationCostDialog() {
+      if (!['architect', 'technologist'].includes(activeRoleGlobal) || !currentTwinId) return;
+      const ai = document.getElementById('test-source-ai') as HTMLInputElement;
+      if (ai?.disabled) return;
+      const dialog = document.getElementById('simulation-cost-dialog') as HTMLDialogElement;
+      if (!dialog) return;
+      if (!dialog.open) dialog.showModal();
+      await requestSimulationQuote();
+    }
+
+    async function requestSimulationQuote() {
+      if (!['architect', 'technologist'].includes(activeRoleGlobal)) return;
+      const confirm = document.getElementById('simulation-cost-confirm') as HTMLButtonElement;
+      const error = document.getElementById('simulation-quote-error');
+      confirm.disabled = true;
+      if (error) error.hidden = true;
+      try {
+        const payload = simulationRunPayload('ai');
+        currentSimulationQuote = await apiPost('/leerbox-simulations/estimate', payload);
+        document.getElementById('simulation-input-tokens').textContent = Number(currentSimulationQuote.input_tokens).toLocaleString('nl-NL');
+        document.getElementById('simulation-output-tokens').textContent = Number(currentSimulationQuote.max_output_tokens).toLocaleString('nl-NL');
+        document.getElementById('simulation-total-tokens').textContent = Number(currentSimulationQuote.estimated_total_tokens).toLocaleString('nl-NL');
+        document.getElementById('simulation-estimated-cost').textContent = `$ ${Number(currentSimulationQuote.estimated_cost_usd).toFixed(4)}`;
+        document.getElementById('simulation-price-note').textContent = `Lokale tokenizer · prijstabel ${currentSimulationQuote.pricing.updated_at} · maximaal geraamde output`;
+        confirm.disabled = false;
+      } catch (quoteError) {
+        currentSimulationQuote = null;
+        if (error) { error.hidden = false; error.textContent = quoteError.message || String(quoteError); }
+      }
+    }
+
+    async function runConfirmedAISimulation() {
+      if (!currentSimulationQuote || !['architect', 'technologist'].includes(activeRoleGlobal)) return;
+      const confirm = document.getElementById('simulation-cost-confirm') as HTMLButtonElement;
+      const dialog = document.getElementById('simulation-cost-dialog') as HTMLDialogElement;
+      const output = document.getElementById('leerbox-test-output');
+      confirm.disabled = true;
+      confirm.textContent = 'Simuleren…';
+      try {
+        const payload = simulationRunPayload('ai');
+        payload.consent = true;
+        payload.quote_id = currentSimulationQuote.quote_id;
+        payload.model = currentSimulationQuote.model;
+        const response = await apiPost('/leerbox-simulations/run', payload);
+        dialog?.close();
+        renderClockSimulationResult(response, output);
+        await loadSimulationClockStatus(loadedTwins.find(item => item.id === currentTwinId));
+      } catch (runError) {
+        const error = document.getElementById('simulation-quote-error');
+        if (error) { error.hidden = false; error.textContent = runError.message || String(runError); }
+      } finally {
+        confirm.textContent = 'Simulatie starten';
+        confirm.disabled = false;
+      }
+    }
+
+    function renderClockSimulationResult(response, output) {
+      if (!output) return;
+      const run = response?.run || response || {};
+      const compact = run.data;
+      const sequences = Array.isArray(compact?.r) ? compact.r : [];
+      const actionTotal = sequences.reduce((total, sequence) => total + (Array.isArray(sequence.a) ? sequence.a.length : 0), 0);
+      output.innerHTML = `
+        <div class="test-output-heading"><strong>${response?.reused ? 'Hergebruikte' : 'Nieuwe'} simulatiedata</strong><span>${escapeHtml(run.model || run.source || 'Data')}</span></div>
+        ${compact ? `<p><strong>${actionTotal}</strong> acties verdeeld over <strong>${sequences.length}</strong> actiereeksen.</p><details><summary>Compacte JSON bekijken</summary><pre class="simulation-json-output">${escapeHtml(JSON.stringify(compact))}</pre></details>` : `<p>${Number(run.legacy?.preview_interaction_count || 0)} preview-interacties en ${Number(run.legacy?.file_count || 0)} gekoppelde bestanden beschikbaar.</p>`}
+      `;
+    }
+
+    function renderLegacyTestData(response, output) {
+      const files = response.files || [];
+      const interactions = response.preview_interactions || [];
+      output.innerHTML = `
+        <div class="test-output-heading"><strong>${interactions.length} preview-interacties · ${files.length} bestanden</strong><span>Alleen-lezen</span></div>
+        ${interactions.length ? `<div class="table-wrapper"><table class="test-result-table"><thead><tr><th>Tijd</th><th>Gebruiker</th><th>Object</th><th>Actie</th></tr></thead><tbody>${interactions.map(event => `<tr><td>${escapeHtml(event.timestamp || '')}</td><td>${escapeHtml(event.user_id || '')}</td><td>${escapeHtml(event.object_id || '')}</td><td>${escapeHtml(event.action || '')}</td></tr>`).join('')}</tbody></table></div>` : '<p class="muted-text">Nog geen preview-interacties geregistreerd.</p>'}
+        ${files.length ? `
+        <div class="test-data-files">${files.map(file => `
+          <button type="button" class="test-data-file" data-group-id="${escapeHtml(file.group_id)}" data-filename="${escapeHtml(file.name)}">
+            <strong>${escapeHtml(file.name)}</strong><small>${escapeHtml(file.group_title || '')} · ${formatBytes(file.bytes)}</small>
+          </button>`).join('')}</div>` : '<p class="muted-text">Geen historische bestanden voor deze leerbox.</p>'}`;
+      output.querySelectorAll('.test-data-file').forEach(button => button.addEventListener('click', () => {
+        renderPathMapForFile(button.getAttribute('data-group-id'), button.getAttribute('data-filename'));
+        document.querySelector('.path-map-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }));
+    }
+
+    async function renderLeerboxSimulationResults(response, output) {
+      const entries = Object.entries(response.resultaten || {});
+      output.innerHTML = `
+        <div class="test-output-heading"><strong>${response.totaal_gesimuleerd} runs</strong><span>${escapeHtml(response.model || 'AI')}</span></div>
+        <div id="leerbox-test-radar" class="leerbox-test-radar" aria-label="Gedragsmarkers per archetype"></div>
+        <div class="table-wrapper"><table class="test-result-table"><thead><tr><th>Archetype</th><th>T</th><th>A</th><th>V</th><th>R</th><th>S</th><th>Leerpret</th></tr></thead><tbody>
+          ${entries.map(([name, result]) => `<tr><th>${escapeHtml(name)}</th>${['T','A','V','R','S'].map(marker => `<td>${Number(result[marker] || 0).toFixed(2)}</td>`).join('')}<td><strong>${Number(result.berekende_leerpret || 0).toFixed(2)}</strong></td></tr>`).join('')}
+        </tbody></table></div>
+        <details class="test-event-logs"><summary>Verhalende event-logs</summary>${entries.map(([name, result]) => `
+          <section><h4>${escapeHtml(name)}</h4>${(result.event_logs || []).map((events, index) => `<details><summary>Persoon ${index + 1}</summary><ol>${(Array.isArray(events) ? events : []).map(event => `<li><strong>${escapeHtml(event.leerobject_id || 'leerobject')}</strong> — ${escapeHtml(event.vertelling || event.actie || '')}</li>`).join('')}</ol></details>`).join('') || '<p class="muted-text">Geen logs ontvangen.</p>'}</section>`).join('')}</details>`;
+      const Plotly = await loadPlotly();
+      const colors = ['#C84E33', '#2563EB', '#D97706', '#0F8A7B'];
+      Plotly.newPlot(document.getElementById('leerbox-test-radar'), entries.map(([name, result], index) => ({
+        type: 'scatterpolar', fill: 'toself', name,
+        r: ['T','A','V','R','S','T'].map(marker => Number(result[marker] || 0)),
+        theta: ['T','A','V','R','S','T'], line: { color: colors[index] }, opacity: .72,
+      })), { height: 350, margin: { t: 25, b: 25, l: 35, r: 35 }, polar: { radialaxis: { visible: true, range: [0, 1] } }, paper_bgcolor: 'rgba(0,0,0,0)' }, { responsive: true, displayModeBar: false });
+    }
+
+    async function setupPersonaSimulationPanel() {
+      const select = document.getElementById('persona-select');
+      const slider = document.getElementById('persona-steps');
+      const sliderValue = document.getElementById('persona-steps-value');
+      const button = document.getElementById('btn-start-persona-simulation');
+      if (!select || !slider || !sliderValue || !button) return;
+
+      if (!loadedPersonas.length) {
+        try {
+          const response = await apiGet('/simulator/personas');
+          loadedPersonas = response.personas || [];
+        } catch {
+          loadedPersonas = [];
+        }
+      }
+
+      if (loadedPersonas.length && !select.dataset.hydrated) {
+        select.innerHTML = loadedPersonas.map((persona) => `
+          <option value="${escapeHtml(persona.name)}">${escapeHtml(persona.name)}</option>
+        `).join('');
+        select.dataset.hydrated = 'true';
+      } else if (!loadedPersonas.length) {
+        select.innerHTML = '<option value="">Geen persona’s beschikbaar</option>';
+      }
+
+      if (!slider.dataset.bound) {
+        slider.addEventListener('input', () => {
+          sliderValue.textContent = slider.value;
+        });
+        slider.dataset.bound = 'true';
+      }
+
+      if (!button.dataset.bound) {
+        button.addEventListener('click', runPersonaSimulation);
+        button.dataset.bound = 'true';
+      }
+    }
+
+    async function runPersonaSimulation() {
+      const select = document.getElementById('persona-select');
+      const slider = document.getElementById('persona-steps');
+      const button = document.getElementById('btn-start-persona-simulation');
+      const status = document.getElementById('persona-status-message');
+      const plot = document.getElementById('persona-curve-plot');
+      if (!select || !slider || !button || !plot || !select.value) return;
+
+      button.disabled = true;
+      button.textContent = 'Simulatie draait...';
+      if (status) {
+        status.hidden = false;
+        status.textContent = 'Persona-run wordt berekend...';
+        status.classList.remove('success');
+      }
+
+      try {
+        const response = await apiPost('/simulator/persona-run', {
+          persona_name: select.value,
+          steps: Number(slider.value || 30),
+        });
+        await renderPersonaCurve(response);
+        if (status) {
+          status.hidden = false;
+          status.textContent = `Eindstatus: ${response.final_status || 'onbekend'} (${Math.round(Number(response.final_lp_score || 0) * 100)}%)`;
+          status.classList.add('success');
+        }
+      } catch (error) {
+        plot.innerHTML = '<p class="muted-text text-danger">De persona-simulatie kon niet worden uitgevoerd.</p>';
+        if (status) {
+          status.hidden = false;
+          status.textContent = `Fout: ${error.message || error}`;
+          status.classList.remove('success');
+        }
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Start Simulatie';
+      }
+    }
+
+    async function renderPersonaCurve(response) {
+      const plot = document.getElementById('persona-curve-plot');
+      if (!plot) return;
+      const points = response.points || [];
+      if (!points.length) {
+        plot.innerHTML = '<p class="muted-text">Geen simulatiepunten ontvangen.</p>';
+        return;
+      }
+
+      const Plotly = await loadPlotly();
+      Plotly.newPlot(plot, [{
+        type: 'scatter',
+        mode: 'lines+markers',
+        x: points.map(point => point.step),
+        y: points.map(point => point.lp_score),
+        line: { color: '#C84E33', width: 3, shape: 'spline' },
+        marker: { color: '#C84E33', size: 5 },
+        hovertemplate: 'Stap %{x}<br>Leerpret %{y:.3f}<extra></extra>',
+      }], {
+        height: 300,
+        margin: { t: 18, b: 42, l: 52, r: 16 },
+        xaxis: { title: { text: 'Stapnummer' }, rangemode: 'tozero' },
+        yaxis: { title: { text: 'Leerpret Formule (0 - 1.0)' }, range: [0, 1] },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(248,250,252,0.72)',
+      }, { responsive: true, displayModeBar: false });
+    }
+
+    async function setupValidationReportPanel() {
+      const select = document.getElementById('validation-dataset-select');
+      const button = document.getElementById('btn-generate-validation-report');
+      const output = document.getElementById('validation-report-output');
+      if (!select || !button || !output) return;
+
+      if (!loadedValidationDatasets.length) {
+        try {
+          const response = await apiGet('/simulator/validation-datasets');
+          loadedValidationDatasets = response.datasets || [];
+        } catch {
+          loadedValidationDatasets = [];
+        }
+      }
+
+      if (!loadedValidationDatasets.length) {
+        select.innerHTML = '<option value="">Geen validatiedatasets gevonden</option>';
+        button.disabled = true;
+        output.innerHTML = '<p class="muted-text">Er zijn geen validatiedatasets gevonden in backend/simulator/testdata.</p>';
+        return;
+      }
+
+      if (!select.dataset.hydrated) {
+        select.innerHTML = loadedValidationDatasets.map((dataset) => `
+          <option value="${escapeHtml(dataset.id)}">${escapeHtml(validationDatasetLabel(dataset))}</option>
+        `).join('');
+        select.dataset.hydrated = 'true';
+      }
+
+      const updateButtonLabel = () => {
+        const dataset = loadedValidationDatasets.find(item => item.id === select.value);
+        button.textContent = dataset?.is_validatable ? 'Genereer Testrapport (LaTeX/Tabel)' : 'Genereer Controleoverzicht';
+      };
+
+      if (!select.dataset.bound) {
+        select.addEventListener('change', updateButtonLabel);
+        select.dataset.bound = 'true';
+      }
+      updateButtonLabel();
+
+      if (!button.dataset.bound) {
+        button.addEventListener('click', generateValidationReport);
+        button.dataset.bound = 'true';
+      }
+
+      document.querySelectorAll('input[name="validation-mode"]').forEach((radio) => {
+        if (radio.dataset.bound) return;
+        radio.addEventListener('change', renderValidationModePreview);
+        radio.dataset.bound = 'true';
+      });
+    }
+
+    function validationDatasetLabel(dataset) {
+      const suffix = dataset.is_template ? ' [sjabloon]' : (!dataset.is_validatable ? ' [onvolledig]' : '');
+      return `${dataset.name} (${dataset.profile_count || 0} profielen)${suffix}`;
+    }
+
+    function renderValidationModePreview() {
+      const output = document.getElementById('validation-report-output');
+      const mode = document.querySelector('input[name="validation-mode"]:checked')?.value || 'single';
+      if (!output || mode !== 'all') return;
+      output.innerHTML = `
+        <h4>Alle JSON-testsets</h4>
+        <p class="muted-text">Het volledige vergelijkingsdashboard over alle testsets is een vervolgstap. Hieronder staat alvast de datasetlijst.</p>
+        ${renderValidationTable(
+          loadedValidationDatasets.map(dataset => ({
+            Naam: dataset.name,
+            Profielen: dataset.profile_count,
+            Status: dataset.is_validatable ? 'valideerbaar' : (dataset.is_template ? 'sjabloon' : 'onvolledig'),
+            Bestand: dataset.source_filename,
+          }))
+        )}
+      `;
+    }
+
+    async function generateValidationReport() {
+      const select = document.getElementById('validation-dataset-select');
+      const button = document.getElementById('btn-generate-validation-report');
+      const output = document.getElementById('validation-report-output');
+      const mode = document.querySelector('input[name="validation-mode"]:checked')?.value || 'single';
+      if (!select || !button || !output) return;
+
+      if (mode === 'all') {
+        renderValidationModePreview();
+        return;
+      }
+
+      button.disabled = true;
+      output.innerHTML = '<p class="muted-text">Testrapport genereren...</p>';
+      try {
+        const report = await apiPost(`/simulator/validation-datasets/${encodeURIComponent(select.value)}/report`, {});
+        if (report.mode === 'incomplete') {
+          renderIncompleteValidationReport(report);
+        } else {
+          await renderFullValidationReport(report);
+        }
+      } catch (error) {
+        output.innerHTML = `<p class="muted-text text-danger">Fout bij genereren van validatierapport: ${escapeHtml(error.message || error)}</p>`;
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    function renderIncompleteValidationReport(report) {
+      const output = document.getElementById('validation-report-output');
+      if (!output) return;
+      const invalidSet = new Set((report.invalid_cells || []).map(cell => `${cell.row}:${cell.column}`));
+      output.innerHTML = `
+        <h4>Controleoverzicht</h4>
+        <p class="muted-text">Deze set is niet valideerbaar; rood gemarkeerde cellen missen verplichte of geldige waarden. Er is geen LaTeX-output beschikbaar.</p>
+        ${renderValidationTable(report.rows || [], invalidSet)}
+      `;
+    }
+
+    async function renderFullValidationReport(report) {
+      const output = document.getElementById('validation-report-output');
+      if (!output) return;
+      const stats = report.statistics || {};
+      output.innerHTML = `
+        <h4>Overzicht</h4>
+        <div class="validation-stats-strip">
+          <span>\\(n=${formatStat(stats.case_count, 0)}\\)</span>
+          <span>gem. \\(LP_{\\mathrm{eng}}=${formatStat(stats.mean_lp_eng)}\\)</span>
+          <span>gem. \\(LP_{\\mathrm{exp}}=${formatStat(stats.mean_lp_exp)}\\)</span>
+          <span>\\(bias=${formatSignedStat(stats.mean_delta)}\\)</span>
+          <span>MAE=${formatStat(stats.mean_abs_delta)}</span>
+          <span>\\(RMSE=${formatStat(stats.rmse)}\\)</span>
+          <span>max \\(|\\Delta|=${formatStat(stats.max_abs_delta)}\\)</span>
+          <span>relevant=${formatStat(stats.relevant_delta_count, 0)}</span>
+          <span>formulecheck max=${formatScientific(stats.formula_check_max_abs_delta)}</span>
+        </div>
+        ${renderValidationTable(report.rows || [])}
+        <div class="validation-chart-panel">
+          <div class="validation-chart-toolbar">
+            <strong>Grafische verdelingscontrole</strong>
+            <select id="validation-comparison-direction" class="spacious-select">
+              <option value="eng-minus-exp">Gemeten t.o.v. verwacht (LPₑₙg − LPₑₓp)</option>
+              <option value="exp-minus-eng">Verwacht t.o.v. gemeten (LPₑₓp − LPₑₙg)</option>
+            </select>
+          </div>
+          <div id="validation-comparison-plot" class="validation-comparison-plot"></div>
+        </div>
+        <details class="validation-latex-details" open>
+          <summary>LaTeX Output</summary>
+          <p class="muted-text">Deze LaTeX-code kan direct in documentatie worden gebruikt.</p>
+          <pre class="validation-latex-code"><code class="language-latex">${escapeHtml(report.latex || '')}</code></pre>
+        </details>
+      `;
+      await renderMath(output);
+      const direction = document.getElementById('validation-comparison-direction');
+      direction?.addEventListener('change', () => renderValidationComparisonPlot(report, direction.value));
+      await renderValidationComparisonPlot(report, direction?.value || 'eng-minus-exp');
+    }
+
+    function renderValidationTable(rows, invalidSet = new Set()) {
+      if (!rows?.length) return '<p class="muted-text">Geen rijen beschikbaar.</p>';
+      const columns = Object.keys(rows[0]);
+      return `
+        <div class="table-wrapper validation-table-wrapper">
+          <table class="validation-report-table">
+            <thead><tr>${columns.map(column => `<th>${escapeHtml(column)}</th>`).join('')}</tr></thead>
+            <tbody>
+              ${rows.map((row, rowIndex) => `
+                <tr>${columns.map(column => `<td class="${invalidSet.has(`${rowIndex}:${column}`) ? 'invalid-cell' : ''}">${escapeHtml(row[column] ?? '')}</td>`).join('')}</tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    async function renderValidationComparisonPlot(report, direction = 'eng-minus-exp') {
+      const plot = document.getElementById('validation-comparison-plot');
+      if (!plot) return;
+      const points = report.chart_points || [];
+      if (!points.length) {
+        plot.innerHTML = '<p class="muted-text">Geen plotpunten beschikbaar.</p>';
+        return;
+      }
+      const measuredMinusExpected = direction === 'eng-minus-exp';
+      const x = points.map(point => measuredMinusExpected ? point.lp_exp : point.lp_eng);
+      const y = points.map(point => measuredMinusExpected ? point.lp_eng : point.lp_exp);
+      const xLabel = measuredMinusExpected ? 'Verwachte leerpret uit dataset/bron' : 'Gemeten leerpret door engine';
+      const yLabel = measuredMinusExpected ? 'Gemeten leerpret door engine' : 'Verwachte leerpret uit dataset/bron';
+      const Plotly = await loadPlotly();
+      Plotly.newPlot(plot, [{
+        type: 'scatter',
+        mode: 'markers',
+        x,
+        y,
+        text: points.map(point => `${point.name}<br>LP<sub>eng</sub> ${point.lp_eng.toFixed(2)}<br>LP<sub>exp</sub> ${point.lp_exp.toFixed(2)}`),
+        hoverinfo: 'text',
+        marker: { color: '#29B09D', size: 9, line: { color: '#ffffff', width: 1.5 } },
+      }, {
+        type: 'scatter',
+        mode: 'lines',
+        x: [0, 1],
+        y: [0, 1],
+        hoverinfo: 'skip',
+        showlegend: false,
+        line: { color: 'rgba(100,116,139,0.55)', dash: 'dash' },
+      }], {
+        height: 320,
+        margin: { t: 18, b: 48, l: 58, r: 16 },
+        xaxis: { title: { text: xLabel }, range: [0, 1] },
+        yaxis: { title: { text: yLabel }, range: [0, 1] },
+        showlegend: false,
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(248,250,252,0.72)',
+      }, { responsive: true, displayModeBar: false });
+    }
+
+    function formatStat(value, digits = 3) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number.toFixed(digits) : '-';
+    }
+
+    function formatSignedStat(value) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return '-';
+      return `${number >= 0 ? '+' : ''}${number.toFixed(3)}`;
+    }
+
+    function formatScientific(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number.toExponential(2) : '-';
+    }
+
+    function renderDescriptionPanel(twin, objects, route) {
+      const codeBlock = document.getElementById('dsl-code-block');
+      const declarationsList = document.getElementById('dsl-declarations-list');
+
+      if (codeBlock) {
+        const quote = (val) => `"${String(val ?? "").replaceAll('"', '\\"')}"`;
+        const lines = [
+          `leerbox ${quote(twin.id)} {`,
+          `  naam: ${quote(twin.title || "Nieuwe leerbox")}`,
+          `  status: ${quote(twin.status || "concept")}`,
+          `  domein: ${quote(twin.domain || "onbekend")}`,
+          `  leerdoel: ${quote(twin.central_learning_goal || "")}`,
+          `  ontdekking: ${quote(twin.central_discovery || "")}`,
+          `  succes: ${quote(twin.success_definition || "")}`,
+          `  weerstand: ${quote(twin.main_barrier || "")}`,
+          `  objecten: [${objects.map(o => quote(o.id)).join(", ")}]`,
+          `  route: [${route.map(r => quote(r.object_id)).join(", ")}]`,
+          `}`,
+        ];
+        codeBlock.textContent = lines.join("\n");
+      }
+
+      if (declarationsList) {
+        declarationsList.innerHTML = (twin.declarations || []).map(dec => `
+          <li>${escapeHtml(dec)}</li>
+        `).join('') || '<li>Geen verklaringen gedocumenteerd.</li>';
+      }
+    }
+
+    function renderEditorPanel(twin, draft) {
+      const draftPills = document.getElementById('editor-draft-pills');
+      if (draftPills) {
+        draftPills.innerHTML = (draft.objects || []).map(o => `
+          <div class="draft-pill">
+            <span>${escapeHtml(o.label)}</span>
+            <small>${escapeHtml(o.role)}</small>
+          </div>
+        `).join('') || '<p class="muted-text">Voeg hierboven elementen toe om een lokale draft op te bouwen.</p>';
+      }
+
+      renderEditorCanvas(twin);
+    }
+
+    function renderEditorCanvas(twin) {
+      const status = document.getElementById('editor-canvas-status');
+      const frameWrapper = document.getElementById('editor-canvas-frame-wrapper');
+      const iframe = document.getElementById('editor-canvas-iframe');
+      if (!status || !frameWrapper || !iframe) return;
+
+      const editorUrl = new URL(editorRootUrl());
+      editorUrl.searchParams.set('api', state.apiBase);
+      editorUrl.searchParams.set('role', activeRoleGlobal);
+      editorUrl.searchParams.set('embedded', '1');
+      editorUrl.searchParams.set('view', currentEditorView);
+
+      const hasLoadedEditor = iframe.src && iframe.src !== window.location.href;
+      if (hasLoadedEditor && !frameWrapper.hidden) {
+        iframe.contentWindow?.postMessage(
+          { type: 'leerpret-editor-view', view: currentEditorView },
+          editorUrl.origin
+        );
+      } else {
+        iframe.src = editorUrl.toString();
+      }
+      status.hidden = true;
+      frameWrapper.hidden = false;
+    }
+
+    function renderKapstokPanel(surfaces, twins) {
+      const statViews = document.getElementById('kapstok-stat-views');
+      const statPages = document.getElementById('kapstok-stat-pages');
+      const statTools = document.getElementById('kapstok-stat-tools');
+      const statApps = document.getElementById('kapstok-stat-apps');
+      const toolsList = document.getElementById('kapstok-tools-list');
+      const catalogList = document.getElementById('twin-catalog-list');
+
+      if (!surfaces) {
+        if (toolsList) toolsList.innerHTML = '<p class="muted-text">Kon /api/ui/surfaces niet laden.</p>';
+      } else {
+        const summary = surfaces.summary || {};
+        if (statViews) statViews.textContent = (summary.frontend_views ?? 0).toString();
+        if (statPages) statPages.textContent = (summary.simulator_pages ?? 0).toString();
+        if (statTools) statTools.textContent = (summary.tools ?? 0).toString();
+        if (statApps) statApps.textContent = (summary.leerbox_apps ?? 0).toString();
+
+        const allTools = [...(surfaces.tools || []), ...(surfaces.leerbox_apps || [])];
+        if (toolsList) {
+          toolsList.innerHTML = allTools.length
+            ? allTools.map(tool => `
+                <div class="surface-tool-item">
+                  <div class="surface-tool-head">
+                    <strong>${escapeHtml(tool.title || tool.id)}</strong>
+                    <span class="badge ${tool.status === 'available' ? 'passed' : 'not_run'}">${escapeHtml(tool.status || 'onbekend')}</span>
+                  </div>
+                  <small>${escapeHtml(tool.id === 'architect-editor' ? editorRootUrl() : (tool.frontend_url || tool.frontend_path || ''))}</small>
+                  ${(tool.id === 'architect-editor' || tool.embed_url || tool.embed_path) ? `<a class="test-link" href="${escapeHtml(tool.id === 'architect-editor' ? editorRootUrl() : new URL(tool.embed_url || tool.embed_path, apiRootUrl()).toString())}" target="_blank" rel="noopener">Openen</a>` : ''}
+                </div>
+              `).join('')
+            : '<p class="muted-text">Geen tools of leerbox-apps gevonden.</p>';
+        }
+      }
+
+      if (catalogList) {
+        catalogList.innerHTML = twins.length
+          ? twins.map(renderTwinCatalogCard).join('')
+          : '<p class="muted-text">Geen leerbox-twins beschikbaar.</p>';
+      }
+    }
+
+    function renderTwinCatalogCard(twin) {
+      const objects = twin.objects || [];
+      const route = twin.route || [];
+      const declarations = twin.declarations || [];
+      return `
+        <details class="twin-catalog-card">
+          <summary>
+            <strong>${escapeHtml(twin.title || twin.id)}</strong>
+            <span class="badge">${escapeHtml(twin.status || 'concept')}</span>
+          </summary>
+          <div class="twin-catalog-body">
+            <div>
+              <h4>Declaraties</h4>
+              <ul class="declarations-bullet-list">
+                ${declarations.map(d => `<li>${escapeHtml(d)}</li>`).join('') || '<li>Geen verklaringen gedocumenteerd.</li>'}
+              </ul>
+            </div>
+            <div>
+              <h4>Objecten (${objects.length})</h4>
+              <div class="pills-grid">
+                ${objects.map(o => `
+                  <div class="object-item-pill">
+                    <strong>${escapeHtml(o.label || o.id)}</strong>
+                    <small>${escapeHtml(o.role || "object")}</small>
+                  </div>
+                `).join('') || '<p class="muted-text">Geen objecten.</p>'}
+              </div>
+            </div>
+            <div>
+              <h4>Route (${route.length} stappen)</h4>
+              <ol class="ordered-route-list">
+                ${route.map(step => `
+                  <li>
+                    <strong>Stap ${step.step}: ${escapeHtml(step.object_id)}</strong>
+                    <span class="route-action-span">${escapeHtml(step.participant_action || "")}</span>
+                  </li>
+                `).join('') || '<li>Niet geconfigureerd</li>'}
+              </ol>
+            </div>
+          </div>
+        </details>
+      `;
+    }
+
+    function addDraftElement(kind) {
+      const key = currentTwinId || "__new";
+      state.leerboxDrafts = safeJsonParse(localStorage.getItem('leerpret.leerbox.drafts'), {});
+      const draft = state.leerboxDrafts[key] || { objects: [], route: [] };
+      
+      const elementTypes = {
+        leerobject: { label: "Leerobject", help: "Didactisch actiepunt" },
+        route: { label: "Routeblok", help: "Stap in routevolgorde" },
+        weerstand: { label: "Weerstand", help: "Frictiepunt" },
+        herstel: { label: "Herstel", help: "Vastlooppad" },
+        succespoort: { label: "Succespoort", help: "Behaald succes" }
+      };
+
+      const type = elementTypes[kind];
+      const number = (draft.objects || []).length + 1;
+      const id = `concept-${kind}-${number}`;
+
+      draft.objects = draft.objects || [];
+      draft.route = draft.route || [];
+
+      draft.objects.push({
+        id,
+        label: `${type.label} ${number}`,
+        role: kind,
+        affordance: type.help,
+        visible_cues: "Lokale concept",
+        loggable_actions: ["inspect"],
+        likely_marker_roles: []
+      });
+
+      // Calculate current route length
+      let twin = loadedTwins.find(t => t.id === currentTwinId) || { route: [] };
+      const currentRouteLength = [...(twin.route || []), ...(draft.route || [])].length;
+
+      draft.route.push({
+        step: currentRouteLength + 1,
+        object_id: id,
+        participant_action: `Werkt met ${type.label.toLowerCase()}`,
+        action_type: kind,
+        expected_feedback: "Gedrag geregistreerd"
+      });
+
+      state.leerboxDrafts[key] = draft;
+      localStorage.setItem('leerpret.leerbox.drafts', JSON.stringify(state.leerboxDrafts));
+      
+      renderWorkbench();
+    }
+
+    // Bind event listeners
+    window.addEventListener('DOMContentLoaded', () => {
+      initWorkbench();
+
+      // Tabbladen boven de inhoud
+      document.querySelectorAll('.workbench-pane-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          selectWorkbenchTab(btn.getAttribute('data-tab') || 'vat');
+        });
+      });
+
+      document.getElementById('view-description-action')?.addEventListener('click', () => {
+        selectWorkbenchTab('description');
+      });
+
+      document.querySelectorAll('[data-editor-view]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          currentEditorView = btn.getAttribute('data-editor-view') || 'description';
+          localStorage.setItem('leerpret.leerbox.editor.view', currentEditorView);
+          selectWorkbenchTab('editor');
+        });
+      });
+
+      const editorMenuToggle = document.getElementById('editor-menu-toggle');
+      const editorSubmenu = document.getElementById('editor-submenu');
+      editorMenuToggle?.addEventListener('click', () => {
+        const expanded = editorMenuToggle.getAttribute('aria-expanded') === 'true';
+        editorMenuToggle.setAttribute('aria-expanded', String(!expanded));
+        editorMenuToggle.setAttribute('aria-label', expanded ? 'Editoronderdelen uitklappen' : 'Editoronderdelen inklappen');
+        editorMenuToggle.textContent = expanded ? '>' : 'v';
+        if (editorSubmenu) editorSubmenu.hidden = expanded;
+      });
+
+      // Element palette clicks in Editor
+      document.querySelectorAll('[data-add-kind]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const kind = btn.getAttribute('data-add-kind');
+          if (kind) addDraftElement(kind);
+        });
+      });
+    });
+
+    window.addEventListener('service-connection-changed', () => {
+      initWorkbench();
+    });
+  </script>
+</Layout>
+
+<style is:global>
+  .workbench-sidebar-context {
+    display: grid;
+    gap: 7px;
+    padding: 8px 6px 14px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .workbench-sidebar-context .eyebrow {
+    margin-bottom: 4px;
+  }
+
+  .workbench-sidebar-context label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .workbench-sidebar-context select {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+  }
+
+  .leerbox-context-actions {
+    display: grid;
+    grid-template-columns: 42px 42px 42px minmax(0, 1fr);
+    gap: 7px;
+    align-items: center;
+  }
+
+  .leerbox-context-action {
+    min-height: 38px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--surface-soft, #f8fafc);
+    color: var(--ink);
+    display: grid;
+    place-items: center;
+    text-decoration: none;
+    cursor: pointer;
+    padding: 3px;
+  }
+
+  .leerbox-context-action span { font-size: 1.15rem; line-height: 1; }
+  .leerbox-context-action small { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .leerbox-context-action:hover,
+  .leerbox-context-action:focus,
+  .leerbox-context-action.active { border-color: var(--teal); color: var(--teal); background: rgba(0,128,128,.09); outline: none; }
+
+  /* Compact Leerbox actions need an explicit dark base in the command theme. */
+  .leerbox-context-action,
+  .leerbox-context-action:link,
+  .leerbox-context-action:visited {
+    background: #10242b;
+    border-color: #365760;
+    color: #65e4da;
+  }
+
+  .leerbox-context-action svg {
+    display: block;
+    opacity: 1;
+    stroke: currentColor;
+  }
+
+  .leerbox-context-action:hover,
+  .leerbox-context-action:focus-visible {
+    background: #17323a;
+    border-color: #32ddd2;
+    color: #effffd;
+    outline: 2px solid rgba(50, 221, 210, .28);
+    outline-offset: 2px;
+  }
+
+  .leerbox-context-action.active {
+    background: #123238;
+    border-color: #32ddd2;
+    box-shadow: inset 0 -3px #32ddd2;
+    color: #effffd;
+  }
+
+  .leerbox-context-action[aria-disabled="true"] {
+    background: #0b171d;
+    border-color: #243a41;
+    color: #62787d;
+    pointer-events: none;
+  }
+  .leerbox-context-actions .twin-status-badge { justify-self: start; }
+
+  .twin-status-badge {
+    width: 112px;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    text-transform: uppercase;
+    background: var(--surface-soft, #ffffff);
+    color: #475569;
+    border: 1px solid var(--line);
+    justify-content: center;
+    transition: background .25s ease;
+  }
+
+  .twin-status-badge.status-concept,
+  .twin-status-badge.status-proto-leerbox {
+    color: #475569;
+    border-color: #cbd5e1;
+  }
+
+  .twin-status-badge.status-concept { background: var(--surface-soft, #ffffff); }
+  .twin-status-badge.status-proto-leerbox { background: linear-gradient(90deg, #dbeafe 0 25%, var(--surface-soft, #ffffff) 25% 100%); }
+
+  .twin-status-badge.status-pilot {
+    background: linear-gradient(90deg, var(--warn) 0 60%, var(--surface-soft, #ffffff) 60% 100%);
+    color: #854d0e;
+    border-color: var(--warn-line);
+  }
+  
+  .twin-status-badge.status-af,
+  .twin-status-badge.status-digital-twin,
+  .twin-status-badge.status-afgerond,
+  .twin-status-badge.status-definitief,
+  .twin-status-badge.status-actief,
+  .twin-status-badge.status-active {
+    background: var(--green-light);
+    color: var(--green);
+    border-color: var(--green-border);
+  }
+
+  .workbench-layout {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+  }
+
+  .workbench-content-area {
+    min-width: 0;
+  }
+
+  /* Tabbladen boven de inhoud, in dezelfde stijl als de Artikel- en Servicepagina. */
+  .workbench-pane-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 14px;
+  }
+
+  .workbench-pane-tab {
+    padding: 9px 18px;
+    border: 1px solid transparent;
+    border-bottom: 0;
+    border-top: 3px solid var(--tab-role-color, transparent);
+    border-radius: 8px 8px 0 0;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font: 700 .84rem inherit;
+  }
+
+  .workbench-pane-tab:hover { color: var(--ink); }
+  .workbench-pane-tab[data-tab="bezoekverhaal"],
+  .workbench-pane-tab[data-tab="objectklok"],
+  .workbench-pane-tab[data-tab="catalogus"],
+  .workbench-pane-tab[data-tab="meetfocus"] { --tab-role-color: var(--green); }
+  .workbench-pane-tab[data-tab="vat"],
+  .workbench-pane-tab[data-tab="validatie"],
+  .workbench-pane-tab[data-tab="oppervlakken"] { --tab-role-color: var(--teal); }
+  .workbench-pane-tab[data-tab="bestanden"],
+  .workbench-pane-tab[data-tab="eventtabel"] { --tab-role-color: var(--plum); }
+
+  .workbench-pane-tab.is-active {
+    background: var(--panel);
+    color: var(--tab-role-color, var(--teal));
+    border-color: var(--line);
+    border-top-color: var(--tab-role-color, var(--teal));
+    border-bottom-color: var(--panel);
+    margin-bottom: -1px;
+  }
+
+  /* Simulatie-instellingen in het linkermenu. De klok volgt de vorm van de balk op
+     de Editorpagina: een donkere pil met kleine, instelbare velden. */
+  #workbench-settings-slot {
+    display: grid;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .leerbox-sim-card {
+    display: grid;
+    gap: 9px;
+  }
+
+  .leerbox-sim-card .eyebrow {
+    color: var(--muted);
+    font-size: .68rem;
+    font-weight: 800;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+
+  .sim-hint {
+    margin: 0;
+    color: var(--muted);
+    font-size: .7rem;
+    line-height: 1.4;
+  }
+
+  .simulation-clock {
+    display: grid;
+    grid-template-columns: minmax(66px, 1fr) minmax(66px, 1fr) 54px;
+    align-items: center;
+    gap: 6px;
+    padding: 7px;
+    border: 1px solid #345b63;
+    border-radius: 20px;
+    background: radial-gradient(circle at 78% 50%, rgba(50,221,210,.14), transparent 38%), #07171c;
+  }
+
+  .simulation-clock button {
+    padding: 0;
+    border-radius: 50%;
+    color: #34e1d1;
+    cursor: pointer;
+    font: 900 .78rem 'Share Tech Mono', monospace;
+  }
+
+  .simulation-clock button:hover,
+  .simulation-clock button.is-active {
+    background: #174149;
+    color: #fff;
+  }
+
+  .simulation-clock label {
+    display: grid;
+    justify-items: center;
+  }
+
+  .simulation-value-control {
+    grid-template-columns: 22px minmax(34px, 1fr) 22px;
+    gap: 2px 4px;
+    align-items: center;
+    padding: 4px 5px;
+    border: 1px solid rgba(50,221,210,.18);
+    border-radius: 14px;
+    background: rgba(10, 35, 42, .86);
+  }
+
+  .simulation-clock label span {
+    grid-column: 1 / -1;
+    color: #739ca1;
+    font: 800 .48rem 'Share Tech Mono', monospace;
+    letter-spacing: .08em;
+  }
+
+  .simulation-clock input {
+    width: 100%;
+    height: 28px;
+    min-height: 28px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #f8fafc;
+    font: 950 1.02rem 'Share Tech Mono', monospace;
+    text-align: center;
+  }
+
+  .simulation-clock input::-webkit-inner-spin-button { display: none; }
+
+  .simulation-clock .simulation-stepper {
+    width: 22px;
+    min-height: 22px;
+    border: 1px solid rgba(50,221,210,.28);
+    background: #0d2b32;
+    line-height: 1;
+  }
+
+  .simulation-clock .simulation-play-button {
+    width: 52px;
+    min-height: 52px;
+    border: 2px solid #5cf3e8;
+    background: radial-gradient(circle,#23777b 0,#0b333a 62%,#061b20 64%);
+    box-shadow: 0 0 0 4px rgba(247,183,51,.25), 0 0 22px rgba(50,221,210,.35);
+    color: #fff;
+    font-size: 1.36rem;
+    line-height: 1;
+  }
+
+  #workbench-settings-slot .test-source-toggle {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  #workbench-settings-slot .test-source-toggle legend {
+    margin-bottom: 4px;
+    color: #739ca1;
+    font: 800 .55rem 'Share Tech Mono', monospace;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .test-source-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 30px;
+    padding: 5px 7px;
+    border: 1px solid #31545d;
+    border-radius: 9px;
+    background: rgba(16, 38, 45, .82);
+    color: #bdd3d6;
+    cursor: pointer;
+    font-size: .68rem;
+    font-weight: 850;
+  }
+
+  .test-source-option input {
+    width: 13px;
+    height: 13px;
+    accent-color: #32ddd2;
+  }
+
+  .test-source-option.active {
+    border-color: rgba(50,221,210,.75);
+    background: rgba(50,221,210,.11);
+    color: #f8fafc;
+  }
+
+  .test-source-option.is-disabled {
+    cursor: not-allowed;
+    opacity: .48;
+  }
+
+  /* Een bron die niet beschikbaar is, hoort er ook uitgeschakeld uit te zien. */
+  .test-source-toggle button:disabled,
+  .test-source-toggle button:disabled:hover {
+    border-color: var(--line);
+    background: var(--surface-soft, #eef2f6);
+    box-shadow: none;
+    color: var(--muted);
+    cursor: not-allowed;
+    opacity: .6;
+  }
+
+  #workbench-settings-slot .leerbox-test-output {
+    border-top: 1px solid var(--line);
+    padding-top: 10px;
+    font-size: .78rem;
+  }
+
+  /* Inhoud van een aangeklikt databestand, onder de bestandenlijst. */
+  .bestand-inhoud {
+    margin-top: 14px;
+    border-top: 1px solid var(--line);
+    padding-top: 12px;
+  }
+
+  .bestand-inhoud-kop {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .bestand-inhoud-json {
+    max-height: 420px;
+    overflow: auto;
+    margin: 0;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #0f172a;
+    color: #cbd5e1;
+    font-size: .74rem;
+    line-height: 1.45;
+  }
+
+  .path-file-trigger.is-active {
+    border-color: var(--teal);
+    box-shadow: inset 3px 0 0 var(--teal);
+  }
+
+  /* Linkermenu voor de volledige werkbank */
+  .workbench-tabs-bar {
+    position: sticky;
+    top: 16px;
+    overflow: hidden;
+    background: var(--surface-soft, #ffffff);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 8px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .workbench-editor-link {
+    text-decoration: none;
+  }
+
+  .workbench-editor-menu {
+    border-radius: 10px;
+  }
+
+  .workbench-editor-menu.active {
+    background: var(--surface-soft, #f8fafc);
+  }
+
+  .workbench-editor-menu-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 34px;
+    align-items: stretch;
+  }
+
+  .editor-menu-toggle {
+    min-height: 52px;
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font-weight: 800;
+  }
+
+  .editor-submenu {
+    display: grid;
+    gap: 2px;
+    padding: 2px 6px 8px 20px;
+  }
+
+  .editor-submenu button {
+    min-height: 36px;
+    padding: 6px 9px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 0.74rem;
+    font-weight: 680;
+    text-align: left;
+  }
+
+  .editor-submenu button:hover,
+  .editor-submenu button.active {
+    background: var(--surface-soft, #ffffff);
+    color: var(--green);
+  }
+
+  .editor-submenu button.active {
+    box-shadow: inset 2px 0 0 var(--green);
+  }
+
+  /* Panels visibility */
+  .tab-panel {
+    display: none;
+  }
+
+  .tab-panel.active {
+    display: block;
+  }
+
+  /* Vertical spine flowchart visualizer */
+  .parent-canvas {
+    position: relative;
+  }
+
+  #panel-vat .leerbox-visual-flow {
+    position: relative;
+    padding: 12px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+    background: var(--surface-soft, #f8fafc);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px;
+    overflow: hidden;
+  }
+
+  .visual-spine-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 36px;
+    width: 4px;
+    background: var(--teal);
+    opacity: 0.2;
+    z-index: 1;
+  }
+
+  .visual-flow-node {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 2;
+  }
+
+  .node-index {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--teal);
+    color: white;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 4px 10px rgba(13, 148, 136, 0.2);
+    border: 3px solid white;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+  }
+
+  .node-card {
+    background: var(--surface-soft, #ffffff);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 14px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+  }
+
+  .node-card strong {
+    font-size: 0.88rem;
+    color: var(--ink);
+  }
+
+  .node-card small {
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  /* Vat Grid sections */
+  .vat-details-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+  }
+
+  .pills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .object-item-pill {
+    background: #f1f5f9;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 6px 12px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .object-item-pill strong {
+    font-size: 0.82rem;
+    color: var(--ink);
+  }
+
+  .object-item-pill small {
+    font-size: 0.65rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .ordered-route-list {
+    padding-left: 20px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .ordered-route-list li {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .route-action-span {
+    display: block;
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .ordered-route-list small {
+    display: block;
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  /* Simulator stats */
+  .workbench-stats-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .workbench-stats-strip strong {
+    font-size: 1.6rem;
+    color: var(--teal);
+    display: block;
+    font-family: var(--font-heading);
+    line-height: 1.1;
+  }
+
+  .workbench-stats-strip span {
+    font-size: 0.72rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  /* File items list */
+  .vertical-item-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .data-file-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface-soft, #f8fafc);
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    text-align: left;
+    transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+  }
+
+  .data-file-item:hover {
+    background: var(--surface-soft, #ffffff);
+    border-color: var(--teal);
+  }
+
+  .data-file-item:active {
+    transform: scale(0.99);
+  }
+
+  .file-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .file-details {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .file-details strong {
+    font-size: 0.85rem;
+    color: var(--ink);
+  }
+
+  .file-details small {
+    font-size: 0.74rem;
+    color: var(--muted);
+  }
+
+  .path-map-card {
+    overflow: hidden;
+  }
+
+  .visit-route-panel { min-width: 0; }
+
+  /* De objectklok krijgt nu een heel tabblad, dus mag hij groot en rustig staan:
+     een ronde, licht verdiepte plaat waar het diagram middenin ligt. */
+  .object-clock-card {
+    display: grid;
+    gap: 4px;
+  }
+
+  .object-clock-card h3 {
+    margin: 4px 0 0;
+  }
+
+  .object-clock-card .muted-text {
+    margin: 0 0 6px;
+    max-width: 62ch;
+  }
+
+  .object-clock-plot {
+    display: grid;
+    place-items: center;
+    min-height: min(620px, 72vh);
+    margin: 6px auto 0;
+    padding: 18px;
+    width: 100%;
+    max-width: 720px;
+    aspect-ratio: 1;
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 28px;
+    background:
+      radial-gradient(circle at 50% 47%, rgba(50, 221, 210, .11), transparent 38%),
+      radial-gradient(circle at 50% 50%, rgba(7, 23, 28, .72) 0 58%, rgba(16, 45, 53, .28) 59% 100%),
+      linear-gradient(145deg, rgba(7, 23, 28, .96), rgba(10, 35, 42, .94));
+    box-shadow:
+      inset 0 0 44px rgba(50,221,210,.08),
+      0 18px 46px rgba(0,0,0,.34);
+    overflow: hidden;
+  }
+
+  .object-clock-plot svg,
+  .object-clock-plot canvas {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .objectklok-svg {
+    display: block;
+    inline-size: min(100%, 650px);
+    overflow: visible;
+  }
+
+  .objectklok-backplate {
+    fill: rgba(6, 20, 26, .62);
+    stroke: rgba(255,255,255,.1);
+    stroke-width: 1.5;
+  }
+
+  .objectklok-ring {
+    fill: none;
+    stroke: rgba(50,221,210,.16);
+    stroke-width: 56;
+  }
+
+  .objectklok-ring-buitenlijn,
+  .objectklok-ring-binnen {
+    fill: none;
+    stroke: rgba(226,232,240,.18);
+    stroke-width: 1.5;
+    pointer-events: none;
+  }
+
+  .objectklok-center-disc {
+    fill: url(#objectklok-center-grad);
+    stroke: rgba(50,221,210,.52);
+    stroke-width: 1.5;
+    filter: drop-shadow(0 0 20px rgba(50,221,210,.18));
+    pointer-events: none;
+  }
+
+  .objectklok-segment {
+    cursor: pointer;
+    stroke: #07171c;
+    stroke-width: 2.4;
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: filter .16s ease, opacity .16s ease, transform .16s ease;
+  }
+
+  .objectklok-segment:hover,
+  .objectklok-segment:focus-visible,
+  .objectklok-segment.is-actief {
+    filter: url(#objectklok-active-glow) brightness(1.22) saturate(1.08);
+    opacity: 1;
+    outline: none;
+    transform: scale(1.012);
+  }
+
+  .objectklok-label path {
+    fill: none;
+    stroke: rgba(226,232,240,.42);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .objectklok-label text {
+    fill: #e2e8f0;
+    font-family: var(--font-heading), Rajdhani, system-ui, sans-serif;
+    font-size: 10px;
+    font-weight: 850;
+    letter-spacing: .035em;
+    paint-order: stroke;
+    stroke: rgba(5,13,16,.9);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+  }
+
+  .objectklok-label.is-actief path {
+    stroke: var(--segment-color, #32ddd2);
+    stroke-width: 1.8;
+  }
+
+  .objectklok-label.is-actief text {
+    fill: #ffffff;
+  }
+
+  .objectklok-midden-kicker,
+  .objectklok-midden-titel,
+  .objectklok-midden-sub {
+    font-family: var(--font-heading), Rajdhani, system-ui, sans-serif;
+    pointer-events: none;
+  }
+
+  .objectklok-midden-kicker {
+    fill: #e6ad43;
+    font-size: 10px;
+    font-weight: 950;
+    letter-spacing: .16em;
+  }
+
+  .objectklok-midden-titel {
+    fill: #f8fafc;
+    font-size: 27px;
+    font-weight: 950;
+    letter-spacing: .02em;
+  }
+
+  .objectklok-midden-sub {
+    fill: #8fb7bd;
+    font-size: 12px;
+    font-weight: 780;
+    letter-spacing: .06em;
+  }
+
+  .objectklok-laden {
+    width: 88px;
+    height: 88px;
+    border: 2px solid rgba(50,221,210,.16);
+    border-top-color: #32ddd2;
+    border-radius: 50%;
+    box-shadow: 0 0 28px rgba(50,221,210,.18), inset 0 0 18px rgba(50,221,210,.08);
+    animation: objectklok-pulse 1.1s ease-in-out infinite;
+  }
+
+  .objectklok-leeg {
+    margin: 0;
+    max-width: 32ch;
+    color: #a9c2c7;
+    text-align: center;
+  }
+
+  @keyframes objectklok-pulse {
+    0%, 100% { transform: scale(.96); opacity: .68; }
+    50% { transform: scale(1.04); opacity: 1; }
+  }
+
+  @media (max-width: 700px) {
+    .object-clock-plot {
+      min-height: 0;
+      padding: 10px;
+    }
+  }
+
+  .persona-simulation-card {
+    overflow: hidden;
+  }
+
+  .persona-simulation-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+  }
+
+  .persona-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .persona-controls label {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--muted);
+  }
+
+  .persona-slider-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 42px;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .persona-slider-row input {
+    width: 100%;
+  }
+
+  .persona-slider-row strong {
+    color: var(--teal);
+    font-family: var(--font-heading);
+    text-align: right;
+  }
+
+  .persona-curve-plot {
+    min-height: 300px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(248, 250, 252, 0.72);
+    overflow: hidden;
+  }
+
+  .persona-status-message {
+    margin-top: 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--muted);
+    background: var(--surface-soft, #ffffff);
+  }
+
+  .persona-status-message.success {
+    border-color: rgba(41, 176, 157, 0.35);
+    color: var(--green);
+    background: rgba(41, 176, 157, 0.08);
+  }
+
+  .validation-report-card {
+    overflow: hidden;
+  }
+
+  .validation-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .validation-mode-toggle {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .validation-mode-toggle label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--surface-soft, #ffffff);
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--ink);
+  }
+
+  .validation-report-output {
+    margin-top: 16px;
+  }
+
+  .validation-stats-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0 14px;
+  }
+
+  .validation-stats-strip span {
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--teal);
+    border-radius: 999px;
+    padding: 6px 10px;
+    background: var(--surface-soft, #ffffff);
+    font-size: 0.74rem;
+    font-weight: 800;
+    color: var(--ink);
+  }
+
+  .validation-table-wrapper {
+    max-height: 420px;
+    overflow: auto;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+
+  .validation-report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.74rem;
+    background: var(--surface-soft, #ffffff);
+  }
+
+  .validation-report-table th,
+  .validation-report-table td {
+    border-bottom: 1px solid var(--line);
+    padding: 8px;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .validation-report-table th {
+    position: sticky;
+    top: 0;
+    background: var(--surface-soft, #f8fafc);
+    color: var(--muted);
+    text-transform: uppercase;
+    font-size: 0.66rem;
+    z-index: 1;
+  }
+
+  .validation-report-table td.invalid-cell {
+    background: #5b2222;
+    color: #ffffff;
+    font-weight: 800;
+  }
+
+  .validation-chart-panel,
+  .validation-latex-details {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface-soft, #f8fafc);
+    padding: 14px;
+    margin-top: 14px;
+  }
+
+  .validation-chart-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .validation-comparison-plot {
+    min-height: 320px;
+  }
+
+  .validation-latex-details summary {
+    cursor: pointer;
+    font-weight: 900;
+    color: var(--ink);
+  }
+
+  .validation-latex-code {
+    background: #0f172a;
+    color: #e2e8f0;
+    border-radius: 10px;
+    padding: 12px;
+    overflow: auto;
+    max-height: 360px;
+    font-size: 0.72rem;
+  }
+
+  .path-map-meta {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--muted);
+    margin: 10px 0 8px;
+  }
+
+  .path-map-plot {
+    min-height: 390px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(248, 250, 252, 0.72);
+    overflow: hidden;
+  }
+
+  .lp-story-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .lp-story-pill {
+    border: 1px solid var(--line);
+    border-left-width: 4px;
+    border-radius: 999px;
+    padding: 6px 10px;
+    background: var(--surface-soft, #ffffff);
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: var(--ink);
+  }
+
+  .path-event-details {
+    margin-top: 12px;
+  }
+
+  .path-event-details summary {
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--teal);
+  }
+
+  .path-event-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.76rem;
+    margin-top: 10px;
+  }
+
+  .path-event-table th,
+  .path-event-table td {
+    border-bottom: 1px solid var(--line);
+    padding: 8px;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .path-event-table th {
+    color: var(--muted);
+    text-transform: uppercase;
+    font-size: 0.68rem;
+  }
+
+  @media (min-width: 960px) {
+    .persona-simulation-grid {
+      grid-template-columns: minmax(240px, 0.45fr) minmax(0, 1fr);
+    }
+
+    .validation-controls {
+      grid-template-columns: minmax(260px, 0.8fr) minmax(260px, 1fr) auto;
+      align-items: center;
+    }
+
+    .validation-chart-toolbar {
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 0.6fr);
+      align-items: center;
+    }
+  }
+
+  /* DSL code block */
+  .dsl-code-block {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 14px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    overflow-x: auto;
+    margin-bottom: 18px;
+    border: 1px solid #1e293b;
+  }
+
+  .declarations-bullet-list {
+    padding-left: 20px;
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--muted);
+  }
+
+  /* Editor element palette */
+  .palette-buttons-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .palette-btn {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--surface-soft, #ffffff);
+    padding: 12px 14px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.2s ease;
+    min-height: var(--touch-target);
+  }
+
+  .palette-btn:active {
+    border-color: var(--green);
+    background: var(--green-light);
+  }
+
+  .palette-btn strong {
+    font-size: 0.95rem;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+
+  .palette-btn span {
+    font-size: 0.76rem;
+    color: var(--muted);
+  }
+
+  .draft-pill {
+    background: #faf5ff;
+    border: 1px solid #e9d5ff;
+    color: var(--plum);
+    border-radius: 8px;
+    padding: 6px 12px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .draft-pill strong {
+    font-size: 0.85rem;
+  }
+
+  .draft-pill small {
+    font-size: 0.68rem;
+    color: var(--muted);
+  }
+
+  /* Meetfocus list (T/A/V/R/S) */
+  .surface-list {
+    display: grid;
+    gap: 7px;
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .surface-list li {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface-soft, #f8fafc);
+  }
+
+  .surface-list span {
+    font-weight: 700;
+    color: var(--ink);
+    font-size: 0.85rem;
+  }
+
+  .surface-list small {
+    color: var(--muted);
+    font-size: 0.76rem;
+  }
+
+  /* Editor visual canvas (embedded architect-editor) */
+  #panel-editor > .mobile-card:not(:last-child) {
+    display: none;
+  }
+
+  .editor-canvas-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .editor-canvas-frame-wrapper {
+    margin-top: 12px;
+    height: min(780px, calc(100vh - 150px));
+    min-height: 560px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .editor-canvas-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  /* Kapstok panel */
+  .kapstok-stats-strip {
+    grid-template-columns: repeat(2, 1fr);
+    margin: 12px 0;
+  }
+
+  .surface-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .surface-tool-item {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+    background: var(--surface-soft, #f8fafc);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .surface-tool-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .surface-tool-item small {
+    color: var(--muted);
+    font-size: 0.72rem;
+    word-break: break-all;
+  }
+
+  .surface-tool-item .test-link {
+    align-self: flex-start;
+    font-size: 0.78rem;
+    color: var(--teal);
+    font-weight: 700;
+  }
+
+  /* Twin catalog (all twins at once) */
+  .twin-catalog-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .twin-catalog-card {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: var(--surface-soft, #f8fafc);
+  }
+
+  .twin-catalog-card summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .twin-catalog-body {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .twin-catalog-body h4 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    margin: 0 0 6px 0;
+  }
+
+  @media (max-width: 800px) {
+    .workbench-layout {
+      grid-template-columns: 1fr;
+    }
+
+    .workbench-tabs-bar {
+      position: static;
+    }
+
+    .workbench-editor-menu {
+      grid-column: 1 / -1;
+    }
+
+    .editor-submenu {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* Desktop optimization */
+  @media (min-width: 768px) {
+    .palette-buttons-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .vat-details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .kapstok-stats-strip {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    .twin-catalog-body {
+      flex-direction: row;
+    }
+
+    .twin-catalog-body > div {
+      flex: 1;
+    }
+  }
+  .leerbox-test-card{display:grid;gap:12px}.leerbox-test-controls{align-items:end;display:grid;gap:10px;grid-template-columns:minmax(140px,210px) auto minmax(110px,160px)}.leerbox-test-controls>label{color:var(--muted);font-size:.78rem;font-weight:800;grid-column:1}.leerbox-test-controls>input{border:1px solid var(--line);border-radius:9px;font:inherit;height:44px;padding:0 12px}.test-source-toggle{display:grid;gap:8px;grid-template-columns:repeat(2,minmax(0,1fr))}.test-source-toggle button{background:#10262d;border:1px solid #31545d;border-radius:9px;color:#d9eef1;cursor:pointer;font:inherit;font-weight:900;min-height:44px;padding:0 14px}.test-source-toggle button.active{background:rgba(50,221,210,.14);border-color:#32ddd2;box-shadow:inset 0 -3px #32ddd2;color:#fff}.test-source-toggle button:disabled{cursor:not-allowed;opacity:.45}.test-valve-message{border-radius:9px;font-size:.82rem;font-weight:750;margin:0;padding:10px 12px}.test-valve-message.is-gevat,.test-valve-message.simulation-validity-current{background:rgba(54,198,126,.12);border:1px solid #36c67e;color:#14633f}.test-valve-message.simulation-validity-minor_changes{background:rgba(50,221,210,.12);border:1px solid #32ddd2;color:#12645f}.test-valve-message.is-not-gevat,.test-valve-message.simulation-validity-stale{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c}.test-valve-message.simulation-validity-missing{background:#fff8e7;border:1px solid #f7b733;color:#7d5300}.leerbox-test-output{border-top:1px solid var(--line);min-width:0;padding-top:12px}.test-output-heading{align-items:center;display:flex;justify-content:space-between;margin-bottom:10px}.test-output-heading span{background: var(--surface-soft, #eef2f6);border-radius:999px;color:var(--muted);font-size:.72rem;font-weight:800;padding:5px 9px}.test-data-files{display:grid;gap:7px}.test-data-file{background: var(--surface-soft, #f8fafc);border:1px solid var(--line);border-radius:8px;cursor:pointer;display:grid;font:inherit;gap:2px;padding:10px;text-align:left}.test-data-file:hover{border-color:var(--teal)}.test-data-file small{color:var(--muted)}.leerbox-test-radar{min-height:350px}.test-result-table{border-collapse:collapse;width:100%}.test-result-table th,.test-result-table td{border-bottom:1px solid var(--line);padding:8px;text-align:right}.test-result-table th:first-child{text-align:left;text-transform:capitalize}.test-event-logs{border-top:1px solid var(--line);margin-top:12px;padding-top:10px}.test-event-logs>summary{cursor:pointer;font-weight:850}.test-event-logs section{border-bottom:1px solid var(--line);padding:6px 0}.test-event-logs h4{text-transform:capitalize}.test-event-logs li{margin:5px 0}.test-error{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#b91c1c;padding:10px}
+
+  .simulation-clock-workbench{align-items:center;background:linear-gradient(135deg,#071a20,#102c33);border:1px solid #31545d;border-radius:18px;display:grid;gap:24px;grid-template-columns:230px minmax(260px,520px);padding:22px}.simulation-config-clock{--action-progress:50%;--duration-progress:2%;aspect-ratio:1;border-radius:50%;filter:drop-shadow(0 11px 13px rgba(0,0,0,.35));isolation:isolate;position:relative;width:220px}.simulation-config-clock::before{background:conic-gradient(from 0deg,#47cdc5 0 var(--action-progress),#16343c var(--action-progress) 50%,#7393e5 50% calc(50% + var(--duration-progress)),#16343c calc(50% + var(--duration-progress)) 100%);border-radius:inherit;content:"";inset:0;position:absolute}.simulation-config-clock::after{background:repeating-conic-gradient(from -1deg,#f7b733 0 2deg,transparent 2deg 15deg),#071b21;border:4px solid #c87554;border-radius:50%;content:"";inset:40px;position:absolute;z-index:1}.simulation-config-face{align-items:center;display:grid;inset:64px;justify-items:center;position:absolute;z-index:2}.simulation-config-caption{color:#f7b733;font-size:.58rem;font-weight:950;letter-spacing:.13em;position:absolute;top:7px}.simulation-config-face button{align-items:center;background:radial-gradient(circle,#23777b 0,#0b333a 62%,#061b20 64%);border:2px solid #5cf3e8;border-radius:50%;box-shadow:0 0 0 5px rgba(247,183,51,.35),0 0 22px rgba(50,221,210,.35);color:#fff;cursor:pointer;display:flex;font-size:1.5rem;height:64px;justify-content:center;line-height:1;padding:0 0 0 4px;width:64px}.simulation-config-face button:disabled{cursor:not-allowed;filter:grayscale(1);opacity:.55}.simulation-clock-actions,.simulation-clock-duration{color:#fff;display:grid;font-size:1.08rem;font-weight:950;line-height:1;position:absolute;text-align:center;text-shadow:0 2px 4px #000;top:50%;transform:translateY(-50%);z-index:3}.simulation-clock-actions{right:4px}.simulation-clock-duration{left:7px}.simulation-config-clock output small{color:#071115;font-size:.52rem;letter-spacing:.08em;margin-top:4px;text-shadow:none}.simulation-clock-controls{display:grid;gap:14px}.simulation-clock-controls>label{color:#c3d9dd;display:grid;font-size:.78rem;font-weight:850;gap:6px}.simulation-clock-controls input{background:#071a20;border:1px solid #3a616a;border-radius:9px;color:#fff;font:inherit;font-weight:850;height:44px;padding:0 12px}.simulation-clock-controls input:focus-visible{border-color:#32ddd2;outline:2px solid rgba(50,221,210,.25);outline-offset:2px}.simulation-json-output{background:#071a20;border:1px solid #31545d;border-radius:8px;color:#c9f9f5;font-size:.72rem;max-height:280px;overflow:auto;padding:12px;white-space:pre-wrap;word-break:break-all}
+
+  .simulation-cost-dialog{background:transparent;border:0;max-width:min(560px,calc(100vw - 28px));padding:0;width:100%}.simulation-cost-dialog::backdrop{background:rgba(2,11,14,.76);backdrop-filter:blur(5px)}.simulation-cost-card{background:#0b2026;border:1px solid #3b6972;border-radius:18px;box-shadow:0 22px 70px rgba(0,0,0,.55),0 0 0 1px rgba(50,221,210,.08);color:#eaf7f8;display:grid;gap:13px;padding:24px}.simulation-cost-card h3,.simulation-cost-card p{margin:0}.simulation-cost-card>label{color:#9fbcc2;font-size:.78rem;font-weight:850}.simulation-cost-card select{background:#071a20;border-color:#3b6972;color:#fff}.simulation-cost-grid{display:grid;gap:8px;grid-template-columns:repeat(3,1fr)}.simulation-cost-grid span{background:#102d34;border:1px solid #31545d;border-radius:10px;display:grid;gap:4px;padding:10px}.simulation-cost-grid small{color:#9fbcc2;font-size:.66rem;font-weight:850;text-transform:uppercase}.simulation-cost-grid strong{font-size:1.05rem}.simulation-cost-grid .simulation-cost-total{border-color:#f7b733;grid-column:1/-1}.simulation-cost-total strong{color:#f7b733;font-size:1.4rem}.simulation-price-note{color:#9fbcc2;font-size:.72rem}.simulation-cost-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:4px}
+
+  @media(max-width:700px){.leerbox-test-controls{grid-template-columns:1fr}.leerbox-test-controls>label{grid-column:auto}.test-source-toggle{grid-template-columns:1fr}.simulation-clock-workbench{grid-template-columns:1fr;justify-items:center;padding:16px}.simulation-config-clock{width:min(220px,76vw)}.simulation-clock-controls{width:100%}.simulation-cost-grid{grid-template-columns:1fr}.simulation-cost-grid .simulation-cost-total{grid-column:auto}.simulation-cost-actions{display:grid;grid-template-columns:1fr 1fr}.simulation-cost-actions .btn{width:100%}}
+</style>
+
+<style is:global>
+  /* Donkere Leerbox-canvascomponenten. */
+  #panel-vat #vat-visual-flow {
+    background:#0b1d23;
+    border-color:#294b54;
+    box-shadow:inset 0 0 32px rgba(0,0,0,.14);
+  }
+
+  #panel-vat .node-card,
+  #panel-vat .object-item-pill,
+  #panel-oppervlakken .surface-tool-item,
+  #panel-catalogus .twin-catalog-card {
+    background:#10262d;
+    border-color:#31545d;
+  }
+
+  #panel-vat .node-card { box-shadow:0 4px 12px rgba(0,0,0,.16); }
+  #panel-vat .node-index {
+    border-color:#0b1d23;
+    box-shadow:0 0 0 2px rgba(50,221,210,.14),0 5px 13px rgba(0,0,0,.28);
+  }
+
+  #panel-oppervlakken .surface-tool-item:hover,
+  #panel-catalogus .twin-catalog-card[open] {
+    background:#15323a;
+    border-color:#3b6972;
+  }
+</style>

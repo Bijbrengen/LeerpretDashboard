@@ -1,0 +1,86 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Privacy & data" description="Zo verwerkt de Leerpret-engine actiereeksen volgens privacy by design.">
+  <main class="privacy-page">
+    <header class="privacy-hero mobile-card">
+      <div class="privacy-shield" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3 5 6v5c0 4.8 2.9 8.2 7 10 4.1-1.8 7-5.2 7-10V6l-7-3Z" />
+          <path d="m9 12 2 2 4-5" />
+        </svg>
+      </div>
+      <div>
+        <span class="eyebrow">AVG · privacy by design</span>
+        <h2>Uw account en enginegegevens blijven van elkaar gescheiden</h2>
+        <p>De Leerpret-engine gebruikt actiereeksen om de meting van leerpret nauwkeuriger te maken. Naam, e-mailadres en Google-account-ID worden niet in die actiereeksen opgenomen.</p>
+      </div>
+    </header>
+
+    <section class="privacy-purpose mobile-card" aria-labelledby="privacy-purpose-title">
+      <span class="privacy-step">Doel</span>
+      <div>
+        <h3 id="privacy-purpose-title">Waarom worden actiereeksen gebruikt?</h3>
+        <p>Uitsluitend voor het ontwikkelen, trainen, testen, valideren en verbeteren van de Leerpret-engine. Daarmee verhogen we de betrouwbaarheid en nauwkeurigheid van de meting, herkennen we fouten en vertekening en ondersteunen we gebruikers beter bij het herkennen en bevorderen van leerpret.</p>
+        <p class="privacy-exclusion"><strong>Niet voor:</strong> advertenties, commerciële persoonsprofilering, algemene AI-training of geautomatiseerde beslissingen met rechtsgevolgen over een lerende.</p>
+      </div>
+    </section>
+
+    <section class="privacy-flow" aria-label="Levenscyclus van actiereeksen">
+      <article class="privacy-flow-card mobile-card">
+        <span class="privacy-number">1</span>
+        <div><h3>De engine ziet een pseudoniem</h3><p>De engine verwerkt een afgeschermde interne entiteitssleutel, actiecodes, relatieve tijd, pseudonieme groepscontext en de gebruikte Leerbox-versie. Zo blijven leerpatronen en versieverschillen meetbaar zonder accountgegevens in het enginecorpus te zetten.</p></div>
+      </article>
+      <article class="privacy-flow-card mobile-card temporary">
+        <span class="privacy-number">2</span>
+        <div><h3>Koppeling maximaal 180 dagen</h3><p>Een afzonderlijke koppellaag maakt het mogelijk om een <code>person_id</code> en actiereeksen aan een account te koppelen. Een niet-geclaimde koppeling vervalt uiterlijk 180 dagen na de laatste actiereeks. Ontkoppelt u eerder, dan wordt deze koppeling direct verwijderd.</p></div>
+      </article>
+      <article class="privacy-flow-card mobile-card retained">
+        <span class="privacy-number">3</span>
+        <div><h3>Daarna niet meer herstelbaar</h3><p>Na verwijdering van de koppellaag kan de pseudonieme trainingsreeks niet opnieuw aan uw account worden gekoppeld. De actiereeks kan wel beschikbaar blijven voor het vastgelegde verbeter- en statistiekdoel, zolang zij daarvoor aantoonbaar nodig is.</p></div>
+      </article>
+    </section>
+
+    <section class="privacy-grid">
+      <article class="mobile-card privacy-detail">
+        <span class="eyebrow">Dataminimalisatie</span>
+        <h3>Wat bewaren we?</h3>
+        <ul>
+          <li>gecodeerde acties en leerobjecten;</li>
+          <li>relatieve tijd met fictief verschoven kalenderdatum;</li>
+          <li>pseudonieme persoon- en groepssleutels;</li>
+          <li>de versie van de gebruikte Leerbox.</li>
+        </ul>
+        <p>Geen naam, e-mailadres, wachtwoord of Google-account-ID in het enginecorpus.</p>
+      </article>
+
+      <article class="mobile-card privacy-detail">
+        <span class="eyebrow">Bewaarbeperking</span>
+        <h3>Niet zomaar “voor eeuwig”</h3>
+        <p>De tijdelijke claimkoppeling heeft een harde grens van 180 dagen. Voor het pseudonieme corpus toetsen we periodiek of de gegevens nog nodig, bruikbaar en proportioneel zijn. Zodra longitudinale herkenning niet meer nodig is, worden gegevens verwijderd of verder geanonimiseerd.</p>
+      </article>
+
+      <article class="mobile-card privacy-detail">
+        <span class="eyebrow">Uw rechten</span>
+        <h3>Inzage, ontkoppeling en verwijdering</h3>
+        <p>Zolang de afzonderlijke koppeling bestaat, kunt u vragen om inzage, correctie, beperking, bezwaar, overdracht of verwijdering voor zover het betreffende AVG-recht van toepassing is. Na definitieve ontkoppeling kan de engine de trainingsreeks niet meer aan uw account terugkoppelen.</p>
+      </article>
+
+      <article class="mobile-card privacy-detail">
+        <span class="eyebrow">Verantwoordelijkheid</span>
+        <h3>Wie moet u benaderen?</h3>
+        <p>De organisatie die de Leerbox aanbiedt is verantwoordelijk voor haar verwerking en vermeldt bij ingebruikname haar identiteit, contactadres, AVG-grondslag, eventuele ontvangers en klachtenprocedure. U kunt daarnaast een klacht indienen bij de Autoriteit Persoonsgegevens.</p>
+      </article>
+    </section>
+
+    <aside class="privacy-poc-note" aria-label="Toelichting voor deze proefomgeving">
+      <strong>Proof of Concept</strong>
+      <span>Voor productie moet de aanbiedende organisatie deze uitleg aanvullen met haar juridische naam, privacycontact, concrete grondslag, eventuele verwerkers en toepasselijke bewaartoets.</span>
+    </aside>
+  </main>
+</Layout>
+
+<style>
+  .privacy-page{display:grid;gap:18px;max-width:1180px;margin:0 auto}.privacy-hero{align-items:center;background:radial-gradient(circle at 8% 25%,rgba(50,221,210,.18),transparent 28%),linear-gradient(135deg,#0a2228,#102f36);border-color:#34707a;display:grid;gap:20px;grid-template-columns:auto 1fr;padding:28px}.privacy-shield{align-items:center;background:#0a1b20;border:1px solid #42d8cf;border-radius:50%;box-shadow:0 0 28px rgba(50,221,210,.22);color:#5cf1e7;display:flex;height:84px;justify-content:center;width:84px}.privacy-shield svg{height:48px;width:48px}.privacy-hero h2{font-size:clamp(1.45rem,3vw,2.35rem);margin:5px 0 8px}.privacy-hero p{color:#b5ced3;line-height:1.65;margin:0;max-width:850px}.privacy-purpose{align-items:start;border-left:5px solid #e6ad43;display:grid;gap:18px;grid-template-columns:auto 1fr;padding:22px}.privacy-step{background:#e6ad43;border-radius:999px;color:#071014;font-family:var(--font-heading);font-size:.7rem;font-weight:900;letter-spacing:.1em;padding:7px 11px;text-transform:uppercase}.privacy-purpose h3,.privacy-flow-card h3,.privacy-detail h3{margin:0 0 8px}.privacy-purpose p,.privacy-flow-card p,.privacy-detail p,.privacy-detail li{color:var(--muted);font-size:.82rem;line-height:1.65}.privacy-purpose p{margin:0}.privacy-purpose .privacy-exclusion{background:#0a1b20;border:1px solid #2c5059;border-radius:9px;margin-top:12px;padding:10px 12px}.privacy-flow{display:grid;gap:14px;grid-template-columns:repeat(3,minmax(0,1fr))}.privacy-flow-card{border-top:4px solid #4bc7bf;display:grid;gap:13px;grid-template-columns:auto 1fr;min-height:210px;padding:19px}.privacy-flow-card.temporary{border-top-color:#e6ad43}.privacy-flow-card.retained{border-top-color:#6e89c8}.privacy-number{align-items:center;background:#14363d;border:1px solid #3c727b;border-radius:50%;color:#fff;display:flex;font-family:var(--font-heading);font-size:1rem;font-weight:900;height:34px;justify-content:center;width:34px}.privacy-flow-card p{margin:0}.privacy-flow-card code{background:#071419;border:1px solid #294b54;border-radius:4px;color:#8ff5e4;padding:1px 4px}.privacy-grid{display:grid;gap:14px;grid-template-columns:repeat(2,minmax(0,1fr))}.privacy-detail{padding:21px}.privacy-detail ul{margin:10px 0 12px;padding-left:21px}.privacy-detail p{margin:0}.privacy-poc-note{align-items:flex-start;background:#251f12;border:1px solid #745d25;border-radius:12px;color:#e8cf92;display:flex;font-size:.72rem;gap:12px;line-height:1.55;padding:13px 16px}.privacy-poc-note strong{color:#f5c85c;white-space:nowrap}@media(max-width:820px){.privacy-flow{grid-template-columns:1fr}.privacy-flow-card{min-height:0}}@media(max-width:620px){.privacy-hero{grid-template-columns:1fr;padding:21px}.privacy-shield{height:66px;width:66px}.privacy-shield svg{height:38px;width:38px}.privacy-purpose{grid-template-columns:1fr}.privacy-grid{grid-template-columns:1fr}.privacy-poc-note{display:grid}}
+</style>

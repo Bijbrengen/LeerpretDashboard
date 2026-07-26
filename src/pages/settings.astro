@@ -1,0 +1,166 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Instellingen" description="Stel de serviceverbinding en toegangsrechten voor rollen en informatie in.">
+  <div class="settings-layout">
+    <aside class="mobile-card settings-menu">
+      <div class="settings-menu-head">
+        <span class="eyebrow">Instellingen</span>
+        <h2>Beheer</h2>
+      </div>
+      <button type="button" class="settings-menu-item active" data-settings-block="connection">
+        <strong>Verbinding</strong><small>Service en authenticatie</small>
+      </button>
+      <button type="button" class="settings-menu-item" data-settings-block="access_management">
+        <strong>Toegang</strong><small>Pagina’s en informatieblokken</small>
+      </button>
+    </aside>
+
+    <main class="settings-content">
+      <section class="settings-panel active" data-settings-panel="connection">
+        <div class="settings-header">
+          <span class="eyebrow">Configuratie</span>
+          <h2 class="section-title">Service-instellingen</h2>
+          <p class="muted-text">Pas de verbinding met de Leerpret FastAPI-backend aan.</p>
+        </div>
+        <div class="mobile-card">
+          <form id="settings-form" class="settings-form-layout" aria-label="Service-instellingen formulier">
+            <div class="input-group"><label for="api-base-input">Service Endpoint URL</label><input id="api-base-input" type="url" value="" required /></div>
+            <div class="input-group"><label for="org-id-input">Organisatie ID</label><input id="org-id-input" type="text" value="local-dev" required autocomplete="organization" /></div>
+            <div class="input-group"><label for="api-key-input">Sleutel (API-Key)</label><input id="api-key-input" type="password" value="leerpret-local-dev" required autocomplete="current-password" /></div>
+            <div class="settings-actions-grid"><button type="submit" class="btn btn-primary">Verbinding opslaan</button></div>
+          </form>
+        </div>
+        <div class="mobile-card" id="connection-feedback-card" hidden><div class="stale-warning" id="connection-feedback-text">Status wordt gecontroleerd...</div></div>
+      </section>
+
+      <section class="settings-panel" data-settings-panel="access_management">
+        <header class="access-header">
+          <div><span class="eyebrow">Informatietoegang</span><h2 class="section-title">Pagina- en blokrechten</h2><p class="muted-text">Bekijk welke informatieblokken de gekozen rol op iedere pagina mag openen.</p></div>
+          <label class="access-role-picker" id="access-role-picker"><span>Rol</span><select id="access-role-select"></select></label>
+        </header>
+        <div class="access-summary mobile-card" id="access-summary"><strong>–</strong><span>rechten laden…</span></div>
+        <div class="access-notice" id="access-notice" hidden></div>
+        <div class="access-page-list" id="access-page-list"><div class="mobile-card"><p class="muted-text">Toegangsrechten laden…</p></div></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    import { state, initSettings, saveSettings, checkHealth, establishSession, apiGet, apiPut } from '../js/api.js';
+    import { activeBlockRole, loadBlockAccess } from '../js/pageBlocks.js';
+
+    const roleLabels = { architect:'Leerpretarchitect', technologist:'Leerprettechnoloog', user:'Leerattractie', learner:'Lerende' };
+    let activeSettingsBlock = new URLSearchParams(window.location.search).get('block') === 'access_management' ? 'access_management' : 'connection';
+    let actorRole = activeBlockRole();
+    let accessCatalog = null;
+
+    async function initializeSettings() {
+      initSettings();
+      try {
+        const policy = await loadBlockAccess(actorRole, 'settings');
+        const allowed = new Set(Object.keys(policy.pages?.settings?.blocks || {}));
+        document.querySelectorAll('[data-settings-block]').forEach((button) => button.hidden = !allowed.has(button.dataset.settingsBlock));
+        if (!allowed.has(activeSettingsBlock)) activeSettingsBlock = 'connection';
+      } catch { activeSettingsBlock = 'connection'; }
+      initializeConnectionForm();
+      initializeRolePicker();
+      selectSettingsBlock(activeSettingsBlock);
+      bindSettingsEvents();
+    }
+
+    function initializeConnectionForm() {
+      const apiInput = document.getElementById('api-base-input');
+      const orgInput = document.getElementById('org-id-input');
+      const keyInput = document.getElementById('api-key-input');
+      if (apiInput) apiInput.value = state.apiBase;
+      if (orgInput) orgInput.value = state.organization;
+      if (keyInput) keyInput.value = state.apiKey || 'leerpret-local-dev';
+    }
+
+    function initializeRolePicker() {
+      const select = document.getElementById('access-role-select');
+      const roles = actorRole === 'technologist' ? Object.keys(roleLabels) : [actorRole];
+      select.innerHTML = roles.map((role) => `<option value="${role}">${roleLabels[role] || role}</option>`).join('');
+      select.value = actorRole;
+      document.getElementById('access-role-picker').classList.toggle('fixed', actorRole !== 'technologist');
+    }
+
+    function bindSettingsEvents() {
+      document.querySelectorAll('[data-settings-block]').forEach((button) => button.addEventListener('click', () => selectSettingsBlock(button.dataset.settingsBlock, true)));
+      document.getElementById('access-role-select')?.addEventListener('change', loadAccessCatalog);
+      document.getElementById('settings-form')?.addEventListener('submit', handleFormSubmit);
+    }
+
+    function selectSettingsBlock(block, updateUrl = false) {
+      activeSettingsBlock = block;
+      document.querySelectorAll('[data-settings-block]').forEach((button) => button.classList.toggle('active', button.dataset.settingsBlock === block));
+      document.querySelectorAll('[data-settings-panel]').forEach((panel) => panel.classList.toggle('active', panel.dataset.settingsPanel === block));
+      if (updateUrl) { const url = new URL(window.location.href); url.searchParams.set('block', block); history.replaceState({}, '', url); }
+      if (block === 'access_management' && !accessCatalog) loadAccessCatalog();
+    }
+
+    async function handleFormSubmit(event) {
+      event.preventDefault();
+      const apiInput = document.getElementById('api-base-input'); const orgInput = document.getElementById('org-id-input'); const keyInput = document.getElementById('api-key-input');
+      const feedbackCard = document.getElementById('connection-feedback-card'); const feedbackText = document.getElementById('connection-feedback-text');
+      saveSettings(apiInput.value, orgInput.value, keyInput.value); feedbackCard.hidden = false; feedbackText.textContent = 'Verbinding wordt gecontroleerd…';
+      const health = await checkHealth(); const auth = health.online ? await establishSession() : { authorized:false };
+      feedbackText.className = `stale-warning ${auth.authorized ? 'online-feedback' : 'error-feedback'}`;
+      feedbackText.textContent = auth.authorized ? `Succesvol verbonden met ${auth.label}.` : 'De verbinding of autorisatie is niet geldig.';
+    }
+
+    async function loadAccessCatalog() {
+      const targetRole = document.getElementById('access-role-select').value || actorRole;
+      const list = document.getElementById('access-page-list'); list.innerHTML = '<div class="mobile-card"><p class="muted-text">Toegangsrechten laden…</p></div>';
+      try {
+        accessCatalog = await apiGet(`/access/rules?role=${encodeURIComponent(targetRole)}&actor_role=${encodeURIComponent(actorRole)}`);
+        renderAccessCatalog();
+      } catch (error) {
+        document.getElementById('access-summary').innerHTML = '<strong>–</strong><span>rechten niet beschikbaar</span>';
+        list.innerHTML = `<div class="mobile-card access-load-error"><p class="text-danger">De toegangsrechten konden niet worden geladen (${escapeText(error?.message || 'onbekende fout')}).</p><button type="button" class="btn btn-secondary" id="retry-access-load">Opnieuw proberen</button></div>`;
+        document.getElementById('retry-access-load')?.addEventListener('click', loadAccessCatalog);
+      }
+    }
+
+    function renderAccessCatalog() {
+      const editable = Boolean(accessCatalog.editable);
+      const pages = accessCatalog.pages || [];
+      const allBlocks = pages.flatMap((page) => page.blocks);
+      const allowedCount = allBlocks.filter((block) => block.allowed).length;
+      document.getElementById('access-summary').innerHTML = `<strong>${allowedCount}</strong><span>van ${allBlocks.length} geplaatste blokken toegankelijk voor ${roleLabels[accessCatalog.role] || accessCatalog.role}</span>`;
+      const notice = document.getElementById('access-notice'); notice.hidden = false; notice.textContent = editable ? 'Wijzigingen worden direct in de backend opgeslagen.' : 'Alleen de Leerprettechnoloog kan deze rechten wijzigen.';
+      document.getElementById('access-page-list').innerHTML = pages.map((page) => renderAccessPage(page, editable)).join('');
+      document.querySelectorAll('[data-access-toggle]').forEach((input) => input.addEventListener('change', updateAccessRule));
+    }
+
+    function renderAccessPage(page, editable) {
+      const visibleBlocks = editable ? page.blocks : page.blocks.filter((block) => block.allowed);
+      if (!visibleBlocks.length) return '';
+      const count = page.blocks.filter((block) => block.allowed).length;
+      return `<details class="access-page-card mobile-card" open><summary><span><strong>${escapeText(page.label)}</strong><small>${escapeText(page.id)}</small></span><em>${count}/${page.blocks.length}</em></summary><div class="access-block-list">${visibleBlocks.map((block) => renderAccessBlock(page.id, block, editable)).join('')}</div></details>`;
+    }
+
+    function renderAccessBlock(pageId, block, editable) {
+      const disabled = pageId === 'settings' && block.id === 'access_management' && accessCatalog.role === 'technologist';
+      return `<label class="access-block-row ${block.allowed ? 'allowed' : 'denied'}"><span><strong>${escapeText(block.label)}</strong><small>${escapeText(block.id)} · ${escapeText(block.data_access)}</small></span>${editable ? `<input type="checkbox" role="switch" data-access-toggle data-page-id="${escapeText(pageId)}" data-block-id="${escapeText(block.id)}" ${block.allowed ? 'checked' : ''} ${disabled ? 'disabled title="Dit beheerrecht kan niet worden uitgezet"' : ''}>` : '<i>Toegang</i>'}</label>`;
+    }
+
+    async function updateAccessRule(event) {
+      const input = event.currentTarget; input.disabled = true;
+      try {
+        await apiPut(`/access/rules?actor_role=${encodeURIComponent(actorRole)}`, { page_id:input.dataset.pageId, block_id:input.dataset.blockId, target_role:accessCatalog.role, allowed:input.checked });
+        await loadAccessCatalog();
+      } catch { input.checked = !input.checked; input.disabled = false; showNotice('Wijziging kon niet worden opgeslagen.'); }
+    }
+
+    function showNotice(message) { const notice=document.getElementById('access-notice'); notice.hidden=false; notice.textContent=message; notice.classList.add('error'); }
+    function escapeText(value) { return String(value ?? '').replace(/[&<>'"]/g, (character) => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character])); }
+    window.addEventListener('DOMContentLoaded', initializeSettings);
+  </script>
+</Layout>
+
+<style is:global>
+  .settings-layout{align-items:start;display:grid;gap:22px}.settings-menu{display:grid;gap:8px}.settings-menu-head{border-bottom:1px solid var(--line);margin-bottom:8px;padding-bottom:16px}.settings-menu-head h2{font-size:1.18rem;margin:4px 0}.settings-menu-item{background:#10262d;border:1px solid var(--line);border-radius:12px;color:var(--ink);cursor:pointer;display:grid;font:inherit;gap:4px;min-height:68px;padding:12px 14px;text-align:left}.settings-menu-item strong{font-size:.8rem}.settings-menu-item small{color:var(--muted);font-size:.65rem}.settings-menu-item:hover{background:#15323a;border-color:#3b6972}.settings-menu-item.active{background:#0e2e33;border-color:var(--teal);box-shadow:inset 5px 0 var(--teal)}.settings-content{min-width:0}.settings-panel{display:none}.settings-panel.active{display:grid;gap:18px}.settings-header{margin-bottom:6px}.settings-header p{margin:0}.settings-form-layout{display:grid;gap:10px}.settings-actions-grid{display:flex;flex-direction:column;gap:8px;margin-top:16px}.online-feedback{background:#10332c;border-color:#2f806d;color:#79dfb1}.error-feedback{background:var(--bad);border-color:var(--bad-line);color:var(--coral)}.access-header{align-items:end;display:flex;gap:24px;justify-content:space-between}.access-header h2{margin:4px 0 6px}.access-header p{margin:0}.access-role-picker{display:grid;gap:7px;min-width:260px}.access-role-picker span{color:var(--muted);font-size:.67rem;font-weight:800;text-transform:uppercase}.access-role-picker select{background:#071419;border:1px solid var(--line);border-radius:11px;color:var(--ink);font:inherit;font-size:.75rem;min-height:44px;padding:9px 12px}.access-role-picker.fixed select{pointer-events:none}.access-summary{align-items:center;background:#0d2026;border-color:#294b54;display:flex;gap:14px;min-height:72px;padding:16px 20px}.access-summary strong{color:var(--teal);font-size:1.65rem}.access-summary span{color:var(--muted);font-size:.72rem;line-height:1.5}.access-notice{background:#102a32;border:1px solid #2d6972;border-radius:11px;color:#8cece5;font-size:.69rem;line-height:1.5;padding:12px 15px}.access-notice.error{background:#351a1d;border-color:#81443c;color:#ff9e8c}.access-page-list{display:grid;gap:18px}.access-load-error{display:grid;gap:12px}.access-load-error p{margin:0}.access-load-error button{justify-self:start}.access-page-card{background:#0d2026;border-color:#2b4c55;overflow:hidden;padding:0}.access-page-card summary{align-items:center;background:#142d34;cursor:pointer;display:flex;gap:16px;justify-content:space-between;list-style:none;min-height:72px;padding:16px 20px}.access-page-card summary:hover{background:#17363e}.access-page-card summary::-webkit-details-marker{display:none}.access-page-card summary span{display:grid;gap:4px;min-width:0}.access-page-card summary strong{color:var(--ink);font-size:.88rem;line-height:1.3}.access-page-card summary small{color:var(--muted);font-size:.62rem;font-weight:650}.access-page-card summary em{background:#103b3c;border:1px solid #2d7775;border-radius:999px;color:#79e6dc;font-size:.64rem;font-style:normal;font-weight:850;padding:6px 10px;white-space:nowrap}.access-block-list{background:#0b1d23;border-top:1px solid #2b4c55;display:grid;padding:4px 20px 10px}.access-block-row{align-items:center;border-bottom:1px solid #28434b;display:grid;gap:20px;grid-template-columns:minmax(0,1fr) auto;min-height:68px;padding:13px 4px}.access-block-row:last-child{border-bottom:0}.access-block-row>span{display:grid;gap:5px;min-width:0}.access-block-row strong{color:var(--ink);font-size:.76rem;line-height:1.35}.access-block-row small{color:var(--muted);font-size:.61rem;line-height:1.4;overflow-wrap:anywhere}.access-block-row.denied{opacity:.55}.access-block-row i{background:#14372c;border:1px solid #2f7058;border-radius:999px;color:#79dfb1;font-size:.61rem;font-style:normal;font-weight:850;padding:6px 9px;white-space:nowrap}.access-block-row input[role=switch]{accent-color:var(--teal);cursor:pointer;height:22px;margin:0;width:42px}@media(min-width:900px){.settings-layout{grid-template-columns:250px minmax(0,1fr)}.settings-menu{position:sticky;top:16px}}@media(max-width:650px){.access-header{align-items:stretch;flex-direction:column}.access-role-picker{min-width:0}.access-page-card summary{padding:14px 16px}.access-block-list{padding:4px 16px 8px}.access-block-row{gap:12px;min-height:64px}}
+</style>

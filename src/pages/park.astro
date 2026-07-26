@@ -1,0 +1,655 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Leerpretpark" description="Bekijk de leerboxen als attracties en open er een om de leerervaring te onderzoeken.">
+  
+  <!-- Attraction Map Wrapper -->
+  <section class="attractions-section">
+    <div class="park-map-scroll-wrapper" id="park-map-wrapper">
+      <!-- Loading Skeleton Map -->
+      <div class="skeleton-map-placeholder">
+        <div class="spinner"></div>
+        <span>Parkplattegrond laden...</span>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    import { apiGet, state } from '../js/api.js';
+
+    // SVG paths
+    const ROLLERCOASTER_PATH_MAIN = "M455.5,352H455v-192.06c0-2.274-1.014-4.312-2.613-5.688c-5.258-4.692-11.009-8.857-17.093-12.379C419.621,132.798,401.71,128,383.5,128c-30.364,0-57.138,11.978-77.445,34.644L247.5,220.919l-65.539-65.225c-0.029-0.029-0.06-0.052-0.09-0.081c-0.032-0.031-0.059-0.064-0.092-0.094C162.604,137.774,137.645,128,111.5,128C54.43,128,8,174.43,8,231.5V352H7.5c-4.142,0-7.5,3.358-7.5,7.5s3.358,7.5,7.5,7.5h448c4.142,0,7.5-3.358,7.5-7.5S459.643,352,455.5,352z M440,163.38V352h-33V146.175c7.254,1.991,14.245,4.897,20.778,8.68C432.072,157.341,436.171,160.201,440,163.38z M392.005,143.412c0,0.03-0.004,0.058-0.004,0.088V352h-33V146.283c7.779-2.17,15.973-3.282,24.5-3.282C386.348,143,389.185,143.141,392.005,143.412z M317.096,172.8c7.898-8.85,16.946-15.798,26.904-20.756V352h-33V178.885l5.791-5.763C316.896,173.018,316.998,172.911,317.096,172.8z M104,334.727V352H71v-25.257C81.261,331.124,92.367,333.89,104,334.727z M119,334.729c11.452-0.824,22.584-3.532,33-7.961V352h-33V334.729z M167,318.872c5.211-3.317,10.156-7.114,14.763-11.375c0.067-0.062,0.133-0.125,0.198-0.19L200,289.354V352h-33V318.872z M215,274.426l33-32.842V352h-33V274.426z M263,226.656l33-32.842V352h-33V226.656z M56,162.621V271.5c0,4.142,3.358,7.5,7.5,7.5s7.5-3.358,7.5-7.5V152.826c10.042-5.19,21.2-8.511,33.01-9.506c-0.001,0.06-0.009,0.119-0.009,0.179v152c0,4.142,3.358,7.5,7.5,7.5s7.5-3.358,7.5-7.5v-152c0-0.057-0.007-0.113-0.009-0.169c11.6,0.977,22.793,4.211,33.019,9.482c-0.002,0.071-0.011,0.14-0.011,0.211v120.809c0,4.142,3.358,7.5,7.5,7.5s7.5-3.358,7.5-7.5V162.592c1.541,1.243,3.058,2.524,4.523,3.877L200,194.809v31.203c0,4.142,3.358,7.5,7.5,7.5s7.5-3.358,7.5-7.5v-16.275l21.868,21.763l-65.389,65.075C155.099,311.682,133.803,320,111.5,320C62.701,320,23,280.299,23,231.5C23,203.7,35.889,178.858,56,162.621z M23,285.119c8.278,13.613,19.609,25.172,33.033,33.727C56.014,319.062,56,319.28,56,319.5V352H23V285.119z";
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    async function loadParkData() {
+      const container = document.getElementById('park-map-wrapper');
+      if (!container) return;
+
+      try {
+        const simulatorData = await apiGet('/simulator/datasets');
+        state.simulator = simulatorData;
+
+        // Filter active twins (exclude archived/inactive, and exclude backend infrastructure like engine/service)
+        const twins = (simulatorData.leerbox_twins || []).filter(
+          (t) => !["archief", "archived", "inactive", "inactief"].includes(String(t.status || "").toLowerCase()) &&
+                 !["engine", "service"].includes(String(t.id || "").toLowerCase())
+        );
+        if (twins.length === 0) {
+          container.innerHTML = `
+            <div class="park-map">
+              <div class="park-empty">
+                <strong>Nog geen actieve leerboxen</strong>
+                <span>Start de service of activeer een leerbox in de architect-werkbank.</span>
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        // Render interactive rollercoaster map
+        container.innerHTML = `
+          <div class="park-map" role="list" aria-label="Actieve leerboxen als attracties">
+            <!-- Eén complete achtergrond-SVG; de dynamische attractie-links blijven gewone HTML erbovenop. -->
+            <svg class="park-path-svg" viewBox="0 0 820 580" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <defs>
+                <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#07171c"/>
+                  <stop offset="52%" stop-color="#0d292e"/>
+                  <stop offset="100%" stop-color="#10242a"/>
+                </linearGradient>
+                <linearGradient id="meadow-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#1b5239"/>
+                  <stop offset="60%" stop-color="#123d2b"/>
+                  <stop offset="100%" stop-color="#0a281c"/>
+                </linearGradient>
+                <filter id="track-glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="6" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                </filter>
+                <path id="coaster-path" d="M 139.4 162.4 C 200 120, 260 110, 319.8 116.0 C 380 122, 450 120, 524.8 139.2 C 590 155, 620 200, 639.6 255.2 C 655 300, 680 360, 672.4 417.6 C 665 470, 550 420, 475.6 382.8 C 400 350, 330 420, 254.2 406.0 C 190 395, 140 370, 123.0 336.4 C 100 290, 80 200, 139.4 162.4 Z"/>
+              </defs>
+
+              <rect width="820" height="580" fill="url(#bg-grad)"/>
+              <circle cx="150" cy="100" r="140" fill="#32ddd2" opacity="0.08" />
+              <circle cx="700" cy="120" r="150" fill="#6e89c8" opacity="0.08" />
+              <rect x="42" y="36" width="736" height="508" rx="70" ry="70" fill="url(#meadow-grad)" stroke="#2b8f89" stroke-width="4"/>
+              <rect x="42" y="36" width="736" height="508" rx="70" ry="70" fill="none" stroke="#32ddd2" stroke-width="1" opacity="0.2"/>
+
+              <g transform="translate(268, 195)" opacity="0.75">
+                <path d="M 10 35 C 20 10, 70 5, 100 20 C 130 35, 125 65, 95 75 C 65 85, 20 70, 10 35 Z" fill="#0e5a6a" stroke="#32ddd2" stroke-width="1.5"/>
+                <ellipse cx="60" cy="40" rx="35" ry="16" fill="#17808f" opacity="0.6"/>
+                <circle cx="40" cy="35" r="4" fill="#32ddd2" opacity="0.8"/>
+                <circle cx="45" cy="45" r="5" fill="#22c55e" opacity="0.7"/>
+                <circle cx="46" cy="44" r="2" fill="#f43f5e" opacity="0.9"/>
+              </g>
+
+              <g transform="translate(50, 440)" opacity="0.65">
+                <path d="M 20 10 L 35 38 H 27 L 35 55 H 5 L 13 38 H 5 Z" fill="#10b981"/>
+                <rect x="17" y="55" width="6" height="10" fill="#78350f"/>
+                <path d="M 45 5 L 62 35 H 53 L 62 52 H 28 L 37 35 H 28 Z" fill="#059669"/>
+                <rect x="42" y="52" width="6" height="10" fill="#78350f"/>
+                <circle cx="110" cy="35" r="18" fill="#10b981"/>
+                <rect x="108" y="50" width="4" height="12" fill="#78350f"/>
+              </g>
+              <g transform="translate(420, 52) scale(0.7)" opacity="0.7">
+                <circle cx="20" cy="25" r="18" fill="#10b981"/>
+                <rect x="18" y="40" width="4" height="14" fill="#78350f"/>
+              </g>
+
+              <g transform="translate(600, 42)" opacity="0.85">
+                <circle cx="58" cy="58" r="42" fill="none" stroke="#2b8f89" stroke-width="3" />
+                <circle cx="58" cy="58" r="28" fill="none" stroke="#2b8f89" stroke-width="1.5" />
+                <path d="M58 16 V100 M16 58 H100 M28 28 L88 88 M88 28 L28 88" stroke="#2b8f89" stroke-width="1.5" />
+                <circle cx="58" cy="16" r="6" fill="#f43f5e" />
+                <circle cx="100" cy="58" r="6" fill="#f59e0b" />
+                <circle cx="58" cy="100" r="6" fill="#32ddd2" />
+                <circle cx="16" cy="58" r="6" fill="#a855f7" />
+                <path d="M42 96 L58 60 L74 96" stroke="#365760" stroke-width="3.5" stroke-linecap="round" />
+                <rect x="36" y="94" width="44" height="6" rx="3" fill="#2b8f89" />
+
+                <g transform="translate(85, 20)">
+                  <path d="M40 35 L25 60 M40 35 L55 60" stroke="#365760" stroke-width="2" />
+                  <path d="M18 35 H62" stroke="#2b8f89" stroke-width="3" stroke-linecap="round" />
+                  <path d="M22 15 L40 3 L58 15 Z" fill="#f43f5e" />
+                  <circle cx="25" cy="63" r="5" fill="#32ddd2" />
+                  <circle cx="55" cy="63" r="5" fill="#f59e0b" />
+                  <rect x="35" y="35" width="10" height="45" rx="3" fill="#2b8f89" />
+                </g>
+              </g>
+
+              <g transform="translate(365, 485)" opacity="0.9">
+                <rect x="15" y="22" width="12" height="50" rx="3" fill="#10242b" stroke="#32ddd2" stroke-width="1.5" />
+                <rect x="73" y="22" width="12" height="50" rx="3" fill="#10242b" stroke="#32ddd2" stroke-width="1.5" />
+                <path d="M 21 24 C 21 4, 79 4, 79 24" fill="none" stroke="#a855f7" stroke-width="4" />
+                <rect x="28" y="10" width="44" height="14" rx="4" fill="#10242b" stroke="#a855f7" stroke-width="1.5"/>
+                <text x="50" y="20" font-size="7.5" font-weight="900" fill="#32ddd2" text-anchor="middle" letter-spacing="1">WELKOM</text>
+              </g>
+
+              <use href="#coaster-path" fill="none" stroke="#050d10" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" />
+              <use href="#coaster-path" fill="none" stroke="#102d35" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+              <use href="#coaster-path" fill="none" stroke="#1d6258" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" />
+              <use href="#coaster-path" fill="none" stroke="#32ddd2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="12 12" filter="url(#track-glow)" />
+              <use href="#coaster-path" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="12 12" opacity="0.9" />
+            </svg>
+            
+            ${twins.map((twin, index) => {
+              const position = parkPosition(index);
+              const typeIcon = getAttractionIconType(twin.title || twin.id, twin.id, index);
+              const title = twin.title || twin.id || `Leerbox ${index + 1}`;
+              const tooltip = `${title} - ${twin.id || "leerbox"} - ${twin.status || "actief"}`;
+
+              return `
+                <a
+                  class="park-attraction ${typeIcon}"
+                  href="/learningbox?id=${encodeURIComponent(twin.id)}"
+                  role="listitem"
+                  title="${escapeHtml(tooltip)}"
+                  aria-label="${escapeHtml(tooltip)}"
+                  style="--park-x:${position.x}%; --park-y:${position.y}%;"
+                >
+                  ${getSvgIcon(typeIcon)}
+                  <span class="park-attraction-label">${escapeHtml(title)}</span>
+                  <span class="park-attraction-tooltip">${escapeHtml(twin.id || title)}</span>
+                </a>
+              `;
+            }).join('')}
+          </div>
+        `;
+
+      } catch (error) {
+        container.innerHTML = `
+          <div class="park-map">
+            <div class="park-empty">
+              <strong>Fout bij laden van Leerpretpark</strong>
+              <p>Kan geen data ophalen van de backend service. Controleer of de backend actief is.</p>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function parkPosition(index) {
+      const presets = [
+        { x: 17, y: 28 },
+        { x: 39, y: 20 },
+        { x: 64, y: 24 },
+        { x: 78, y: 44 },
+        { x: 58, y: 66 },
+        { x: 31, y: 70 },
+        { x: 15, y: 58 },
+        { x: 82, y: 72 },
+      ];
+      if (presets[index]) return presets[index];
+      const angle = (index * 47 * Math.PI) / 180;
+      return {
+        x: Math.round(50 + Math.cos(angle) * 34),
+        y: Math.round(48 + Math.sin(angle) * 30),
+      };
+    }
+
+    function getAttractionIconType(title, id, index) {
+      const text = `${title} ${id}`.toLowerCase();
+      if (text.includes("game") || text.includes("operations")) return "coaster";
+      if (text.includes("druk") || text.includes("werkplaats")) return "booth";
+      if (text.includes("phile") || text.includes("social")) return "pavilion";
+      return ["tent", "coaster", "pavilion", "booth"][index % 4];
+    }
+
+    function getSvgIcon(type) {
+      if (type === "coaster") {
+        return `<svg class="park-icon" viewBox="0 0 463 463" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+          <path d="${ROLLERCOASTER_PATH_MAIN}"></path>
+        </svg>`;
+      }
+      if (type === "booth") {
+        return `<svg class="park-icon" viewBox="0 0 96 72" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 24 H78 L72 12 H24 Z"></path>
+          <rect x="20" y="24" width="56" height="38" rx="5"></rect>
+          <path d="M28 24 V12 M44 24 V12 M60 24 V12 M34 46 H62"></path>
+        </svg>`;
+      }
+      if (type === "pavilion") {
+        return `<svg class="park-icon" viewBox="0 0 96 72" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 34 L48 10 L82 34 Z"></path>
+          <rect x="20" y="34" width="56" height="28" rx="4"></rect>
+          <path d="M32 62 V42 M48 62 V42 M64 62 V42"></path>
+        </svg>`;
+      }
+      return `<svg class="park-icon" viewBox="0 0 96 72" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 56 C18 34 30 16 48 10 C66 16 78 34 82 56 Z"></path>
+        <path d="M48 10 V56 M24 56 H72"></path>
+      </svg>`;
+    }
+
+    // Load data on load and on state change
+    window.addEventListener('DOMContentLoaded', loadParkData);
+    window.addEventListener('service-connection-changed', loadParkData);
+  </script>
+</Layout>
+
+<style is:global>
+  /* Map scroll container for responsive mobile styling */
+  .park-map-scroll-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.02);
+    display: grid;
+    place-items: center;
+    background: #f8fafc;
+  }
+
+  /* Original coordinate-based 2D map styling */
+  .park-map {
+    position: relative;
+    width: 820px; /* FIXED WIDTH to match SVG coordinates exactly under all screen ratios */
+    height: 580px; /* FIXED HEIGHT */
+    background: #07171c;
+    overflow: hidden;
+  }
+
+  .park-map::after {
+    content: "";
+    position: absolute;
+    inset: 36px 42px;
+    z-index: 0;
+    border: 8px solid #78a900;
+    border-radius: 70px;
+    background: rgba(250, 255, 235, 0.94);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.65);
+    pointer-events: none;
+  }
+
+  /* Theme park decorations styling */
+  .park-decoration {
+    position: absolute;
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  .park-story-asset {
+    position: absolute;
+    z-index: 2;
+    object-fit: contain;
+    pointer-events: none;
+    filter: drop-shadow(0 5px 0 rgba(0, 0, 0, 0.85));
+  }
+
+  .story-forest {
+    left: 20px;
+    top: 452px;
+    width: 148px;
+  }
+
+  .story-pond {
+    left: 268px;
+    top: 208px;
+    width: 138px;
+  }
+
+  .story-attractions {
+    right: 10px;
+    top: 6px;
+    width: 190px;
+  }
+
+  .story-attractions svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .story-booth-box {
+    left: 340px;
+    bottom: 74px;
+    width: 62px;
+  }
+
+  .tree-svg {
+    width: 32px;
+    height: 48px;
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.08));
+  }
+
+  .gate-decoration {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    z-index: 10;
+  }
+
+  .gate-svg {
+    width: 72px;
+    height: 58px;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.08));
+  }
+
+  .gate-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--plum);
+    background: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+    letter-spacing: 0.05em;
+  }
+
+  /* Bottom-right circle background decoration */
+  .park-map::before {
+    content: "";
+    position: absolute;
+    right: 8%;
+    bottom: 9%;
+    z-index: 1;
+    width: 190px;
+    height: 92px;
+    border: 3px solid rgba(47, 128, 237, 0.18);
+    border-radius: 50%;
+    background: rgba(47, 128, 237, 0.06);
+    pointer-events: none;
+  }
+
+  /* Winding SVG Rollercoaster Track */
+  .park-path-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .coaster-track-outer {
+    stroke: rgba(0, 0, 0, 0.9);
+    stroke-width: 22;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+  }
+
+  .coaster-track-inner {
+    stroke: rgba(255, 255, 255, 0.42);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 10 12;
+    fill: none;
+  }
+
+  /* Map zones labels */
+  .park-zone {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    min-width: 104px;
+    min-height: 54px;
+    padding: 8px 14px;
+    border: 2px solid;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--ink);
+    font-weight: 800;
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+    pointer-events: none;
+    font-family: var(--font-heading);
+  }
+
+  .park-zone-engine {
+    left: 46%;
+    top: 40%;
+    border-color: var(--green);
+  }
+
+  .park-zone-service {
+    left: 54%;
+    top: 52%;
+    border-color: var(--blue);
+  }
+
+  /* Attraction Node Link Button positioning */
+  .park-attraction {
+    position: absolute;
+    left: var(--park-x);
+    top: var(--park-y);
+    transform: translate(-50%, -50%);
+    display: grid;
+    justify-items: center;
+    gap: 6px;
+    width: 132px;
+    min-height: 112px;
+    padding: 10px 8px;
+    border: 1px solid rgba(216, 226, 234, 0.95);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.94);
+    color: var(--ink);
+    text-decoration: none;
+    text-align: center;
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.04);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 5;
+  }
+
+  .park-attraction:hover,
+  .park-attraction:focus {
+    border-color: var(--teal);
+    background: white;
+    outline: none;
+    transform: translate(-50%, -55%) scale(1.03);
+    box-shadow: 0 12px 24px rgba(13, 148, 136, 0.12);
+  }
+
+  /* Icons inside nodes */
+  .park-icon {
+    width: 74px;
+    height: 54px;
+    transition: transform 0.2s ease;
+  }
+
+  .park-icon path,
+  .park-icon rect {
+    fill: #eef8f8;
+    stroke: var(--teal);
+    stroke-width: 4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Icon specific variations matching the theme */
+  .park-attraction.coaster .park-icon path {
+    fill: #f2fbfb;
+    stroke-width: 24;
+  }
+
+  .park-attraction.pavilion .park-icon path,
+  .park-attraction.pavilion .park-icon rect {
+    fill: #f5eef4;
+    stroke: var(--plum);
+  }
+
+  .park-attraction.booth .park-icon path,
+  .park-attraction.booth .park-icon rect {
+    fill: #fff7e8;
+    stroke: var(--amber);
+  }
+
+  /* Label styles */
+  .park-attraction-label {
+    width: 100%;
+    color: var(--ink);
+    font-weight: 800;
+    font-size: 0.8rem;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Tooltip overlay styling */
+  .park-attraction-tooltip {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    z-index: 20;
+    max-width: 220px;
+    padding: 7px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--ink);
+    color: white;
+    font-size: 0.74rem;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 6px);
+    transition: opacity 120ms ease, transform 120ms ease;
+    white-space: nowrap;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+  }
+
+  .park-attraction:hover .park-attraction-tooltip,
+  .park-attraction:focus .park-attraction-tooltip {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  /* Empty state styling */
+  .park-empty {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: grid;
+    gap: 6px;
+    width: min(420px, calc(100% - 48px));
+    padding: 24px;
+    border: 1px dashed var(--line);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.95);
+    text-align: center;
+    transform: translate(-50%, -50%);
+  }
+
+  .park-empty strong {
+    font-size: 1.05rem;
+    color: var(--ink);
+  }
+
+  .park-empty span {
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  /* Skeleton loader styling */
+  .skeleton-map-placeholder {
+    width: 100%;
+    min-width: 820px;
+    height: 580px;
+    background: #f8fafc;
+    display: grid;
+    place-content: center;
+    gap: 16px;
+  }
+
+  .skeleton-map-placeholder .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3.5px solid var(--line);
+    border-top-color: var(--teal);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .skeleton-map-placeholder span {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  /* Rustige parkcockpit: de route en leerboxen hebben visuele voorrang. */
+  .park-map-scroll-wrapper {
+    background: #071014;
+    border-color: #29434b;
+    box-shadow: inset 0 0 0 1px rgba(50, 221, 210, .08);
+  }
+
+  .park-map {
+    background:
+      radial-gradient(circle at 18% 16%, rgba(50, 221, 210, .12), transparent 34%),
+      radial-gradient(circle at 84% 22%, rgba(110, 137, 200, .11), transparent 32%),
+      radial-gradient(ellipse at 52% 104%, rgba(44, 127, 112, .18), transparent 48%),
+      linear-gradient(145deg, #07171c 0%, #0d292e 52%, #10242a 100%);
+  }
+
+  .park-map::after {
+    background:
+      radial-gradient(circle at 24% 20%, rgba(111, 174, 82, .28), transparent 38%),
+      radial-gradient(ellipse at 74% 76%, rgba(76, 143, 69, .2), transparent 44%),
+      linear-gradient(145deg, rgba(47, 105, 61, .94), rgba(20, 70, 49, .96));
+    border-color: #2b8f89;
+    border-width: 5px;
+    box-shadow: inset 0 0 0 1px rgba(50, 221, 210, .16), inset 0 0 46px rgba(0, 0, 0, .22);
+  }
+
+  .park-story-asset {
+    opacity: .24;
+    filter: grayscale(1) saturate(.55) sepia(.12) hue-rotate(125deg) drop-shadow(0 5px 0 rgba(0, 0, 0, .32));
+  }
+
+  .park-map::before {
+    background: rgba(89, 188, 232, .08);
+    border-color: rgba(89, 188, 232, .3);
+  }
+
+  .gate-label,
+  .park-zone,
+  .park-attraction,
+  .park-empty {
+    background: rgba(9, 21, 26, .9);
+    border-color: #365760;
+    color: #eaf8f7;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .28);
+    backdrop-filter: blur(5px);
+  }
+
+  .gate-label { color: #c6d7da; }
+  .park-attraction:hover,
+  .park-attraction:focus {
+    background: rgba(18, 45, 52, .96);
+    border-color: #32ddd2;
+    box-shadow: 0 12px 28px rgba(50, 221, 210, .16);
+  }
+
+  .park-attraction-label,
+  .park-empty strong { color: #eaf8f7; }
+  .park-attraction-tooltip { background: #050d10; border-color: #365760; color: #eaf8f7; }
+
+  .park-icon path,
+  .park-icon rect { fill: #10242b; stroke: #32ddd2; }
+  .park-attraction.coaster .park-icon path { fill: #10242b; }
+  .park-attraction.pavilion .park-icon path,
+  .park-attraction.pavilion .park-icon rect { fill: #171f2d; stroke: #6e89c8; }
+  .park-attraction.booth .park-icon path,
+  .park-attraction.booth .park-icon rect { fill: #2a2213; stroke: #e6ad43; }
+
+  .coaster-track-outer { stroke: rgba(3, 8, 10, .96); }
+  .coaster-track-inner { stroke: rgba(120, 232, 223, .5); }
+  .skeleton-map-placeholder { background: #071014; }
+</style>

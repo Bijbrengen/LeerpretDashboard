@@ -1,0 +1,2852 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SourceCodeBrowser from '../components/SourceCodeBrowser.astro';
+---
+
+<Layout title="Service" description="Beheer servicefuncties, test API-verzoeken en voer leerboxsimulaties uit.">
+  
+  <div class="engine-header-block">
+    <span class="eyebrow" id="service-eyebrow">Handmatige Meting</span>
+    <h2 class="section-title" id="service-title">Bereken Leerpret</h2>
+    <p class="muted-text" id="service-desc">Voer handmatig de gedragsmarkers in om direct de berekende leerpretscore en jouw archetype te bepalen.</p>
+  </div>
+
+  <aside class="guest-identity-warning" id="guest-identity-warning" role="status" hidden>
+    <strong>Let op: acties worden pseudoniem verwerkt</strong>
+    <p>Zonder login kan de API niet vaststellen wie je bent. Een meegestuurde <code>person_id</code> geldt als pseudonieme meet-ID bij de <code>leerbox_id</code>, <code>leerbox_version</code>, groep en het leerobject. Na ontkoppeling blijft de actiereeks voor training en groepsstatistiek behouden onder een stabiele HMAC-entiteit. Echte tijdstippen worden per gedeelde groep met dezelfde geheime verschuiving naar een fictieve kalender verplaatst, zodat onderlinge tijdsverschillen blijven kloppen.</p>
+  </aside>
+
+  <!-- VIEW 1: Perspectief van de Lerende -->
+  <div id="learner-service-view">
+    <div class="engine-layout-grid">
+      
+      <!-- Left Column: Inputs & Input Switcher -->
+      <div class="input-container">
+        
+        <!-- Dropdown Selector for Input Methods -->
+        <div class="mobile-card input-method-switcher-card" style="margin-bottom: 16px;">
+          <div class="input-group">
+            <label for="learner-input-method-select" style="font-weight: 800; font-size: 0.82rem; margin-bottom: 6px; display: block; color: var(--ink);">Kies wijze van invoer</label>
+            <select id="learner-input-method-select" class="spacious-select" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--line); font-size: 0.85rem; font-weight: 700; background: #f8fafc; color: var(--ink);">
+              <option value="sliders">1. Gedragsmarkers handmatig (Schuifjes)</option>
+              <option value="raw">2. Handmatige meting (Aantallen)</option>
+              <option value="sequence">3. Actiereeks creëren (Reeks Bouwer)</option>
+              <option value="current">4. Huidige instellingen (Acceptatie-lijn)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Input Method 1: Sliders -->
+        <div id="input-method-sliders-panel" class="mobile-card input-method-card">
+          <h4>1. Gedragsmarkers handmatig</h4>
+          <p class="muted-text">Stel de T, A, V, R, S markers direct in via de schuifjes. De berekening start automatisch:</p>
+          
+          <div class="slider-group">
+            <div class="slider-header">
+              <label for="slide-t">Tijd (T)</label>
+              <span id="slide-t-val">0.60</span>
+            </div>
+            <input type="range" id="slide-t" class="spacious-slider" min="0" max="1" step="0.01" value="0.60">
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-header">
+              <label for="slide-a">Actie / Frictie (A)</label>
+              <span id="slide-a-val">0.60</span>
+            </div>
+            <input type="range" id="slide-a" class="spacious-slider" min="0" max="1" step="0.01" value="0.60">
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-header">
+              <label for="slide-v">Variatie (V)</label>
+              <span id="slide-v-val">0.33</span>
+            </div>
+            <input type="range" id="slide-v" class="spacious-slider" min="0" max="1" step="0.01" value="0.33">
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-header">
+              <label for="slide-r">Resilience (R)</label>
+              <span id="slide-r-val">0.67</span>
+            </div>
+            <input type="range" id="slide-r" class="spacious-slider" min="0" max="1" step="0.01" value="0.67">
+          </div>
+
+          <div class="slider-group">
+            <div class="slider-header">
+              <label for="slide-s">Succes (S)</label>
+              <span id="slide-s-val">1.00</span>
+            </div>
+            <input type="range" id="slide-s" class="spacious-slider" min="0" max="1" step="0.01" value="1.00">
+          </div>
+
+          <div style="margin-top: 16px;">
+            <button type="button" class="btn btn-danger btn-sm" id="btn-reset-sliders" style="width: 100%;">Reset</button>
+          </div>
+        </div>
+
+        <!-- Input Method 2: Handmatige meting (Aantallen) -->
+        <div id="input-method-raw-panel" class="mobile-card input-method-card" hidden>
+          <h4>2. Handmatige meting (Aantallen)</h4>
+          <p class="muted-text">Voer de ruwe gedragstellers in om direct de gedragsmarkers en leerpret te berekenen:</p>
+          
+          <div class="input-group" style="margin-bottom: 12px;">
+            <label for="raw-duration" style="font-size: 0.8rem; font-weight: 700;">Verblijftijd (seconden)</label>
+            <input type="number" id="raw-duration" min="0" value="360" style="width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 0.85rem; font-weight: 700; color: var(--ink);">
+          </div>
+
+          <div class="input-group" style="margin-bottom: 12px;">
+            <label for="raw-actions" style="font-size: 0.8rem; font-weight: 700;">Aantal Acties</label>
+            <input type="number" id="raw-actions" min="0" value="24" style="width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 0.85rem; font-weight: 700; color: var(--ink);">
+          </div>
+
+          <div class="input-group" style="margin-bottom: 12px;">
+            <label for="raw-targets" style="font-size: 0.8rem; font-weight: 700;">Unieke Targets (Variatie)</label>
+            <input type="number" id="raw-targets" min="0" value="8" style="width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 0.85rem; font-weight: 700; color: var(--ink);">
+          </div>
+
+          <div class="input-group" style="margin-bottom: 12px;">
+            <label for="raw-frictions" style="font-size: 0.8rem; font-weight: 700;">Botsingen (Weerstand)</label>
+            <input type="number" id="raw-frictions" min="0" value="3" style="width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 0.85rem; font-weight: 700; color: var(--ink);">
+          </div>
+
+          <div class="input-group" style="margin-bottom: 12px;">
+            <label for="raw-recoveries" style="font-size: 0.8rem; font-weight: 700;">Herstelpogingen</label>
+            <input type="number" id="raw-recoveries" min="0" value="2" style="width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 0.85rem; font-weight: 700; color: var(--ink);">
+          </div>
+
+          <div class="input-group" style="margin-bottom: 12px;">
+            <label for="raw-successes" style="font-size: 0.8rem; font-weight: 700;">Doelbereikingen (Succes)</label>
+            <input type="number" id="raw-successes" min="0" value="1" style="width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 0.85rem; font-weight: 700; color: var(--ink);">
+          </div>
+
+          <div style="margin-top: 16px;">
+            <button type="button" class="btn btn-danger btn-sm" id="btn-reset-raw" style="width: 100%;">Reset</button>
+          </div>
+        </div>
+
+        <!-- Input Method 3: Actiereeks creëren -->
+        <div id="input-method-sequence-panel" class="mobile-card input-method-card" hidden>
+          <h4>3. Actiereeks creëren</h4>
+          <p class="muted-text">Bouw een reeks acties door objecten aan te klikken. Elke toevoeging berekent direct de resultaten:</p>
+          
+          <div class="action-buttons-grid">
+            <button type="button" class="btn btn-action-node blue-node" data-action="gewoon">🔵 Gewoon</button>
+            <button type="button" class="btn btn-action-node red-node" data-action="weerstand">🔴 Weerstand</button>
+            <button type="button" class="btn btn-action-node green-node" data-action="herstel">🟢 Herstel</button>
+            <button type="button" class="btn btn-action-node yellow-node" data-action="succes">🟡 Succes</button>
+            <button type="button" class="btn btn-action-node white-node" data-action="tijd">⚪ Tussenstation</button>
+          </div>
+
+          <div class="ribbon-container">
+            <span class="eyebrow" id="sequence-counters-label" style="text-transform: none; font-size: 0.72rem; font-weight: 700; color: var(--muted);">Reeks details: -</span>
+            <div id="action-sequence-ribbon" class="action-sequence-ribbon">
+              <span class="empty-ribbon-text">Reeks is leeg. Klik op objecten hierboven.</span>
+            </div>
+          </div>
+
+          <div style="margin-top: 16px;">
+            <button type="button" class="btn btn-danger btn-sm" id="btn-reset-sequence" style="width: 100%;">Reset reeks</button>
+          </div>
+        </div>
+
+        <!-- Input Method 4: Huidige Instellingen -->
+        <div id="input-method-current-panel" class="mobile-card input-method-card" hidden>
+          <h4>4. Huidige instellingen</h4>
+          <p class="muted-text">Laad direct de markers uit de actieve stap van de Acceptatie-Controlelijn.</p>
+          
+          <div class="current-settings-display-box" style="margin: 16px 0; padding: 12px; background: #f8fafc; border: 1px solid var(--line); border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px;">
+              <span>Tijd (T):</span> <strong id="current-marker-t">-</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px;">
+              <span>Actie (A):</span> <strong id="current-marker-a">-</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px;">
+              <span>Variatie (V):</span> <strong id="current-marker-v">-</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px;">
+              <span>Resilience (R):</span> <strong id="current-marker-r">-</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+              <span>Succes (S):</span> <strong id="current-marker-s">-</strong>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-load-current-settings" style="flex: 1;">Laad Actieve Stap</button>
+            <button type="button" class="btn btn-danger btn-sm" id="btn-reset-current">Reset</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Outputs -->
+      <div class="mobile-card result-card" id="learner-result-card">
+        <h3>Jouw Leerpret Resultaat</h3>
+        
+        <div class="result-details-grid">
+          <!-- Column 1: Scores & Radar -->
+          <div class="result-col-left">
+            <div class="learner-score-display">
+              <div class="score-ring-wrapper">
+                <svg class="score-ring" viewBox="0 0 120 120">
+                  <circle class="ring-bg" cx="60" cy="60" r="50" />
+                  <circle class="ring-fill" cx="60" cy="60" r="50" id="result-score-ring" stroke-dasharray="314" stroke-dashoffset="314" />
+                </svg>
+                <div class="score-text-val" id="result-score-val">0%</div>
+              </div>
+              <div class="score-status-info">
+                <span class="eyebrow" id="result-status-label">Geen meting</span>
+                <h4 id="result-archetype-name">Nog geen berekening</h4>
+              </div>
+            </div>
+
+            <div class="radar-chart-container">
+              <span class="eyebrow">Radarspiegel (TAVRS)</span>
+              <div id="radar-chart-target" class="radar-chart-frame"></div>
+            </div>
+          </div>
+
+          <!-- Column 2: Archetype Mix & Markers -->
+          <div class="result-col-right">
+            <div class="archetype-mix-section">
+              <span class="eyebrow">Archetype Affiniteit</span>
+              <div id="archetype-mix-target"></div>
+            </div>
+
+            <div class="markers-metric-row">
+              <div class="metric-pill"><strong>T</strong><span id="result-marker-t">-</span><label>Tijd</label></div>
+              <div class="metric-pill"><strong>A</strong><span id="result-marker-a">-</span><label>Actie</label></div>
+              <div class="metric-pill"><strong>V</strong><span id="result-marker-v">-</span><label>Variatie</label></div>
+              <div class="metric-pill"><strong>R</strong><span id="result-marker-r">-</span><label>Resilience</label></div>
+              <div class="metric-pill"><strong>S</strong><span id="result-marker-s">-</span><label>Succes</label></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="analytics-secondary-grid">
+          <section class="analytics-panel">
+            <span class="eyebrow">Markerprofiel</span>
+            <h4>TAVRS-niveaus</h4>
+            <div id="marker-profile-chart" class="compact-bar-chart"></div>
+          </section>
+          <section class="analytics-panel">
+            <span class="eyebrow">Formulebijdrage</span>
+            <h4>Gewogen invloed</h4>
+            <div id="contribution-chart" class="compact-bar-chart"></div>
+          </section>
+          <section class="analytics-panel analytics-trend-panel">
+            <span class="eyebrow">Meetverloop</span>
+            <h4>Laatste berekeningen</h4>
+            <div id="measurement-history-chart" class="measurement-history-chart"></div>
+          </section>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- VIEW 2: Perspectief van de Leerpretattractie -->
+  <div id="attraction-service-view" hidden>
+    <div class="engine-layout-grid">
+      
+      <!-- Left Column: Input Menu -->
+      <div class="input-container">
+        <!-- Eén keuzelijst met alle Leerboxen; de herkomst staat als broodkruimel
+             boven het tabblad Concept. Daaronder de invoerwijze en de gedragsmarkers. -->
+        <div class="mobile-card service-block-picker" id="service-block-picker">
+          <div class="input-group" style="margin-bottom: 16px;">
+            <label for="attraction-twin-select">Leerbox</label>
+            <select id="attraction-twin-select" class="spacious-select">
+              <option value="">Laden...</option>
+            </select>
+          </div>
+          <div id="individual-input-slot"></div>
+        </div>
+      </div>
+
+      <!-- Right Column: Outputs / Formulas + Group Simulation -->
+      <div class="service-output-column">
+
+      <div class="service-pane-tabs" role="tablist" id="service-pane-tabs">
+        <button class="service-pane-tab role-all" type="button" role="tab" data-service-pane="individueel">Individueel</button>
+        <button class="service-pane-tab role-attraction" type="button" role="tab" data-service-pane="groep">Groep</button>
+        <button class="service-pane-tab role-builder" type="button" role="tab" data-service-pane="simulatie">Simulatie</button>
+        <button class="service-pane-tab role-builder" type="button" role="tab" data-service-pane="runs">Runs</button>
+        <button class="service-pane-tab role-technologist" type="button" role="tab" data-service-pane="api">API</button>
+        <button class="service-pane-tab role-builder" type="button" role="tab" data-service-pane="formule">Formule</button>
+        <button class="service-pane-tab role-technologist" type="button" role="tab" data-service-pane="code">Code</button>
+      </div>
+
+      <div class="service-pane" data-service-pane-body="individueel">
+        <div id="individual-output-slot"></div>
+      </div>
+
+      <div class="service-pane" data-service-pane-body="groep" hidden>
+        <div class="mobile-card">
+          <nav class="leerbox-kruimelpad" id="leerbox-kruimelpad" aria-label="Herkomst van de Leerbox">
+            <span id="kruimel-park">-</span>
+            <span aria-hidden="true">›</span>
+            <span id="kruimel-attractie">-</span>
+            <span aria-hidden="true">›</span>
+            <strong id="kruimel-leerbox">-</strong>
+          </nav>
+          <div id="attraction-twin-details" class="twin-details-box" style="margin-top: 16px;" hidden>
+            <span class="eyebrow" id="attraction-twin-status">concept</span>
+            <h4 id="attraction-twin-title" style="margin: 6px 0 10px 0; font-size: 1.15rem; color: var(--ink);">-</h4>
+            <p id="attraction-twin-summary" class="muted-text" style="font-size: 0.82rem; line-height: 1.4; margin-bottom: 12px;">-</p>
+            <ul class="twin-meta-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; font-size: 0.8rem; border-top: 1px dashed var(--line); padding-top: 12px;">
+              <li><strong>Leerdoel:</strong> <span id="attraction-twin-goal" class="muted-text">-</span></li>
+              <li><strong>Ontdekking:</strong> <span id="attraction-twin-discovery" class="muted-text">-</span></li>
+              <li><strong>Succes:</strong> <span id="attraction-twin-success" class="muted-text">-</span></li>
+              <li><strong>Weerstand:</strong> <span id="attraction-twin-barrier" class="muted-text">-</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="service-pane" data-service-pane-body="formule" hidden>
+      <div class="mobile-card technologist-formula-card service-block-card" id="technologist-formula-panel" data-service-block="formula">
+        <div class="service-card-heading">
+          <span class="eyebrow">Berekening geselecteerde leerbox</span>
+          <strong>Formules naar Leerpret</strong>
+        </div>
+        <div id="technologist-formula-content">
+          <p class="muted-text">De rekenroute van actiedata naar markers, archetypemix, weegvector en uiteindelijke leerpretwaarde voor de geselecteerde leerbox.</p>
+
+          <div class="formula-section">
+            <div id="technologist-formula-breakdown" class="formula-breakdown-grid">
+              <p class="muted-text">Nog geen simulatieprofielen geladen.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      </div>
+
+      <div class="service-pane" data-service-pane-body="api" hidden>
+      <div class="mobile-card protocol-tester-card service-block-card" id="protocol-tester-panel" data-service-block="protocol">
+        <div class="service-card-heading">
+          <span class="eyebrow">API-test</span>
+          <strong>Protocolverzoek</strong>
+        </div>
+        <div id="protocol-tester-content">
+          <p class="muted-text">Stuur een STATEMENT-envelope rechtstreeks naar de engine en bekijk de ruwe JSON-respons.</p>
+          <p class="guest-protocol-warning" id="guest-protocol-warning" hidden><strong>Gastmodus:</strong> de API bewaart de acties onder een nog niet gekoppelde meet-ID. Koppelen kan na login totdat de polsband-/sessie-uitgifte wordt gesloten; nu volgt alleen een ontvangstbevestiging.</p>
+          <form id="protocol-evaluate-form" class="protocol-form-grid">
+            <label>Duration seconden <input name="duration" type="number" min="0" value="420"></label>
+            <label>Actions <input name="actions" type="number" min="0" value="32"></label>
+            <label>Unique targets <input name="unique_targets" type="number" min="0" value="14"></label>
+            <label>Frictions <input name="frictions" type="number" min="0" value="5"></label>
+            <label>Recoveries <input name="recoveries" type="number" min="0" value="4"></label>
+            <label>Successes <input name="successes" type="number" min="0" value="1"></label>
+          <button type="submit" class="btn btn-primary btn-sm">Verstuur naar service</button>
+        </form>
+        <pre id="protocol-evaluate-output" class="json-output-box" aria-live="polite">Nog geen verzoek verstuurd.</pre>
+        <div class="protocol-archetype-chart-card">
+          <h3>Archetype-overlap</h3>
+          <div id="protocol-archetype-overlap-plot" class="protocol-archetype-overlap-plot">
+            <p class="muted-text">Voer een engine-evaluatie uit om de archetype-overlap te tonen.</p>
+          </div>
+        </div>
+      </div>
+
+      </div>
+      </div>
+
+      <div class="service-pane" data-service-pane-body="code" hidden>
+      <div class="service-block-card service-code-card" data-service-block="code">
+        <div class="service-code-heading">
+          <span class="eyebrow">Broncode</span>
+          <h3>Servicecode</h3>
+          <p class="muted-text">Bekijk de API-, protocol-, authenticatie- en sessiecode achter de Service-pagina.</p>
+        </div>
+        <SourceCodeBrowser scope="service" title="Service" />
+      </div>
+      </div>
+
+      <div class="service-pane" data-service-pane-body="simulatie" hidden>
+      <div class="mobile-card attraction-sim-card service-block-card" data-service-block="group">
+        <!-- Eigen tabblad, dus geen knop om in of uit te klappen. -->
+        <div class="service-card-heading">
+          <span class="eyebrow">Groepssimulatie</span>
+          <strong>Groepssimulatie Resultaten</strong>
+        </div>
+        <div id="attraction-sim-content">
+        <p class="muted-text">De berekende leerpret over meerdere virtuele gebruikers voor deze leerbox:</p>
+        
+        <div class="attraction-stats-grid">
+          <div class="attraction-stat-card">
+            <span class="stat-val" id="attraction-stat-users">-</span>
+            <label>Gesimuleerde Personen</label>
+          </div>
+          <div class="attraction-stat-card">
+            <span class="stat-val" id="attraction-stat-score">-%</span>
+            <label>Gemiddelde Leerpret</label>
+          </div>
+        </div>
+
+        <div class="attraction-archetypes-distribution" style="margin-top: 20px; background: #f8fafc; border: 1px solid var(--line); border-radius: 12px; padding: 16px;">
+          <span class="eyebrow">Archetype Verdeling (Groep)</span>
+          <div id="attraction-archetype-dist-target" style="margin-top: 8px;"></div>
+        </div>
+
+        </div>
+      </div>
+
+      </div>
+
+      <div class="service-pane" data-service-pane-body="runs" hidden>
+      <div class="mobile-card attraction-runs-card service-block-card" id="attraction-runs-panel" data-service-block="runs">
+          <!-- Het tabblad Runs bevat niets anders, dus de tabel staat meteen open;
+               een knop om hem uit te klappen voegt hier niets meer toe. -->
+          <span class="eyebrow" style="margin: 0; font-size: 0.76rem; letter-spacing: 0.05em; font-weight: 800; color: var(--ink);">Gedetailleerde Runs</span>
+
+          <div class="table-wrapper" id="runs-table-wrapper" style="margin-top: 12px;">
+            <table class="attraction-runs-table">
+              <thead>
+                <tr>
+                  <th>Gebruiker / Profiel</th>
+                  <th>T</th>
+                  <th>A</th>
+                  <th>V</th>
+                  <th>R</th>
+                  <th>S</th>
+                  <th>Score</th>
+                  <th>Archetype</th>
+                </tr>
+              </thead>
+              <tbody id="attraction-runs-table-body">
+                <tr>
+                  <td colspan="8" class="text-center muted-text" style="padding: 20px;">Geen data geladen.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+      </div>
+      </div>
+
+    </div>
+  </div>
+  </div>
+
+  <script>
+    import { apiGet, apiPost, initSettings, renderMath } from '../js/api.js';
+
+    // Static mapping of the archetypes
+    const ARCHETYPES = {
+      "Veroveraar": [0.818, 0.880, 0.581, 0.907, 0.807],
+      "Verwerver": [0.740, 0.778, 0.556, 0.615, 0.765],
+      "Verkenner": [0.830, 0.833, 0.854, 0.719, 0.790],
+      "Volger": [0.764, 0.700, 0.359, 0.553, 0.594],
+      "Verlater": [0.050, 0.050, 0.050, 0.050, 0.000]
+    };
+
+    let sequenceRaw = {
+      duration: 360,
+      actions: 24,
+      unique_targets: 8,
+      frictions: 3,
+      recoveries: 2,
+      successes: 1
+    };
+    let sequenceArray = [];
+    let activeCurrentStepMarkers = [0.00, 0.00, 0.00, 0.00, 0.00];
+
+    // Helper: Escape HTML
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // Helper: JS Leerpret formula implementation for instant computations
+    function calculateLeerpretJs(markersTuple) {
+      const overlap = (left, right) => left.map((val, i) => Math.min(val, right[i]));
+      const area = (v) => v.reduce((sum, val, i) => sum + val * v[(i + 1) % v.length], 0);
+      
+      const areas = {};
+      let totalArea = 0;
+      for (const [key, vector] of Object.entries(ARCHETYPES)) {
+        const ov = overlap(markersTuple, vector);
+        const a = area(ov);
+        areas[key] = a;
+        totalArea += a;
+      }
+      
+      const alphas = {};
+      for (const key of Object.keys(ARCHETYPES)) {
+        alphas[key] = totalArea > 0 ? (areas[key] / totalArea) : 0;
+      }
+      
+      const weights = [0, 0, 0, 0, 0];
+      for (const [key, alpha] of Object.entries(alphas)) {
+        const vector = ARCHETYPES[key];
+        for (let i = 0; i < 5; i++) {
+          weights[i] += alpha * vector[i];
+        }
+      }
+      
+      let numerator = 0;
+      let denominator = 0;
+      for (let i = 0; i < 5; i++) {
+        numerator += markersTuple[i] * weights[i];
+        denominator += weights[i] * weights[i];
+      }
+      
+      const score = denominator > 0 ? Math.max(0, Math.min(1, numerator / denominator)) : 0;
+      
+      let dominant = null;
+      let maxVal = -1;
+      for (const [key, val] of Object.entries(alphas)) {
+        if (val > maxVal) {
+          maxVal = val;
+          dominant = key;
+        }
+      }
+      if (maxVal <= 0) dominant = null;
+      
+      return {
+        learning_value: score,
+        dominant_archetype: dominant,
+        archetype_mix: alphas
+      };
+    }
+
+    function calculateFormulaBreakdown(markersTuple) {
+      const raw = markersTuple.map(v => Math.max(0, Math.min(1, Number(v || 0))));
+      const effective = [...raw];
+      const thresholdTriggered = effective[1] < 0.15;
+      if (thresholdTriggered) effective[0] = 0;
+
+      const overlap = (left, right) => left.map((val, i) => Math.min(val, right[i]));
+      const area = (v) => v.reduce((sum, val, i) => sum + val * v[(i + 1) % v.length], 0);
+      const overlaps = {};
+      const areas = {};
+      let totalArea = 0;
+
+      for (const [key, vector] of Object.entries(ARCHETYPES)) {
+        const ov = overlap(effective, vector);
+        const ar = area(ov);
+        overlaps[key] = ov;
+        areas[key] = ar;
+        totalArea += ar;
+      }
+
+      const alphas = {};
+      for (const key of Object.keys(ARCHETYPES)) {
+        alphas[key] = totalArea > 0 ? areas[key] / totalArea : 0;
+      }
+
+      const weights = [0, 0, 0, 0, 0];
+      for (const [key, alpha] of Object.entries(alphas)) {
+        const vector = ARCHETYPES[key];
+        for (let i = 0; i < 5; i++) {
+          weights[i] += alpha * vector[i];
+        }
+      }
+
+      const numerator = effective.reduce((sum, value, index) => sum + value * weights[index], 0);
+      const denominator = weights.reduce((sum, value) => sum + value * value, 0);
+      const score = denominator > 0 ? Math.max(0, Math.min(1, numerator / denominator)) : 0;
+      const dominant = Object.entries(alphas).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+
+      return { raw, effective, thresholdTriggered, overlaps, areas, totalArea, alphas, weights, numerator, denominator, score, dominant };
+    }
+
+    /* Welke rollen welk tabblad in de rechterkolom zien. Individueel en Concept zijn
+       er voor iedereen; de groepssimulatie niet voor Gast en Lerende, want die werken
+       uitsluitend met hun eigen invoer. Runs is voor de twee bouwrollen, en de
+       technische tabbladen zijn alleen voor de Leerprettechnoloog.
+
+       Deze tabel staat bewust boven de functies die hem lezen: een const die later in
+       het bestand staat bestaat nog niet op het moment dat een functie erboven hem
+       aanroept, en dat levert een lastig te vinden fout op. */
+    const ALLE_SERVICEROLLEN = ['guest', 'learner', 'user', 'architect', 'technologist'];
+    const TABBLADEN_PER_ROL = {
+      individueel: ALLE_SERVICEROLLEN,
+      groep: ALLE_SERVICEROLLEN,
+      simulatie: ['user', 'architect', 'technologist'],
+      runs: ['architect', 'technologist'],
+      api: ['technologist'],
+      formule: ['architect', 'technologist'],
+      code: ['technologist']
+    };
+
+    function currentServiceRole() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get('role') || localStorage.getItem('active_role') || localStorage.getItem('leerpret.poc.role') || 'architect';
+    }
+
+    /* Gast en Lerende benaderen de service uitsluitend individueel; een view=group
+       in de URL mag dat niet omzeilen. De overige rollen kiezen zelf. */
+    function magGroepsweergave(activeRole = currentServiceRole()) {
+      return ['user', 'architect', 'technologist'].includes(activeRole);
+    }
+
+    function currentServiceMode(activeRole = currentServiceRole()) {
+      if (!magGroepsweergave(activeRole)) return 'individual';
+      const view = new URLSearchParams(window.location.search).get('view');
+      if (view === 'individual' || view === 'group') return view;
+      return 'individual';
+    }
+
+    function updateDetailedRunsVisibility(activeRole = currentServiceRole()) {
+      const runsPanel = document.getElementById('attraction-runs-panel');
+      if (!runsPanel) return;
+
+      // De zichtbaarheid van het tabblad zelf regelt pasServiceTabbladenAan; hier
+      // gaat het alleen om de inhoud van het runspaneel binnen dat tabblad.
+      const showDetailedRuns = TABBLADEN_PER_ROL.runs.includes(activeRole);
+      runsPanel.hidden = !showDetailedRuns;
+      runsPanel.style.display = showDetailedRuns ? '' : 'none';
+    }
+
+    /* Elke kaart heeft nu een eigen tabblad en staat dus altijd open. Het inklappen
+       en de bijbehorende knoppen zijn daarmee vervallen. */
+
+    function pasServiceTabbladenAan(activeRole = currentServiceRole()) {
+      const tabs = [...document.querySelectorAll('[data-service-pane]')];
+      if (!tabs.length) return;
+
+      let zichtbaarActief = false;
+      tabs.forEach((tab) => {
+        const naam = tab.getAttribute('data-service-pane');
+        const mag = (TABBLADEN_PER_ROL[naam] || []).includes(activeRole);
+        tab.hidden = !mag;
+        if (mag && tab.classList.contains('is-active')) zichtbaarActief = true;
+      });
+
+      // Zonder geldig actief tabblad terug naar Individueel, dat elke rol heeft.
+      if (!zichtbaarActief) toonServiceTabblad('individueel');
+    }
+
+    function toonServiceTabblad(naam) {
+      document.querySelectorAll('[data-service-pane]').forEach((tab) => {
+        const actief = tab.getAttribute('data-service-pane') === naam;
+        tab.classList.toggle('is-active', actief);
+        tab.setAttribute('aria-selected', String(actief));
+      });
+      document.querySelectorAll('[data-service-pane-body]').forEach((pane) => {
+        pane.hidden = pane.getAttribute('data-service-pane-body') !== naam;
+      });
+      localStorage.setItem('leerpret.service.pane', naam);
+    }
+
+    function setupServiceTabs() {
+      document.querySelectorAll('[data-service-pane]').forEach((tab) => {
+        if (tab.dataset.bound === 'true') return;
+        tab.dataset.bound = 'true';
+        tab.addEventListener('click', () => toonServiceTabblad(tab.getAttribute('data-service-pane')));
+      });
+      /* De onthouden keuze kan een naam van voor de hernoeming zijn. Een onbekende
+         naam zou alle panelen verbergen, dus vallen we dan terug op Individueel. */
+      const onthouden = localStorage.getItem('leerpret.service.pane');
+      toonServiceTabblad(TABBLADEN_PER_ROL[onthouden] ? onthouden : 'individueel');
+      pasServiceTabbladenAan();
+    }
+
+    const visibleServiceBlocks = new Set(['group']);
+    let lastServiceBlockRole = null;
+    let activeServicePaneMode = 'individual';
+    let individualMeasurementHistory = [];
+
+    function allowedServiceBlocksForRole(activeRole) {
+      if (activeRole === 'technologist') return new Set(['leerbox', 'group', 'runs', 'formula', 'protocol', 'code']);
+      if (activeRole === 'architect') return new Set(['leerbox', 'group', 'runs', 'protocol']);
+      if (activeRole === 'guest') return new Set(['protocol']);
+      return new Set(['leerbox', 'group']);
+    }
+
+    /* Het linkermenu bestaat nog uit één keuzelijst en de invoervelden. De schakelaars
+       tussen individuele en groepsblokken zijn vervallen; alleen de rolgebonden
+       verwijzingen hebben hier nog een klikafhandeling nodig. */
+    function setupServiceBlockPicker() {
+      document.querySelectorAll('.block-picker-link').forEach(link => {
+        if (link.dataset.roleBound === 'true') return;
+        link.dataset.roleBound = 'true';
+        link.addEventListener('click', (event) => {
+          const activeRole = currentServiceRole();
+          const url = new URL(link.getAttribute('href'), window.location.origin);
+          url.searchParams.set('role', activeRole);
+          event.preventDefault();
+          window.location.href = `${url.pathname}${url.search}`;
+        });
+      });
+
+    }
+
+    function mountUnifiedServiceWorkbench() {
+      const inputSlot = document.getElementById('individual-input-slot');
+      const outputSlot = document.getElementById('individual-output-slot');
+      const learnerView = document.getElementById('learner-service-view');
+      const switcher = document.querySelector('#learner-service-view .input-method-switcher-card');
+      const resultCard = document.getElementById('learner-result-card');
+
+      if (inputSlot && switcher && switcher.parentElement !== inputSlot) {
+        inputSlot.appendChild(switcher);
+        ['input-method-sliders-panel', 'input-method-raw-panel', 'input-method-sequence-panel', 'input-method-current-panel']
+          .map(id => document.getElementById(id))
+          .filter(Boolean)
+          .forEach(panel => inputSlot.appendChild(panel));
+      }
+
+      if (outputSlot && resultCard && resultCard.parentElement !== outputSlot) {
+        outputSlot.appendChild(resultCard);
+      }
+
+      if (learnerView) learnerView.hidden = true;
+    }
+
+    /* De oude scheiding tussen een individuele en een groepsweergave is vervangen door
+       tabbladen in de rechterkolom. Deze functie zet nu alleen nog de koptekst en de
+       gastwaarschuwingen; het tonen en verbergen van panelen doen de tabbladen. */
+    function setServicePaneMode(mode, activeRole = currentServiceRole()) {
+      activeServicePaneMode = mode;
+      const individualOutput = document.getElementById('individual-output-slot');
+      const eyebrow = document.getElementById('service-eyebrow');
+      const title = document.getElementById('service-title');
+      const desc = document.getElementById('service-desc');
+      const guestWarning = document.getElementById('guest-identity-warning');
+      const protocolWarning = document.getElementById('guest-protocol-warning');
+      const isGuest = activeRole === 'guest';
+
+      if (guestWarning) guestWarning.hidden = !isGuest;
+      if (protocolWarning) protocolWarning.hidden = !isGuest;
+      if (individualOutput) individualOutput.hidden = isGuest;
+
+      if (eyebrow) eyebrow.textContent = isGuest ? 'Gastmodus' : 'Individueel';
+      if (title) title.textContent = isGuest ? 'Lever acties pseudoniem aan' : 'Bereken Leerpret';
+      if (desc) desc.textContent = isGuest
+        ? 'De engine neemt acties aan, maar koppelt ze zonder login niet aan een persoon en geeft geen persoonlijke uitkomst terug.'
+        : 'Voer gedragsmarkers of een actiereeks in en bekijk rechts direct de individuele leerpretuitkomst.';
+
+      setAttractionServiceHeader(activeRole);
+      updateServiceBlockVisibility(activeRole);
+    }
+
+    /* De rechterkolom wordt sinds de tabbladen niet meer per blok getoond of verborgen.
+       Deze functie houdt nog wel het linkermenu bij en zorgt dat de gegevens geladen
+       zijn; welke tabbladen een rol mag zien, bepaalt pasServiceTabbladenAan. */
+    function updateServiceBlockVisibility(activeRole = currentServiceRole()) {
+      const picker = document.getElementById('service-block-picker');
+      const allowed = allowedServiceBlocksForRole(activeRole);
+
+      if (picker) picker.hidden = false;
+
+      // Elke rol kiest een Leerbox, dus de lijst is altijd nodig.
+      loadSimulationData();
+
+      if (lastServiceBlockRole !== activeRole) {
+        lastServiceBlockRole = activeRole;
+        visibleServiceBlocks.clear();
+        allowed.forEach(block => visibleServiceBlocks.add(block));
+      }
+
+      pasServiceTabbladenAan(activeRole);
+
+      updateDetailedRunsVisibility(activeRole);
+    }
+
+    function averageMarkers(profiles) {
+      if (!profiles.length) return null;
+      const totals = [0, 0, 0, 0, 0];
+      profiles.forEach(profile => {
+        const markers = extractMarkers(profile);
+        for (let i = 0; i < 5; i++) totals[i] += Number(markers[i] || 0);
+      });
+      return totals.map(value => value / profiles.length);
+    }
+
+    function formatVector(values) {
+      return `(${values.map(value => Number(value || 0).toFixed(2)).join(', ')})`;
+    }
+
+    function formatMix(alphas) {
+      return Object.entries(alphas)
+        .map(([key, value]) => `${key}: ${Math.round(Number(value || 0) * 100)}%`)
+        .join(' | ');
+    }
+
+    function formatNumberMap(values, digits = 3) {
+      return Object.entries(values)
+        .map(([key, value]) => `${key}: ${Number(value || 0).toFixed(digits)}`)
+        .join(' | ');
+    }
+
+    function renderTechnologistFormulaPanel(twin, profiles = []) {
+      const panel = document.getElementById('technologist-formula-panel');
+      if (!panel) return;
+      // Welke rollen het tabblad zien staat in TABBLADEN_PER_ROL; volg diezelfde lijst,
+      // anders blijft het paneel leeg voor een rol die het tabblad wel mag openen.
+      const magFormule = TABBLADEN_PER_ROL.formule.includes(currentServiceRole());
+      panel.hidden = !magFormule;
+      panel.style.display = panel.hidden ? 'none' : '';
+      if (!magFormule) return;
+
+      const breakdownTarget = document.getElementById('technologist-formula-breakdown');
+      if (!breakdownTarget) return;
+      const sample = averageMarkers(profiles);
+      if (!sample) {
+        breakdownTarget.innerHTML = `<p class="muted-text">Geen simulatieprofielen beschikbaar voor een voorbeeldberekening. De formules hierboven blijven de actieve rekenroute.</p>`;
+        return;
+      }
+
+      const breakdown = calculateFormulaBreakdown(sample);
+      breakdownTarget.innerHTML = `
+        <div class="formula-metric">
+          <span>Stap 1 - ruwe acties naar markers</span>
+          <strong>\\(m = ${formatVector(breakdown.raw)}\\)</strong>
+        </div>
+        <div class="formula-metric">
+          <span>Stap 2 - activatiedrempel</span>
+          <strong>\\(m_{\\mathrm{eff}} = ${formatVector(breakdown.effective)}\\)</strong>
+          <small>${breakdown.thresholdTriggered ? '\\(A < 0.15\\), dus \\(T\\) is nulgezet.' : '\\(A \\ge 0.15\\), dus de marker blijft gelijk.'}</small>
+        </div>
+        <div class="formula-metric">
+          <span>Stap 3 - archetype-overlap</span>
+          <strong>${escapeHtml(formatNumberMap(breakdown.areas))}</strong>
+          <small>\\(\\sum \\Omega = ${breakdown.totalArea.toFixed(3)}\\)</small>
+        </div>
+        <div class="formula-metric">
+          <span>Stap 4 - archetypemix</span>
+          <strong>${escapeHtml(formatMix(breakdown.alphas))}</strong>
+        </div>
+        <div class="formula-metric">
+          <span>Stap 5 - weegvector</span>
+          <strong>\\(w = ${formatVector(breakdown.weights)}\\)</strong>
+        </div>
+        <div class="formula-metric highlight">
+          <span>Stap 6 - leerpret</span>
+          <strong>\\(\\frac{${breakdown.numerator.toFixed(3)}}{${breakdown.denominator.toFixed(3)}} = ${Math.round(breakdown.score * 100)}\\%\\)</strong>
+          <small>${escapeHtml(breakdown.dominant || 'Geen dominant archetype')}</small>
+        </div>
+      `;
+      renderMath(breakdownTarget);
+    }
+
+    // Helper: dynamic SVG Radar creator
+    function generateRadarSvg(markers) {
+      const center = 60;
+      const maxRadius = 45;
+      const axes = ['T', 'A', 'V', 'R', 'S'];
+      const angles = axes.map((_, i) => (i * 2 * Math.PI / 5) - Math.PI / 2);
+
+      const archetypeVectors = {
+        "Veroveraar": { T: 0.818, A: 0.880, V: 0.581, R: 0.907, S: 0.807 },
+        "Verwerver": { T: 0.740, A: 0.778, V: 0.556, R: 0.615, S: 0.765 },
+        "Verkenner": { T: 0.830, A: 0.833, V: 0.854, R: 0.719, S: 0.790 },
+        "Volger": { T: 0.764, A: 0.700, V: 0.359, R: 0.553, S: 0.594 }
+      };
+
+      const archetypeColors = {
+        "Veroveraar": "#FF4B4B",
+        "Verwerver": "#0068C9",
+        "Verkenner": "#FF8C00",
+        "Volger": "#29B09D"
+      };
+
+      const points = axes.map((axis, i) => {
+        const val = markers[axis] ?? 0;
+        const r = val * maxRadius;
+        const x = center + r * Math.cos(angles[i]);
+        const y = center + r * Math.sin(angles[i]);
+        return { x, y, label: axis };
+      });
+
+      let gridHtml = '';
+      [0.25, 0.5, 0.75, 1.0].forEach(level => {
+        const levelPoints = angles.map(angle => {
+          const r = level * maxRadius;
+          const x = center + r * Math.cos(angle);
+          const y = center + r * Math.sin(angle);
+          return `${x.toFixed(1)},${y.toFixed(1)}`;
+        }).join(' ');
+        gridHtml += `<polygon points="${levelPoints}" class="radar-grid-line" stroke="#cbd5e1" stroke-width="0.75" fill="none" />`;
+      });
+
+      let standardPolysHtml = '';
+      Object.entries(archetypeVectors).forEach(([name, vec]) => {
+        const polyPoints = axes.map((axis, i) => {
+          const val = vec[axis];
+          const r = val * maxRadius;
+          const x = center + r * Math.cos(angles[i]);
+          const y = center + r * Math.sin(angles[i]);
+          return `${x.toFixed(1)},${y.toFixed(1)}`;
+        }).join(' ');
+        standardPolysHtml += `
+          <polygon points="${polyPoints}" stroke="${archetypeColors[name]}" stroke-width="1.2" stroke-dasharray="1.5,1.5" fill="none" style="opacity: 0.65;" />
+        `;
+      });
+
+      let axesHtml = '';
+      points.forEach((pt, i) => {
+        const angle = angles[i];
+        const lineX = center + maxRadius * Math.cos(angle);
+        const lineY = center + maxRadius * Math.sin(angle);
+        
+        const labelDistance = maxRadius + 10;
+        const labelX = center + labelDistance * Math.cos(angle);
+        const labelY = center + labelDistance * Math.sin(angle) + 3;
+        
+        axesHtml += `
+          <line x1="${center}" y1="${center}" x2="${lineX.toFixed(1)}" y2="${lineY.toFixed(1)}" class="radar-axis-line" stroke="#94a3b8" stroke-width="0.75" stroke-dasharray="2,2" />
+          <text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" class="radar-axis-label" text-anchor="middle" font-size="8" font-weight="800" fill="#475569">${pt.label}</text>
+        `;
+      });
+
+      const polyPoints = points.map(pt => `${pt.x.toFixed(1)},${pt.y.toFixed(1)}`).join(' ');
+
+      return `
+        <svg class="radar-chart-svg" viewBox="0 0 120 120" style="width: 100%; height: 100%;">
+          ${gridHtml}
+          ${standardPolysHtml}
+          ${axesHtml}
+          <polygon points="${polyPoints}" class="radar-value-poly" fill="rgba(15, 118, 110, 0.22)" stroke="var(--green)" stroke-width="2.5" />
+          ${points.map(pt => `<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="2.5" fill="var(--green)" />`).join('')}
+        </svg>
+      `;
+    }
+
+    // Helper: dynamic Archetype Mix list creator
+    function generateArchetypeMixHtml(mix) {
+      const colors = {
+        "Veroveraar": "#FF4B4B",
+        "Verwerver": "#0068C9",
+        "Verkenner": "#FF8C00",
+        "Volger": "#29B09D",
+        "Verlater": "#808495"
+      };
+
+      const sorted = Object.entries(mix || {})
+        .map(([key, val]) => ({ name: key, value: Number(val || 0) }))
+        .sort((a, b) => b.value - a.value);
+
+      return `
+        <div class="archetype-mix-list">
+          ${sorted.map(arch => {
+            const pct = Math.round(arch.value * 100);
+            const color = colors[arch.name] || 'var(--muted)';
+            return `
+              <div class="archetype-mix-row">
+                <div class="archetype-mix-label">
+                  <strong>${arch.name}</strong>
+                  <span>${pct}%</span>
+                </div>
+                <div class="archetype-mix-bar-bg">
+                  <div class="archetype-mix-bar-fill" style="width: ${pct}%; background-color: ${color};"></div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function renderCompactBarChart(targetId, values, labels, colors, normalized = false) {
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      const maximum = normalized ? Math.max(...values, 0.001) : 1;
+      target.innerHTML = values.map((value, index) => {
+        const safeValue = Math.max(0, Number(value || 0));
+        const width = Math.min(100, (safeValue / maximum) * 100);
+        return `
+          <div class="compact-bar-row">
+            <strong>${labels[index]}</strong>
+            <div class="compact-bar-track"><span style="width:${width}%;background:${colors[index]}"></span></div>
+            <em>${safeValue.toFixed(2)}</em>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderMeasurementHistory() {
+      const target = document.getElementById('measurement-history-chart');
+      if (!target) return;
+      const history = individualMeasurementHistory.slice(-14);
+      if (!history.length) {
+        target.innerHTML = '<span class="chart-empty-label">Nog geen meetpunten</span>';
+        return;
+      }
+      const width = 320;
+      const height = 128;
+      const padding = 14;
+      const xStep = history.length > 1 ? (width - padding * 2) / (history.length - 1) : 0;
+      const points = history.map((point, index) => {
+        const x = history.length > 1 ? padding + index * xStep : width / 2;
+        const y = height - padding - (Math.max(0, Math.min(1, point.score)) * (height - padding * 2));
+        return `${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ');
+      const latest = history[history.length - 1];
+      target.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Leerprettrend van de laatste ${history.length} metingen">
+          <line x1="${padding}" y1="${height - padding}" x2="${width - padding}" y2="${height - padding}" class="trend-grid-line" />
+          <line x1="${padding}" y1="${height / 2}" x2="${width - padding}" y2="${height / 2}" class="trend-grid-line" />
+          <polyline points="${points}" class="trend-area-line" />
+          ${history.map((point, index) => {
+            const x = history.length > 1 ? padding + index * xStep : width / 2;
+            const y = height - padding - (Math.max(0, Math.min(1, point.score)) * (height - padding * 2));
+            return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" class="trend-point" />`;
+          }).join('')}
+        </svg>
+        <div class="trend-chart-footer"><span>${history.length} meetpunten</span><strong>${Math.round(latest.score * 100)}%</strong></div>
+      `;
+    }
+
+    // Update Lerende outputs dynamically
+    function updateCalculatedLeerpret(markers) {
+      const result = calculateLeerpretJs(markers);
+      const breakdown = calculateFormulaBreakdown(markers);
+      const val = result.learning_value || 0;
+      const percentage = Math.round(val * 100);
+      
+      document.getElementById('result-score-val').textContent = `${percentage}%`;
+      const strokeDashoffset = 314 - (314 * percentage) / 100;
+      document.getElementById('result-score-ring')?.setAttribute('stroke-dashoffset', strokeDashoffset.toString());
+
+      let friendlyStatus = "Geen leerpret";
+      if (val >= 0.30) friendlyStatus = "Matige leerpret";
+      if (val >= 0.60) friendlyStatus = "Actieve leerpret";
+      if (val >= 0.80) friendlyStatus = "Optimale leerpret";
+
+      document.getElementById('result-status-label').textContent = friendlyStatus;
+      document.getElementById('result-archetype-name').textContent = result.dominant_archetype || '-';
+
+      document.getElementById('result-marker-t').textContent = markers[0].toFixed(2);
+      document.getElementById('result-marker-a').textContent = markers[1].toFixed(2);
+      document.getElementById('result-marker-v').textContent = markers[2].toFixed(2);
+      document.getElementById('result-marker-r').textContent = markers[3].toFixed(2);
+      document.getElementById('result-marker-s').textContent = markers[4].toFixed(2);
+
+      const radarTarget = document.getElementById('radar-chart-target');
+      if (radarTarget) {
+        radarTarget.innerHTML = `
+          ${generateRadarSvg( { T: markers[0], A: markers[1], V: markers[2], R: markers[3], S: markers[4] } )}
+          <div class="radar-legend">
+            <div class="legend-item"><span class="legend-dot" style="background-color: #FF4B4B;"></span>Veroveraar</div>
+            <div class="legend-item"><span class="legend-dot" style="background-color: #0068C9;"></span>Verwerver</div>
+            <div class="legend-item"><span class="legend-dot" style="background-color: #FF8C00;"></span>Verkenner</div>
+            <div class="legend-item"><span class="legend-dot" style="background-color: #29B09D;"></span>Volger</div>
+            <div class="legend-item"><span class="legend-dot" style="background-color: var(--green); border: 2.5px solid white; box-shadow: 0 0 0 1px var(--green);"></span>Jouw Profiel</div>
+          </div>
+        `;
+      }
+
+      const mixTarget = document.getElementById('archetype-mix-target');
+      if (mixTarget) {
+        mixTarget.innerHTML = generateArchetypeMixHtml(result.archetype_mix);
+      }
+
+      const markerLabels = ['T', 'A', 'V', 'R', 'S'];
+      const markerColors = ['#38d8cf', '#69a7e8', '#f0b44d', '#9d86e7', '#ff8067'];
+      renderCompactBarChart('marker-profile-chart', markers, markerLabels, markerColors);
+      renderCompactBarChart('contribution-chart', breakdown.effective.map((value, index) => value * breakdown.weights[index]), markerLabels, markerColors, true);
+      individualMeasurementHistory.push({ score: val, markers: [...markers] });
+      if (individualMeasurementHistory.length > 14) individualMeasurementHistory.shift();
+      renderMeasurementHistory();
+    }
+
+    // Reset Results Card back to unmeasured empty state
+    function resetResultsCardToEmpty() {
+      document.getElementById('result-score-val').textContent = '0%';
+      document.getElementById('result-score-ring')?.setAttribute('stroke-dashoffset', '314');
+      document.getElementById('result-status-label').textContent = 'Geen meting';
+      document.getElementById('result-archetype-name').textContent = 'Nog geen berekening';
+
+      const radarTarget = document.getElementById('radar-chart-target');
+      if (radarTarget) {
+        radarTarget.innerHTML = `
+          ${generateRadarSvg( { T: 0, A: 0, V: 0, R: 0, S: 0 } )}
+          <div class="radar-legend">
+            <div class="legend-item"><span class="legend-dot" style="background-color: #FF4B4B;"></span>Veroveraar</div>
+            <div class="legend-item"><span class="legend-dot" style="background-color: #0068C9;"></span>Verwerver</div>
+            <div class="legend-item"><span class="legend-dot" style="background-color: #FF8C00;"></span>Verkenner</div>
+            <div class="legend-item"><span class="legend-dot" style="background-color: #29B09D;"></span>Volger</div>
+            <div class="legend-item"><span class="legend-dot" style="background-color: var(--green); border: 2.5px solid white; box-shadow: 0 0 0 1px var(--green);"></span>Jouw Profiel</div>
+          </div>
+        `;
+      }
+
+      const mixTarget = document.getElementById('archetype-mix-target');
+      if (mixTarget) {
+        mixTarget.innerHTML = generateArchetypeMixHtml({
+          "Veroveraar": 0,
+          "Verwerver": 0,
+          "Verkenner": 0,
+          "Volger": 0,
+          "Verlater": 0
+        });
+      }
+
+      document.getElementById('result-marker-t').textContent = '-';
+      document.getElementById('result-marker-a').textContent = '-';
+      document.getElementById('result-marker-v').textContent = '-';
+      document.getElementById('result-marker-r').textContent = '-';
+      document.getElementById('result-marker-s').textContent = '-';
+      const markerLabels = ['T', 'A', 'V', 'R', 'S'];
+      const markerColors = ['#38d8cf', '#69a7e8', '#f0b44d', '#9d86e7', '#ff8067'];
+      renderCompactBarChart('marker-profile-chart', [0, 0, 0, 0, 0], markerLabels, markerColors);
+      renderCompactBarChart('contribution-chart', [0, 0, 0, 0, 0], markerLabels, markerColors, true);
+      individualMeasurementHistory = [];
+      renderMeasurementHistory();
+    }
+
+    // Set slider input UI elements
+    function setSlidersUI(markers) {
+      const ids = ['t', 'a', 'v', 'r', 's'];
+      ids.forEach((id, idx) => {
+        const slider = document.getElementById(`slide-${id}`);
+        if (slider) slider.value = markers[idx].toString();
+        const lbl = document.getElementById(`slide-${id}-val`);
+        if (lbl) lbl.textContent = markers[idx].toFixed(2);
+      });
+    }
+
+    // Set step display text elements
+    function setStepMarkersUI(markers) {
+      document.getElementById('current-marker-t').textContent = markers[0].toFixed(2);
+      document.getElementById('current-marker-a').textContent = markers[1].toFixed(2);
+      document.getElementById('current-marker-v').textContent = markers[2].toFixed(2);
+      document.getElementById('current-marker-r').textContent = markers[3].toFixed(2);
+      document.getElementById('current-marker-s').textContent = markers[4].toFixed(2);
+    }
+
+    // Convert T, A, V, R, S back to raw action counts
+    function convertMarkersToRaw(T, A, V, R, S) {
+      const duration = Math.round(T * 600);
+      const actions = Math.round(A * 40);
+      const unique_targets = Math.round(V * actions);
+      const frictions = actions > 0 ? Math.max(1, Math.round(actions * 0.15)) : 0;
+      const recoveries = Math.round(R * frictions);
+      const successes = Math.round(S);
+      return { duration, actions, unique_targets, frictions, recoveries, successes };
+    }
+
+    // Calculate T, A, V, R, S markers from sequence raw counters or manual inputs
+    function calculateMarkersFromRaw(duration, actions, unique_targets, frictions, recoveries, successes) {
+      const T = Math.max(0, Math.min(1, duration / 600.0));
+      const A = Math.max(0, Math.min(1, actions / 40.0));
+      const V = Math.max(0, Math.min(1, unique_targets / Math.max(actions, 1.0)));
+      const R = Math.max(0, Math.min(1, recoveries / Math.max(frictions, 1.0)));
+      const S = Math.max(0, Math.min(1, successes));
+      return [T, A, V, R, S];
+    }
+
+    // Calculate T, A, V, R, S markers from sequence raw counters
+    function convertRawToMarkers() {
+      return calculateMarkersFromRaw(
+        sequenceRaw.duration,
+        sequenceRaw.actions,
+        sequenceRaw.unique_targets,
+        sequenceRaw.frictions,
+        sequenceRaw.recoveries,
+        sequenceRaw.successes
+      );
+    }
+
+    // Rebuild ribbon nodes list
+    function rebuildRibbonFromRaw() {
+      const ribbon = document.getElementById('action-sequence-ribbon');
+      if (!ribbon) return;
+
+      ribbon.innerHTML = '';
+      sequenceArray = [];
+
+      for (let i = 0; i < sequenceRaw.actions; i++) sequenceArray.push('🔵');
+      for (let i = 0; i < sequenceRaw.frictions; i++) sequenceArray.push('🔴');
+      for (let i = 0; i < sequenceRaw.recoveries; i++) sequenceArray.push('🟢');
+      for (let i = 0; i < sequenceRaw.successes; i++) sequenceArray.push('🟡');
+      const whiteNodesCount = Math.round(sequenceRaw.duration / 30);
+      for (let i = 0; i < whiteNodesCount; i++) sequenceArray.push('⚪');
+
+      if (sequenceArray.length === 0) {
+        ribbon.innerHTML = '<span class="empty-ribbon-text">Reeks is leeg. Klik op objecten hierboven.</span>';
+        document.getElementById('sequence-counters-label').textContent = 'Reeks details: 0 acties, 0 weerstand, 0 herstel, 0 succes (0s)';
+      } else {
+        sequenceArray.forEach(icon => {
+          const span = document.createElement('span');
+          span.className = 'ribbon-item';
+          span.textContent = icon;
+          ribbon.appendChild(span);
+        });
+        document.getElementById('sequence-counters-label').textContent = `Reeks details: ${sequenceRaw.actions} acties, ${sequenceRaw.frictions} weerstand, ${sequenceRaw.recoveries} herstel, ${sequenceRaw.successes} succes (${sequenceRaw.duration}s)`;
+      }
+    }
+
+    function triggerSlidersCalculation() {
+      const T = Number(document.getElementById('slide-t').value);
+      const A = Number(document.getElementById('slide-a').value);
+      const V = Number(document.getElementById('slide-v').value);
+      const R = Number(document.getElementById('slide-r').value);
+      const S = Number(document.getElementById('slide-s').value);
+      updateCalculatedLeerpret([T, A, V, R, S]);
+    }
+
+    // Set up Sliders input listeners
+    function setupSliders() {
+      const sliders = ['t', 'a', 'v', 'r', 's'];
+      sliders.forEach(id => {
+        const slider = document.getElementById(`slide-${id}`);
+        const valLabel = document.getElementById(`slide-${id}-val`);
+        if (slider) {
+          slider.addEventListener('input', () => {
+            if (valLabel) valLabel.textContent = Number(slider.value).toFixed(2);
+            triggerSlidersCalculation();
+          });
+        }
+      });
+
+      // Bind reset sliders button
+      document.getElementById('btn-reset-sliders')?.addEventListener('click', () => {
+        setSlidersUI([0, 0, 0, 0, 0]);
+        resetResultsCardToEmpty();
+      });
+    }
+
+    function setRawInputsUI(values) {
+      document.getElementById('raw-duration').value = values.duration.toString();
+      document.getElementById('raw-actions').value = values.actions.toString();
+      document.getElementById('raw-targets').value = values.targets.toString();
+      document.getElementById('raw-frictions').value = values.frictions.toString();
+      document.getElementById('raw-recoveries').value = values.recoveries.toString();
+      document.getElementById('raw-successes').value = values.successes.toString();
+    }
+
+    function triggerRawCalculation() {
+      const duration = Number(document.getElementById('raw-duration').value || 0);
+      const actions = Number(document.getElementById('raw-actions').value || 0);
+      const targets = Number(document.getElementById('raw-targets').value || 0);
+      const frictions = Number(document.getElementById('raw-frictions').value || 0);
+      const recoveries = Number(document.getElementById('raw-recoveries').value || 0);
+      const successes = Number(document.getElementById('raw-successes').value || 0);
+
+      const markers = calculateMarkersFromRaw(duration, actions, targets, frictions, recoveries, successes);
+      updateCalculatedLeerpret(markers);
+    }
+
+    // Set up Raw numbers input fields listeners
+    function setupRawInputs() {
+      const inputs = ['duration', 'actions', 'targets', 'frictions', 'recoveries', 'successes'];
+      inputs.forEach(id => {
+        const input = document.getElementById(`raw-${id}`);
+        if (input) {
+          input.addEventListener('input', () => {
+            triggerRawCalculation();
+          });
+        }
+      });
+
+      document.getElementById('btn-reset-raw')?.addEventListener('click', () => {
+        setRawInputsUI({
+          duration: 0,
+          actions: 0,
+          targets: 0,
+          frictions: 0,
+          recoveries: 0,
+          successes: 0
+        });
+        resetResultsCardToEmpty();
+      });
+    }
+
+    // Load active step markers
+    async function loadCurrentStepSettings() {
+      try {
+        const response = await apiGet('/developer/steps');
+        const steps = response.steps || [];
+        const activeStepId = localStorage.getItem('active_step_id') || 'definition';
+        const step = steps.find(s => s.id === activeStepId) || steps[0];
+        
+        if (step) {
+          const order = step.order || 1;
+          let markers = [0.70, 0.80, 0.50, 0.80, 1.00];
+          if (order === 1) markers = [0.20, 0.30, 0.20, 0.10, 0.00];
+          if (order === 2) markers = [0.50, 0.60, 0.40, 0.30, 0.20];
+          if (order === 3) markers = [0.80, 0.85, 0.70, 0.75, 0.80];
+          if (order === 4) markers = [0.90, 0.90, 0.80, 0.90, 1.00];
+          
+          setStepMarkersUI(markers);
+          activeCurrentStepMarkers = markers;
+          
+          // Calculate step immediately upon loading
+          updateCalculatedLeerpret(markers);
+        }
+      } catch (err) {
+        alert('Fout bij inladen huidige instellingen: ' + err.message);
+      }
+    }
+
+    // Set up active step reset & calculate binds
+    function setupCurrentSettingsPanel() {
+      document.getElementById('btn-reset-current')?.addEventListener('click', () => {
+        setStepMarkersUI([0, 0, 0, 0, 0]);
+        activeCurrentStepMarkers = [0, 0, 0, 0, 0];
+        resetResultsCardToEmpty();
+      });
+    }
+
+    // Setup action sequence node clicking
+    function setupActionSequence() {
+      const ribbon = document.getElementById('action-sequence-ribbon');
+      if (!ribbon) return;
+
+      document.querySelectorAll('.btn-action-node').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const type = btn.getAttribute('data-action');
+          
+          if (sequenceArray.length === 0) {
+            ribbon.innerHTML = '';
+          }
+
+          let icon = '⚪';
+          if (type === 'gewoon') {
+            sequenceRaw.actions++;
+            sequenceRaw.unique_targets++;
+            icon = '🔵';
+          } else if (type === 'weerstand') {
+            sequenceRaw.frictions++;
+            icon = '🔴';
+          } else if (type === 'herstel') {
+            sequenceRaw.recoveries++;
+            icon = '🟢';
+          } else if (type === 'succes') {
+            sequenceRaw.successes++;
+            icon = '🟡';
+          } else if (type === 'tijd') {
+            sequenceRaw.duration += 30;
+            icon = '⚪';
+          }
+
+          sequenceArray.push(icon);
+
+          const itemSpan = document.createElement('span');
+          itemSpan.className = 'ribbon-item';
+          itemSpan.textContent = icon;
+          ribbon.appendChild(itemSpan);
+
+          document.getElementById('sequence-counters-label').textContent = `Reeks details: ${sequenceRaw.actions} acties, ${sequenceRaw.frictions} weerstand, ${sequenceRaw.recoveries} herstel, ${sequenceRaw.successes} succes (${sequenceRaw.duration}s)`;
+
+          // Trigger immediate calculation upon adding object
+          const markers = convertRawToMarkers();
+          updateCalculatedLeerpret(markers);
+        });
+      });
+
+      document.getElementById('btn-reset-sequence')?.addEventListener('click', () => {
+        sequenceRaw = { duration: 0, actions: 0, unique_targets: 0, frictions: 0, recoveries: 0, successes: 0 };
+        rebuildRibbonFromRaw();
+        resetResultsCardToEmpty();
+      });
+    }
+
+    // Setup Input Method Dropdown Switcher with values carry over
+    function setupInputMethodSwitcher() {
+      const select = document.getElementById('learner-input-method-select');
+      if (!select) return;
+
+      select.addEventListener('change', () => {
+        const method = select.value;
+        setServicePaneMode('individual', currentServiceRole());
+        const slidersPanel = document.getElementById('input-method-sliders-panel');
+        const rawPanel = document.getElementById('input-method-raw-panel');
+        const sequencePanel = document.getElementById('input-method-sequence-panel');
+        const currentPanel = document.getElementById('input-method-current-panel');
+
+        // Extract currently active markers before hiding panels to carry them over
+        let currentMarkers = [0.60, 0.60, 0.33, 0.67, 1.00];
+
+        if (slidersPanel && !slidersPanel.hidden) {
+          currentMarkers = [
+            Number(document.getElementById('slide-t').value),
+            Number(document.getElementById('slide-a').value),
+            Number(document.getElementById('slide-v').value),
+            Number(document.getElementById('slide-r').value),
+            Number(document.getElementById('slide-s').value)
+          ];
+        } else if (rawPanel && !rawPanel.hidden) {
+          const dur = Number(document.getElementById('raw-duration').value || 0);
+          const act = Number(document.getElementById('raw-actions').value || 0);
+          const tar = Number(document.getElementById('raw-targets').value || 0);
+          const fric = Number(document.getElementById('raw-frictions').value || 0);
+          const rec = Number(document.getElementById('raw-recoveries').value || 0);
+          const succ = Number(document.getElementById('raw-successes').value || 0);
+          currentMarkers = calculateMarkersFromRaw(dur, act, tar, fric, rec, succ);
+        } else if (sequencePanel && !sequencePanel.hidden) {
+          currentMarkers = convertRawToMarkers();
+        } else if (currentPanel && !currentPanel.hidden) {
+          currentMarkers = activeCurrentStepMarkers;
+        }
+
+        // Hide all
+        if (slidersPanel) slidersPanel.hidden = true;
+        if (rawPanel) rawPanel.hidden = true;
+        if (sequencePanel) sequencePanel.hidden = true;
+        if (currentPanel) currentPanel.hidden = true;
+
+        // Load active view and populate carried over markers
+        if (method === 'sliders') {
+          if (slidersPanel) slidersPanel.hidden = false;
+          setSlidersUI(currentMarkers);
+          updateCalculatedLeerpret(currentMarkers);
+        } else if (method === 'raw') {
+          if (rawPanel) rawPanel.hidden = false;
+          const raw = convertMarkersToRaw(currentMarkers[0], currentMarkers[1], currentMarkers[2], currentMarkers[3], currentMarkers[4]);
+          setRawInputsUI({
+            duration: raw.duration,
+            actions: raw.actions,
+            targets: raw.unique_targets,
+            frictions: raw.frictions,
+            recoveries: raw.recoveries,
+            successes: raw.successes
+          });
+          updateCalculatedLeerpret(currentMarkers);
+        } else if (method === 'sequence') {
+          if (sequencePanel) sequencePanel.hidden = false;
+          sequenceRaw = convertMarkersToRaw(currentMarkers[0], currentMarkers[1], currentMarkers[2], currentMarkers[3], currentMarkers[4]);
+          rebuildRibbonFromRaw();
+          updateCalculatedLeerpret(currentMarkers);
+        } else if (method === 'current') {
+          if (currentPanel) currentPanel.hidden = false;
+          setStepMarkersUI(currentMarkers);
+          activeCurrentStepMarkers = currentMarkers;
+          updateCalculatedLeerpret(currentMarkers);
+        }
+      });
+    }
+
+    // --- VIEW 2: ATTRACTION GROUPS SIMULATION ---
+    let loadedSimulatorTwins = [];
+    let loadedSimulatorGroups = [];
+
+    // Helper: Parse profile markers from JSON
+    function extractMarkers(p) {
+      if (Array.isArray(p.markers)) {
+        return p.markers;
+      } else if (p.markers && typeof p.markers === 'object') {
+        return [
+          p.markers.T ?? p.markers.time ?? 0,
+          p.markers.A ?? p.markers.activity ?? 0,
+          p.markers.V ?? p.markers.variety ?? 0,
+          p.markers.R ?? p.markers.resilience ?? 0,
+          p.markers.S ?? p.markers.success ?? 0
+        ];
+      } else {
+        const duration = p.duration ?? p.duration_seconds ?? 0;
+        const actions = p.actions ?? p.action_count ?? 1;
+        const unique_targets = p.unique_targets ?? p.unique_objects ?? 0;
+        const frictions = p.frictions ?? p.friction_count ?? 1;
+        const recoveries = p.recoveries ?? p.recovery_count ?? 0;
+        const successes = p.successes ?? p.success_count ?? 0;
+        return [
+          Math.max(0, Math.min(1, duration / 600.0)),
+          Math.max(0, Math.min(1, actions / 40.0)),
+          Math.max(0, Math.min(1, unique_targets / Math.max(actions, 1.0))),
+          Math.max(0, Math.min(1, recoveries / Math.max(frictions, 1.0))),
+          Math.max(0, Math.min(1, successes))
+        ];
+      }
+    }
+
+    /* Herkomst van een Leerbox: welk park en welke attractie erbij horen. Deze indeling
+       stond eerder verspreid over de twee weggevallen keuzelijsten; hij voedt nu de
+       broodkruimel boven het tabblad Concept. */
+    function herkomstVanLeerbox(twin) {
+      const id = String(twin?.id || "").toLowerCase();
+      let park = 'Proefopstelling';
+      if (id.includes('drukwerkplaats')) park = 'Drenthe';
+      else if (id.includes('growing-emmen') || id.includes('operations-management')) park = 'LE-Network';
+      else if (id.includes('phile')) park = 'Bijbrengen';
+      return { park, attractie: twin?.title || twin?.id || '-' };
+    }
+
+    /* Leerboxnamen tonen we met een hoofdletter. De id's zijn kleingeschreven met
+       koppeltekens, en dat leest in een keuzelijst als een technische sleutel. */
+    function leerboxNaam(twin) {
+      const ruw = String(twin?.id || "").replace(/^leerbox-/, "").replaceAll("-", " ").trim();
+      if (!ruw) return String(twin?.title || "Leerbox");
+      return ruw.charAt(0).toUpperCase() + ruw.slice(1);
+    }
+
+    let simulatieGegevensBezig = false;
+
+    async function loadSimulationData() {
+      const select = document.getElementById('attraction-twin-select') as HTMLSelectElement;
+      if (!select) return;
+      if (loadedSimulatorTwins.length > 0 || simulatieGegevensBezig) return;
+      simulatieGegevensBezig = true;
+
+      try {
+        const response = await apiGet('/simulator/datasets');
+        loadedSimulatorTwins = response.leerbox_twins || [];
+        loadedSimulatorGroups = response.groups || [];
+
+        if (loadedSimulatorTwins.length === 0) {
+          select.innerHTML = '<option value="">Geen Leerboxen beschikbaar</option>';
+          return;
+        }
+
+        const gesorteerd = [...loadedSimulatorTwins].sort((a, b) =>
+          leerboxNaam(a).localeCompare(leerboxNaam(b), 'nl')
+        );
+
+        select.innerHTML = gesorteerd
+          .map(t => `<option value="${escapeHtml(t.id)}">${escapeHtml(leerboxNaam(t))}</option>`)
+          .join('');
+
+        select.addEventListener('change', () => renderAttractionSimulation(select.value));
+        renderAttractionSimulation(select.value);
+      } catch (error) {
+        select.innerHTML = '<option value="">Fout bij laden van Leerboxen</option>';
+      } finally {
+        simulatieGegevensBezig = false;
+      }
+    }
+
+    async function renderAttractionSimulation(twinId) {
+      const twin = loadedSimulatorTwins.find(t => t.id === twinId);
+      if (!twin) return;
+
+      // Broodkruimel: bij welk park en welke attractie hoort deze Leerbox.
+      const herkomst = herkomstVanLeerbox(twin);
+      const kruimelPark = document.getElementById('kruimel-park');
+      const kruimelAttractie = document.getElementById('kruimel-attractie');
+      const kruimelLeerbox = document.getElementById('kruimel-leerbox');
+      if (kruimelPark) kruimelPark.textContent = herkomst.park;
+      if (kruimelAttractie) kruimelAttractie.textContent = herkomst.attractie;
+      if (kruimelLeerbox) kruimelLeerbox.textContent = leerboxNaam(twin);
+
+      document.getElementById('attraction-twin-details').hidden = false;
+      document.getElementById('attraction-twin-status').textContent = twin.status || 'concept';
+      document.getElementById('attraction-twin-status').className = `eyebrow twin-status-badge status-${String(twin.status || "").toLowerCase()}`;
+      document.getElementById('attraction-twin-title').textContent = twin.title || twin.id;
+      document.getElementById('attraction-twin-summary').textContent = twin.summary || "Geen samenvatting.";
+      document.getElementById('attraction-twin-goal').textContent = twin.central_learning_goal || "-";
+      document.getElementById('attraction-twin-discovery').textContent = twin.central_discovery || "-";
+      document.getElementById('attraction-twin-success').textContent = twin.central_success_definition || twin.success_definition || "-";
+      document.getElementById('attraction-twin-barrier').textContent = twin.main_barrier || "-";
+      updateDetailedRunsVisibility();
+      renderTechnologistFormulaPanel(twin);
+
+      const slug = String(twin.id || "").replace(/^leerbox-/, "");
+      let selectedGroup = null;
+      let selectedFile = null;
+
+      const matchedGroup = loadedSimulatorGroups.find(g => {
+        const groupId = String(g.id || "").toLowerCase();
+        const groupTitle = String(g.title || "").toLowerCase();
+        return groupId.includes(slug) || groupTitle.includes(slug.replaceAll("-", " "));
+      });
+
+      if (matchedGroup && matchedGroup.files && matchedGroup.files.length > 0) {
+        selectedGroup = matchedGroup;
+        selectedFile = matchedGroup.files[0];
+      } else {
+        const allFiles = loadedSimulatorGroups.flatMap(g => 
+          (g.files || []).map(f => ({ ...f, groupId: g.id }))
+        );
+        
+        const directMatch = allFiles.find(f => {
+          const name = String(f.name || "").toLowerCase();
+          return name.includes(slug) || name.includes(slug.replaceAll("-", "_"));
+        });
+
+        if (directMatch) {
+          selectedGroup = loadedSimulatorGroups.find(g => g.id === directMatch.groupId);
+          selectedFile = directMatch;
+        } else {
+          let hashCode = 0;
+          for (let i = 0; i < slug.length; i++) {
+            hashCode = slug.charCodeAt(i) + ((hashCode << 5) - hashCode);
+          }
+          if (allFiles.length > 0) {
+            const picked = allFiles[Math.abs(hashCode) % allFiles.length];
+            selectedGroup = loadedSimulatorGroups.find(g => g.id === picked.groupId);
+            selectedFile = picked;
+          }
+        }
+      }
+
+      if (!selectedGroup || !selectedFile) {
+        document.getElementById('attraction-runs-table-body').innerHTML = `
+          <tr><td colspan="8" class="text-center muted-text" style="padding:20px;">Geen simulatiebestanden gevonden voor deze leerbox.</td></tr>
+        `;
+        renderTechnologistFormulaPanel(twin, []);
+        return;
+      }
+
+      try {
+        const data = await apiGet(`/simulator/datasets/${selectedGroup.id}/files/${selectedFile.name}`);
+        const profiles = data.profiles || data.profielen || [];
+        renderTechnologistFormulaPanel(twin, profiles);
+
+        if (profiles.length === 0) {
+          document.getElementById('attraction-runs-table-body').innerHTML = `
+            <tr><td colspan="8" class="text-center muted-text" style="padding:20px;">Simulatiebestand bevat geen profielen.</td></tr>
+          `;
+          return;
+        }
+
+        let totalScore = 0;
+        const archCounts = {
+          "Veroveraar": 0,
+          "Verwerver": 0,
+          "Verkenner": 0,
+          "Volger": 0,
+          "Verlater": 0
+        };
+
+        const rowsHtml = profiles.map((p, idx) => {
+          const m = extractMarkers(p);
+          const result = calculateLeerpretJs(m);
+          totalScore += result.learning_value;
+          
+          if (result.dominant_archetype) {
+            archCounts[result.dominant_archetype]++;
+          }
+
+          const badgeColor = {
+            "Veroveraar": "#FF4B4B",
+            "Verwerver": "#0068C9",
+            "Verkenner": "#FF8C00",
+            "Volger": "#29B09D",
+            "Verlater": "#808495"
+          }[result.dominant_archetype] || 'var(--muted)';
+
+          const fullName = p.name || p.naam || "Simulant";
+          let displayName = fullName;
+          let isLong = false;
+          if (fullName.length > 25) {
+            displayName = fullName.substring(0, 22) + "...";
+            isLong = true;
+          }
+
+          const nameCellHtml = isLong 
+            ? `<div class="collapsible-name-cell" data-idx="${idx}" data-full="${escapeHtml(fullName)}" data-short="${escapeHtml(displayName)}" style="cursor: pointer; color: var(--green); font-weight: 700; display: inline-flex; align-items: center; gap: 4px;" title="Klik om uit/in te klappen">
+                 <span class="name-text">${escapeHtml(displayName)}</span>
+                 <span class="toggle-icon" style="font-size: 0.65rem; color: var(--muted);">▼</span>
+               </div>`
+            : `<strong>${escapeHtml(fullName)}</strong>`;
+
+          return `
+            <tr>
+              <td>${nameCellHtml}</td>
+              <td>${m[0].toFixed(2)}</td>
+              <td>${m[1].toFixed(2)}</td>
+              <td>${m[2].toFixed(2)}</td>
+              <td>${m[3].toFixed(2)}</td>
+              <td>${m[4].toFixed(2)}</td>
+              <td><strong>${Math.round(result.learning_value * 100)}%</strong></td>
+              <td><span class="badge-arch" style="background-color: ${badgeColor};">${result.dominant_archetype || 'Geen'}</span></td>
+            </tr>
+          `;
+        }).join('');
+
+        const avgScore = totalScore / profiles.length;
+
+        document.getElementById('attraction-stat-users').textContent = profiles.length.toString();
+        document.getElementById('attraction-stat-score').textContent = `${Math.round(avgScore * 100)}%`;
+
+        const distHtml = Object.entries(archCounts).map(([name, count]) => {
+          const pct = profiles.length > 0 ? Math.round((count / profiles.length) * 100) : 0;
+          const colors = {
+            "Veroveraar": "#FF4B4B",
+            "Verwerver": "#0068C9",
+            "Verkenner": "#FF8C00",
+            "Volger": "#29B09D",
+            "Verlater": "#808495"
+          };
+          return `
+            <div class="archetype-mix-row" style="margin-top: 8px;">
+              <div class="archetype-mix-label">
+                <strong>${name}</strong>
+                <span>${pct}% (${count})</span>
+              </div>
+              <div class="archetype-mix-bar-bg">
+                <div class="archetype-mix-bar-fill" style="width: ${pct}%; background-color: ${colors[name]};"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+        document.getElementById('attraction-archetype-dist-target').innerHTML = distHtml;
+        document.getElementById('attraction-runs-table-body').innerHTML = rowsHtml;
+
+      } catch (err) {
+        renderTechnologistFormulaPanel(twin, []);
+        document.getElementById('attraction-runs-table-body').innerHTML = `
+          <tr><td colspan="8" class="text-center muted-text" style="padding:20px;">Fout bij inladen en berekenen van simulatiebestand: ${err.message}</td></tr>
+        `;
+      }
+    }
+
+    function setupProtocolTester() {
+      const form = document.getElementById('protocol-evaluate-form');
+      const output = document.getElementById('protocol-evaluate-output');
+      if (!form || !output || form.dataset.bound === 'true') return;
+      form.dataset.bound = 'true';
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const data = new FormData(form);
+        const payload = {
+          STATEMENT: {
+            ACTOR: { TYPE: "ACTOR", id: "developer-dashboard" },
+            CONTEXT: { TYPE: "CONTEXT", id: "local-development" },
+            ACTION: {
+              TYPE: "ACTION",
+              id: "evaluate-marker-request",
+              data: {
+                duration: Number(data.get('duration') || 0),
+                actions: Number(data.get('actions') || 0),
+                unique_targets: Number(data.get('unique_targets') || 0),
+                frictions: Number(data.get('frictions') || 0),
+                recoveries: Number(data.get('recoveries') || 0),
+                successes: Number(data.get('successes') || 0),
+              },
+            },
+            WITH: [{ TYPE: "RESOURCE", id: "dashboard-form" }],
+            IN: [{ TYPE: "CONTEXT", id: "local-development" }],
+            WHEN: [{ TYPE: "TIME", id: "submit-time" }],
+          },
+        };
+
+        output.textContent = "Bezig met versturen...";
+        renderProtocolArchetypeOverlap(null);
+        try {
+          const response = await apiPost('/engine/evaluate', payload);
+          output.textContent = JSON.stringify(response, null, 2);
+          await renderProtocolArchetypeOverlap(
+            response,
+            response?.personal_result_available === false
+              ? 'Geen persoonsuitkomst beschikbaar: deze acties zijn pseudoniem ontvangen.'
+              : undefined
+          );
+        } catch (error) {
+          output.textContent = `Fout bij versturen: ${error.message || error}`;
+          renderProtocolArchetypeOverlap(null, 'Geen archetype-overlap beschikbaar door een fout in de evaluatie.');
+        }
+      });
+    }
+
+    function extractArchetypeMix(response) {
+      return response?.STATEMENT?.ANALYSIS?.archetype_mix
+        || response?.statement?.analysis?.archetype_mix
+        || response?.analysis?.archetype_mix
+        || response?.archetype_mix
+        || null;
+    }
+
+    async function renderProtocolArchetypeOverlap(response, emptyText = 'Voer een engine-evaluatie uit om de archetype-overlap te tonen.') {
+      const plot = document.getElementById('protocol-archetype-overlap-plot');
+      if (!plot) return;
+
+      const mix = response ? extractArchetypeMix(response) : null;
+      const entries = mix
+        ? Object.entries(mix)
+            .map(([name, value]) => [name, Number(value || 0)])
+            .sort((a, b) => b[1] - a[1])
+        : [];
+
+      if (!entries.length) {
+        plot.innerHTML = `<p class="muted-text">${escapeHtml(emptyText)}</p>`;
+        return;
+      }
+
+      const colors = ["#1982C4", "#29B09D", "#FF8C00", "#7C3AED", "#64748B"];
+      const labels = entries.map(([name]) => name);
+      const values = entries.map(([, value]) => value);
+      const Plotly = await loadPlotly();
+
+      Plotly.newPlot(plot, [{
+        type: 'bar',
+        orientation: 'h',
+        y: labels.slice().reverse(),
+        x: values.slice().reverse(),
+        marker: { color: colors.slice(0, entries.length).reverse() },
+        text: values.slice().reverse().map(value => `${Math.round(value * 100)}%`),
+        textposition: 'auto',
+        hovertemplate: '%{y}<br>%{x:.0%}<extra></extra>',
+      }], {
+        height: 250,
+        margin: { t: 12, b: 36, l: 104, r: 16 },
+        xaxis: { tickformat: '.0%', range: [0, Math.max(1, Math.max(...values) * 1.08)] },
+        yaxis: { automargin: true },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+      }, { responsive: true, displayModeBar: false });
+    }
+
+    async function loadPlotly() {
+      if (window.__leerpretPlotly) return window.__leerpretPlotly;
+      const module = await import('plotly.js-dist-min');
+      window.__leerpretPlotly = module.default || module;
+      return window.__leerpretPlotly;
+    }
+
+    function setAttractionServiceHeader(activeRole) {
+      const eyebrow = document.getElementById('service-eyebrow');
+      const title = document.getElementById('service-title');
+      const desc = document.getElementById('service-desc');
+      if (!eyebrow || !title || !desc) return;
+
+      if (activeRole === 'guest') {
+        eyebrow.textContent = 'Gastmodus';
+        title.textContent = 'Lever acties pseudoniem aan';
+        desc.textContent = 'Zonder login verwerkt de API iedere aanvraag losstaand en zonder betrouwbare person_id.';
+        return;
+      }
+
+      if (activeRole === 'technologist') {
+        eyebrow.textContent = 'Formules';
+        title.textContent = 'Formules naar Leerpret';
+        desc.textContent = 'Bekijk per leerbox hoe actiedata via markers, archetypen en weegvector tot de leerpretuitkomst leidt.';
+        return;
+      }
+
+      eyebrow.textContent = 'Groepssimulatie';
+      title.textContent = 'Leerattractie Simulator';
+      desc.textContent = 'Simuleer leerpretuitkomsten over een grote groep gebruikers voor de geselecteerde leerbox.';
+    }
+
+    let isInitialized = false;
+
+    function initServiceView() {
+      if (isInitialized) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeRole = urlParams.get('role') || localStorage.getItem('active_role') || localStorage.getItem('leerpret.poc.role') || 'architect';
+        const serviceMode = currentServiceMode(activeRole);
+        localStorage.setItem('active_role', activeRole);
+        localStorage.setItem('leerpret.poc.role', activeRole);
+        setServicePaneMode(serviceMode, activeRole);
+        return;
+      }
+      isInitialized = true;
+
+      initSettings();
+      mountUnifiedServiceWorkbench();
+      setupSliders();
+      setupRawInputs();
+      setupCurrentSettingsPanel();
+      setupActionSequence();
+      setupInputMethodSwitcher();
+      setupServiceBlockPicker();
+      setupServiceTabs();
+      setupProtocolTester();
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const activeRole = urlParams.get('role') || localStorage.getItem('active_role') || localStorage.getItem('leerpret.poc.role') || 'architect';
+      const serviceMode = currentServiceMode(activeRole);
+      localStorage.setItem('active_role', activeRole);
+      localStorage.setItem('leerpret.poc.role', activeRole);
+      
+      const learnerContainer = document.getElementById('learner-service-view');
+      const attractionContainer = document.getElementById('attraction-service-view');
+
+      if (learnerContainer) learnerContainer.hidden = true;
+      if (attractionContainer) attractionContainer.hidden = false;
+      
+      const methodSelect = document.getElementById('learner-input-method-select');
+      if (methodSelect) methodSelect.value = 'sliders';
+
+      setSlidersUI([0.60, 0.60, 0.33, 0.67, 1.00]);
+      setRawInputsUI({
+        duration: 360,
+        actions: 24,
+        targets: 8,
+        frictions: 3,
+        recoveries: 2,
+        successes: 1
+      });
+      sequenceRaw = {
+        duration: 360,
+        actions: 24,
+        unique_targets: 8,
+        frictions: 3,
+        recoveries: 2,
+        successes: 1
+      };
+      rebuildRibbonFromRaw();
+      resetResultsCardToEmpty();
+
+      const requestedMethod = urlParams.get('input');
+      const allowedMethods = new Set(['sliders', 'raw', 'sequence', 'current']);
+      if (methodSelect && allowedMethods.has(requestedMethod)) {
+        methodSelect.value = requestedMethod;
+        methodSelect.dispatchEvent(new Event('change'));
+      }
+
+      setServicePaneMode(serviceMode, activeRole);
+
+      // Bind Huidige Instellingen click
+      document.getElementById('btn-load-current-settings')?.addEventListener('click', loadCurrentStepSettings);
+
+      // Bind event delegation for collapsible name cells in runs table
+      document.getElementById('attraction-runs-table-body')?.addEventListener('click', (e) => {
+        const cell = e.target.closest('.collapsible-name-cell');
+        if (!cell) return;
+
+        const nameTextEl = cell.querySelector('.name-text');
+        const iconEl = cell.querySelector('.toggle-icon');
+        const isExpanded = cell.getAttribute('data-expanded') === 'true';
+
+        if (isExpanded) {
+          nameTextEl.textContent = cell.getAttribute('data-short');
+          iconEl.textContent = '▼';
+          cell.setAttribute('data-expanded', 'false');
+        } else {
+          nameTextEl.textContent = cell.getAttribute('data-full');
+          iconEl.textContent = '▲';
+          cell.setAttribute('data-expanded', 'true');
+        }
+      });
+
+      // De runtabel heeft geen knop meer om uit te klappen: hij vult het hele tabblad.
+    }
+
+    /* Een Gast kan op deze pagina niets betekenisvols doen: zonder login koppelt de
+       engine de acties niet aan een persoon en komt er geen uitkomst terug. Daarom
+       sturen we hem meteen door naar het inlogscherm in plaats van hem een pagina
+       te tonen die alleen maar kan teleurstellen. */
+    function stuurGastNaarInloggen() {
+      if (currentServiceRole() !== 'guest') return false;
+      const doel = new URL('/login/', window.location.origin);
+      doel.searchParams.set('next', '/service/');
+      window.location.replace(`${doel.pathname}${doel.search}`);
+      return true;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (stuurGastNaarInloggen()) return;
+      initServiceView();
+    });
+
+    window.addEventListener('service-connection-changed', () => {
+      // Ook bij een rolwissel tijdens de sessie geldt de doorverwijzing.
+      if (stuurGastNaarInloggen()) return;
+      initServiceView();
+    });
+  </script>
+</Layout>
+
+<style is:global>
+  .engine-header-block {
+    margin-bottom: 20px;
+  }
+
+  .engine-layout-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Sliders styling */
+  .slider-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .spacious-slider {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .spacious-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--green);
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Action buttons styling */
+  .action-buttons-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  @media (min-width: 480px) {
+    .action-buttons-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .btn-action-node {
+    padding: 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s ease;
+  }
+
+  .btn-action-node:hover {
+    transform: translateY(-1px);
+  }
+
+  .blue-node { background: #eff6ff; color: #1e40af; border-color: #bfdbfe; }
+  .red-node { background: #fef2f2; color: #991b1b; border-color: #fca5a5; }
+  .green-node { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
+  .yellow-node { background: #fefce8; color: #854d0e; border-color: #fef08a; }
+  .white-node { background: #f8fafc; color: #475569; border-color: #e2e8f0; }
+
+  /* Action sequence ribbon styling */
+  .ribbon-container {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .action-sequence-ribbon {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 10px;
+    background: #f8fafc;
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    min-height: 42px;
+    align-items: center;
+  }
+
+  .empty-ribbon-text {
+    font-size: 0.76rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .ribbon-item {
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: default;
+    animation: popIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes popIn {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+  }
+
+  .ribbon-actions {
+    margin-top: 8px;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .service-output-column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  .service-block-picker {
+    display: grid;
+    gap: 14px;
+  }
+
+  .service-block-picker[hidden] {
+    display: none !important;
+  }
+
+  .block-picker-group {
+    display: grid;
+    gap: 8px;
+  }
+
+  /* Tabbladen van de rechterkolom, in dezelfde stijl als op de artikelpagina. */
+  .service-pane-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 14px;
+  }
+
+  .service-pane-tab {
+    padding: 9px 18px;
+    border: 1px solid transparent;
+    border-bottom: 0;
+    border-top: 3px solid var(--tab-role-color, transparent);
+    border-radius: 8px 8px 0 0;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font: 700 .84rem inherit;
+  }
+
+  .service-pane-tab:hover { color: var(--ink); }
+  .service-pane-tab.role-all { --tab-role-color: var(--green); }
+  .service-pane-tab.role-attraction { --tab-role-color: var(--amber); }
+  .service-pane-tab.role-builder { --tab-role-color: var(--teal); }
+  .service-pane-tab.role-technologist { --tab-role-color: var(--plum); }
+
+  .service-pane-tab.is-active {
+    background: var(--panel);
+    color: var(--tab-role-color, var(--green));
+    border-color: var(--line);
+    border-top-color: var(--tab-role-color, var(--green));
+    border-bottom-color: var(--panel);
+    margin-bottom: -1px;
+  }
+
+  .leerbox-kruimelpad {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: .78rem;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .leerbox-kruimelpad strong { color: var(--ink); }
+
+  /* Kop van een kaart die niet meer in te klappen is. */
+  .service-card-heading {
+    display: grid;
+    gap: 2px;
+    margin-bottom: 12px;
+  }
+
+  .service-card-heading strong {
+    color: var(--ink);
+    font-size: 1.02rem;
+  }
+
+  .block-picker-content[hidden] {
+    display: none !important;
+  }
+
+  .individual-selection-card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    padding: 18px;
+  }
+
+  .group-selection-card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    padding: 18px;
+  }
+
+  .group-selection-card[hidden] {
+    display: none !important;
+  }
+
+  .block-picker-btn,
+  .block-picker-link {
+    width: 100%;
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #f8fafc;
+    color: var(--ink);
+    font: inherit;
+    font-weight: 800;
+    padding: 9px 12px;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .block-picker-btn.active {
+    border-color: var(--green);
+    background: rgba(47, 128, 111, 0.1);
+    color: var(--green);
+  }
+
+  .block-picker-btn[hidden],
+  .block-picker-group[hidden] {
+    display: none !important;
+  }
+
+  .block-picker-link::after,
+  .block-picker-btn.active::after {
+    content: ">";
+    color: var(--green);
+    font-weight: 900;
+  }
+
+  .technologist-formula-card {
+    border-top: 5px solid #2f80ed;
+  }
+
+  .formula-section {
+    display: grid;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .marker-map-grid,
+  .formula-breakdown-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 10px;
+  }
+
+  .marker-map-card,
+  .formula-metric {
+    display: grid;
+    gap: 4px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #f8fafc;
+    min-width: 0;
+  }
+
+  .marker-map-card strong,
+  .formula-metric strong {
+    color: var(--ink);
+    overflow-wrap: anywhere;
+    max-width: 100%;
+  }
+
+  /* MathJax zet een formule als één blok dat niet afbreekt. Een vector met vijf
+     getallen is daardoor breder dan zijn kaart en liep buiten de rand. Laat zo'n
+     formule binnen de kaart schuiven in plaats van eruit te steken. */
+  .formula-metric strong,
+  .marker-map-card strong {
+    display: block;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .formula-metric mjx-container,
+  .marker-map-card mjx-container {
+    max-width: 100%;
+  }
+
+  .marker-map-card span,
+  .formula-metric span,
+  .formula-metric small {
+    color: var(--muted);
+    line-height: 1.35;
+  }
+
+  .formula-metric code {
+    display: block;
+    padding: 8px;
+    border-radius: 8px;
+    background: #102033;
+    color: #e6f1ff;
+    font-size: 0.76rem;
+    line-height: 1.35;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .formula-step-list {
+    display: grid;
+    gap: 8px;
+  }
+
+  .formula-step-list div {
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+  }
+
+  .formula-step-list code {
+    display: block;
+    margin-top: 6px;
+    padding: 8px;
+    border-radius: 8px;
+    background: #102033;
+    color: #e6f1ff;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .formula-metric.highlight {
+    border-color: rgba(45, 128, 110, 0.45);
+    background: #edf8f4;
+  }
+
+  .formula-metric.highlight strong {
+    color: var(--green);
+    font-size: 1.25rem;
+  }
+
+  /* Attraction stats cards styling */
+  .attraction-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 16px 0;
+  }
+
+  .attraction-stat-card {
+    background: #f8fafc;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .stat-val {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--green);
+  }
+
+  .attraction-stat-card label {
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  /* Attraction runs table styling */
+  .attraction-table-container {
+    margin-top: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .attraction-table-container[hidden] {
+    display: none !important;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: var(--panel);
+  }
+
+  .attraction-runs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    text-align: left;
+  }
+
+  .attraction-runs-table th {
+    background: #f8fafc;
+    padding: 10px 12px;
+    color: var(--muted);
+    font-weight: 700;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .attraction-runs-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+  }
+
+  .attraction-runs-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .attraction-runs-table tbody tr:hover {
+    background: #f8fafc;
+  }
+
+  /* Badge styling */
+  .badge-arch {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: white;
+  }
+
+  /* Learner score and result card styling */
+  .learner-score-display {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .score-ring-wrapper {
+    position: relative;
+    width: 110px;
+    height: 110px;
+  }
+
+  .score-ring {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+
+  .score-ring circle {
+    fill: none;
+    stroke-width: 8;
+  }
+
+  .score-ring .ring-bg {
+    stroke: var(--line);
+  }
+
+  .score-ring .ring-fill {
+    stroke: var(--green);
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.8s ease-out;
+  }
+
+  .score-text-val {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--ink);
+  }
+
+  .score-status-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .score-status-info h4 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: var(--green);
+    font-weight: 800;
+  }
+
+  /* Grid columns inside result card */
+  .result-details-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    margin-top: 16px;
+  }
+
+  .result-col-left, .result-col-right {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Radar chart frame styling */
+  .radar-chart-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #f8fafc;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    align-items: center;
+  }
+
+  .radar-chart-frame {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 12px;
+  }
+
+  .radar-chart-svg {
+    width: 210px;
+    height: 210px;
+  }
+
+  .radar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 12px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+    width: 100%;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  /* Archetype mix list styling */
+  .archetype-mix-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #f8fafc;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .archetype-mix-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .archetype-mix-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .archetype-mix-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.82rem;
+  }
+
+  .archetype-mix-label strong {
+    color: var(--ink);
+  }
+
+  .archetype-mix-label span {
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  .archetype-mix-bar-bg {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .archetype-mix-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.8s ease-out;
+  }
+
+  .markers-metric-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 16px;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+  }
+
+  .metric-pill {
+    flex: 1;
+    background: #f8fafc;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 8px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .metric-pill strong {
+    font-size: 0.95rem;
+    color: var(--muted);
+  }
+
+  .metric-pill span {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--ink);
+  }
+
+  .metric-pill label {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  /* Desktop layout optimization */
+  @media (min-width: 768px) {
+    .engine-layout-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .result-details-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+  }
+
+  /* Protocol tester (raw STATEMENT-envelope API test) */
+  .protocol-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .guest-identity-warning,
+  .guest-protocol-warning {
+    border: 1px solid #f0b44d;
+    border-left: 5px solid #d97706;
+    border-radius: 12px;
+    background: #fff8e8;
+    color: #713f12;
+    padding: 14px 16px;
+    margin: 0 0 16px;
+  }
+
+  .guest-identity-warning p,
+  .guest-protocol-warning {
+    margin-top: 6px;
+  }
+
+  .guest-identity-warning code {
+    color: inherit;
+    font-weight: 800;
+  }
+
+  .protocol-form-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  .protocol-form-grid input {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    color: var(--ink);
+  }
+
+  .protocol-form-grid button {
+    grid-column: 1 / -1;
+    margin-top: 4px;
+  }
+
+  .json-output-box {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    overflow-x: auto;
+    max-height: 260px;
+    margin-top: 12px;
+  }
+
+  .protocol-archetype-chart-card {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #f8fafc;
+    padding: 14px;
+    margin-top: 14px;
+  }
+
+  .protocol-archetype-chart-card h3 {
+    margin: 0 0 8px;
+    font-size: 1rem;
+  }
+
+  .protocol-archetype-overlap-plot {
+    min-height: 250px;
+  }
+
+  /* Compact service controls with a wide, multi-panel analysis canvas. */
+  .service-block-picker {
+    gap: 8px;
+    padding: 10px;
+    background: #09191e;
+  }
+
+  .service-block-picker .block-picker-content { padding: 6px; }
+  .service-block-picker .individual-selection-card,
+  .service-block-picker .group-selection-card {
+    padding: 7px;
+    border-color: #294b54;
+    background: #07171c;
+  }
+  .service-block-picker .block-picker-group + .block-picker-group {
+    padding-top: 8px;
+    border-top: 1px solid #294b54;
+  }
+  .service-block-picker .mobile-card { padding: 12px; margin-bottom: 8px !important; }
+  .service-block-picker .input-method-card { padding: 12px; }
+  .service-block-picker .input-method-card h4 { margin: 0 0 7px; font-size: .88rem; }
+  .service-block-picker .input-method-card > .muted-text { margin: 0 0 10px; font-size: .7rem; line-height: 1.35; }
+  .service-block-picker .slider-group { gap: 4px; margin-bottom: 10px; }
+  .service-block-picker .slider-header { font-size: .72rem; }
+  .service-block-picker .input-group { margin-bottom: 8px !important; }
+  .service-block-picker .input-group label { font-size: .7rem !important; }
+  .service-block-picker input[type="number"],
+  #learner-input-method-select {
+    min-height: 38px;
+    padding: 7px 9px !important;
+    border-color: #31545d !important;
+    background: #07171c !important;
+    color: var(--ink) !important;
+  }
+
+  .current-settings-display-box,
+  .action-sequence-ribbon { background: #07171c !important; }
+
+  .block-picker-btn,
+  .block-picker-link,
+  .marker-map-card,
+  .formula-metric,
+  .attraction-stat-card,
+  .protocol-archetype-chart-card,
+  .attraction-archetypes-distribution {
+    border-color: #294b54 !important;
+    background: #0c2026 !important;
+    color: var(--ink) !important;
+  }
+
+  .formula-metric.highlight { background: #10332c !important; }
+  .attraction-runs-table th { background: #10262d; }
+  .attraction-runs-table tbody tr:hover { background: #123038; }
+  .protocol-form-grid input { background: #07171c; color: var(--ink); }
+
+  .result-card {
+    margin: 0;
+    padding: 16px;
+    border-color: #2b525b;
+    background: linear-gradient(145deg, #0d252c, #09191e);
+  }
+
+  .result-card > h3 { margin: 0 0 4px; }
+  .result-details-grid { gap: 12px; margin-top: 12px; }
+  .result-col-left, .result-col-right { gap: 12px; }
+
+  .learner-score-display,
+  .radar-chart-container,
+  .archetype-mix-section,
+  .analytics-panel {
+    border: 1px solid #294b54;
+    border-radius: 11px;
+    background: #0c2026;
+    box-shadow: inset 0 1px rgba(234, 248, 247, .035);
+  }
+
+  .learner-score-display { min-height: 126px; padding: 12px; }
+  .score-ring-wrapper { width: 92px; height: 92px; }
+  .score-status-info h4 { font-size: 1.12rem; }
+  .radar-chart-container { padding: 12px; }
+  .radar-chart-svg { width: 190px; height: 190px; }
+  .archetype-mix-section { padding: 12px; }
+  .archetype-mix-list { gap: 7px; }
+  .archetype-mix-bar-bg { background: #1c3941; }
+
+  .markers-metric-row { gap: 6px; margin-top: 0; padding-top: 0; border-top: 0; }
+  .metric-pill { padding: 7px 4px; border-color: #294b54; background: #0c2026; }
+  .metric-pill span { color: #e2f4f3; }
+
+  .analytics-secondary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .analytics-panel { min-width: 0; padding: 12px; }
+  .analytics-panel h4 { margin: 3px 0 12px; color: var(--ink); font-size: .88rem; }
+  .compact-bar-chart { display: grid; gap: 8px; }
+  .compact-bar-row { display: grid; grid-template-columns: 18px minmax(0, 1fr) 34px; gap: 7px; align-items: center; }
+  .compact-bar-row strong { color: var(--muted); font-family: var(--font-mono); font-size: .67rem; }
+  .compact-bar-row em { color: var(--ink); font-size: .64rem; font-style: normal; text-align: right; }
+  .compact-bar-track { height: 7px; overflow: hidden; border-radius: 999px; background: #1c3941; }
+  .compact-bar-track span { display: block; height: 100%; min-width: 2px; border-radius: inherit; transition: width .35s ease; }
+
+  .measurement-history-chart { min-height: 128px; }
+  .measurement-history-chart svg { display: block; width: 100%; height: 128px; }
+  .trend-grid-line { stroke: #294b54; stroke-width: 1; stroke-dasharray: 3 4; }
+  .trend-area-line { fill: none; stroke: #38d8cf; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 4px rgba(56,216,207,.35)); }
+  .trend-point { fill: #f0b44d; stroke: #07171c; stroke-width: 2; }
+  .trend-chart-footer { display: flex; justify-content: space-between; color: var(--muted); font-size: .65rem; }
+  .trend-chart-footer strong { color: #65e4da; }
+  .chart-empty-label { display: grid; min-height: 128px; place-items: center; color: var(--muted); font-size: .7rem; }
+
+  @media (min-width: 900px) {
+    .engine-layout-grid { grid-template-columns: 310px minmax(0, 1fr) !important; gap: 14px; }
+    .input-container { position: sticky; top: 16px; min-width: 0; }
+    .result-details-grid { grid-template-columns: minmax(280px, .9fr) minmax(300px, 1.1fr); }
+  }
+
+  @media (min-width: 1200px) {
+    .result-details-grid {
+      display: grid;
+      grid-template-columns: minmax(190px, .72fr) minmax(310px, 1.28fr) minmax(240px, 1fr) !important;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .result-col-left,
+    .result-col-right { display: contents; }
+
+    .learner-score-display { grid-column: 1; grid-row: 1; flex-direction: column; justify-content: center; text-align: center; }
+    .radar-chart-container { grid-column: 2; grid-row: 1; }
+    .archetype-mix-section { grid-column: 3; grid-row: 1; justify-content: center; }
+    .markers-metric-row { grid-column: 1 / -1; grid-row: 2; }
+    .metric-pill { min-height: 64px; justify-content: center; }
+  }
+
+  @media (max-width: 1180px) {
+    .analytics-secondary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .analytics-trend-panel { grid-column: 1 / -1; }
+  }
+
+  @media (max-width: 899px) {
+    .analytics-secondary-grid { grid-template-columns: 1fr; }
+    .analytics-trend-panel { grid-column: auto; }
+  }
+</style>

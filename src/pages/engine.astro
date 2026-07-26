@@ -1,0 +1,875 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SourceCodeBrowser from '../components/SourceCodeBrowser.astro';
+---
+
+<Layout title="Engine" description="Bereken leerpret, bekijk de formule en test de technische engineblokken.">
+  <div class="engine-header-block">
+    <span class="eyebrow">Engine</span>
+    <h2 class="section-title">Engine</h2>
+    <p class="muted-text">Vul links testwaarden in en kies rechts welk enginepaneel je wilt bekijken.</p>
+  </div>
+
+  <div class="engine-workbench page-block-layout" data-page-blocks="engine">
+    <aside class="mobile-card engine-block-menu page-block-menu" aria-label="Engineblokken">
+      <div class="engine-calculator-controls">
+        <span class="eyebrow">Handmatige test</span>
+        <h3>Engine Calculator</h3>
+        <form id="engine-evaluation-form" class="engine-form engine-sidebar-form">
+          <div class="input-group">
+            <label for="duration-input">Duration (seconden)</label>
+            <input id="duration-input" name="duration" type="number" min="0" value="420" required>
+          </div>
+          <div class="input-group">
+            <label for="actions-input">Actions (A)</label>
+            <input id="actions-input" name="actions" type="number" min="0" value="32" required>
+          </div>
+          <div class="input-group">
+            <label for="targets-input">Unique Targets (V)</label>
+            <input id="targets-input" name="unique_targets" type="number" min="0" value="14" required>
+          </div>
+          <div class="input-group">
+            <label for="frictions-input">Frictions (F)</label>
+            <input id="frictions-input" name="frictions" type="number" min="0" value="5" required>
+          </div>
+          <div class="input-group">
+            <label for="recoveries-input">Recoveries (R)</label>
+            <input id="recoveries-input" name="recoveries" type="number" min="0" value="4" required>
+          </div>
+          <div class="input-group">
+            <label for="successes-input">Successes (S)</label>
+            <input id="successes-input" name="successes" type="number" min="0" value="1" required>
+          </div>
+          <button type="submit" class="btn btn-primary" id="btn-submit-engine">Bereken via Engine</button>
+        </form>
+      </div>
+      <div class="engine-code-perspective-menu" id="engine-code-perspective-menu" hidden>
+        <span class="eyebrow">Codeperspectief</span>
+        <button class="engine-code-perspective active" type="button" data-engine-source-path="backend/app/core/formula.py" data-engine-source-symbol="learning_value" data-title="Formule" data-body="De kernformule vertaalt markerwaarden naar een engine-uitkomst. Dit perspectief hoort bij de code, niet bij extra invoerwaarden.">Formule</button>
+        <button class="engine-code-perspective" type="button" data-engine-source-path="backend/app/core/formula.py" data-engine-source-search="request_id" data-title="Auditcode" data-body="Herleidbaarheid van engine-aanroepen: invoer, instellingen, request-id en uitkomst moeten later terug te vinden zijn.">Auditcode</button>
+        <button class="engine-code-perspective" type="button" data-engine-source-path="backend/app/services/proof_of_concept.py" data-engine-source-search="validation" data-title="Validatiestatistiek" data-body="Bundelt foutmaat, samenhang, bias, toevalstoets en risico-indicatoren als kwaliteitslens op de engine.">Validatiestatistiek</button>
+        <button class="engine-code-perspective" type="button" data-engine-source-path="backend/app/core/formula.py" data-engine-source-search="baseline" data-title="Toevalsbaseline" data-body="Controleert of een engine-uitkomst betekenisvoller is dan willekeurige of nulverwachting.">Toevalsbaseline</button>
+        <button class="engine-code-perspective" type="button" data-engine-source-path="backend/app/core/formula.py" data-engine-source-search="risk" data-title="Schijnvalidatierisico" data-body="Bewaakt of validatie mogelijk vertekend is door bronkeuze, labeling, datalek of een te smalle testset.">Schijnvalidatierisico</button>
+        <button class="engine-code-perspective" type="button" data-engine-source-path="backend/app/core/formula.py" data-engine-source-search="markers" data-title="Markerverdeling" data-body="Kijkt of T, A, V, R en S voldoende spreiding hebben om conclusies zinvol te maken.">Markerverdeling</button>
+        <button class="engine-code-perspective" type="button" data-engine-source-path="backend/app/core/formula.py" data-engine-source-search="threshold" data-title="Verfijningen" data-body="Verfijningen zijn implementatiekeuzes rond de enginecode. De actuele waarden links beïnvloeden alleen de Uitkomst-tab.">Verfijningen</button>
+      </div>    </aside>
+
+    <main class="engine-block-content page-block-content">
+      <nav class="engine-panel-tabs" aria-label="Enginepanelen">
+        <button class="engine-panel-tab role-shared active" type="button" data-block-id="calculator" data-engine-block="calculator">Uitkomst</button>
+        <button class="engine-panel-tab role-technologist" type="button" data-block-id="code" data-engine-block="code" data-technologist-only>Code</button>
+      </nav>
+
+      <section class="engine-panel page-block-content-item active" data-block-id="calculator" id="engine-block-calculator" data-engine-panel="calculator">
+        <div class="engine-panel-heading">
+          <span class="eyebrow">Uitkomst</span>
+          <h3>Engine Uitkomst</h3>
+          <p class="muted-text">Vul links de markerwaarden in en bereken hier de vectorwaarden en archetype-mix.</p>
+        </div>
+        <div class="mobile-card engine-result-card">
+          <pre class="json-output-box" id="engine-json-output">Nog geen engine-test uitgevoerd.</pre>
+        </div>
+      </section>
+
+      <section class="engine-panel page-block-content-item" data-block-id="code" id="engine-block-code" data-engine-panel="code">
+        <div class="engine-panel-heading">
+          <span class="eyebrow">Broncode</span>
+          <h3>Leerpret-engine Code</h3>
+          <p class="muted-text">Kies links in de Explorer een enginebestand. De broncode wordt alleen-lezen weergegeven.</p>
+        </div>
+
+        <article class="mobile-card engine-code-perspective-detail" id="engine-code-perspective-detail" aria-live="polite">
+          <span class="eyebrow">Codeperspectief</span>
+          <h3>Formule</h3>
+          <p class="muted-text">De kernformule vertaalt markerwaarden naar een engine-uitkomst. Dit perspectief hoort bij de code, niet bij extra invoerwaarden.</p>
+        </article>
+
+
+        <article class="mobile-card formula-reference-card" id="engine-formula-overview">
+          <div class="engine-panel-heading">
+            <span class="eyebrow">Formules & statistiek</span>
+            <h3>Engineformule</h3>
+            <p class="formula-caption">De formules staan hier als leesbare dashboardformules. Beweeg over termen voor uitleg; klik op <strong>LP<sub>eng</sub></strong> of kies links een codeperspectief om het bijbehorende codefragment te openen.</p>
+          </div>
+
+          <div class="lp-formula-panel" aria-label="Engineformules">
+            <p class="lp-formula-line">
+              <span class="lp-hover lp-hover-code engine-code-link" role="button" tabindex="0" data-engine-source-path="backend/app/core/formula.py" data-engine-source-symbol="learning_value" data-engine-detail="Kernformule: de effectieve markervector wordt gewogen tegen het gebruikers- of profielgewicht." data-tooltip="Kernformule: de effectieve markervector wordt gewogen tegen het gebruikers- of profielgewicht. Klik om de bijbehorende code te openen.">LP<sub>eng</sub></span>
+              =
+              <span class="lp-hover formula-frac" tabindex="0" data-tooltip="m_eff,i is de effectieve markerwaarde na normalisatie en eventuele engine-verfijning, bijvoorbeeld de activiteitsdrempel.">
+                <span>S<sub>i</sub> m<sub>eff,i</sub> · w<sub>u,i</sub></span>
+                <span>S<sub>i</sub> w<sub>u,i</sub><sup>2</sup></span>
+              </span>
+            </p>
+            <p class="lp-formula-line">
+              <span class="lp-hover" tabindex="0" data-tooltip="Delta vergelijkt de engine-uitkomst met een verwachte of menselijk beoordeelde leerpretwaarde.">?</span>
+              = LP<sub>eng</sub> - LP<sub>exp</sub>
+            </p>
+            <p class="lp-formula-line">
+              <span class="lp-hover" tabindex="0" data-tooltip="MAE is de gemiddelde absolute afwijking: robuust en makkelijk te lezen als gemiddelde fout.">MAE</span>
+              =
+              <span class="formula-frac"><span>S<sub>i</sub>|?<sub>i</sub>|</span><span>n</span></span>;
+              <span class="lp-hover" tabindex="0" data-tooltip="RMSE straft grote afwijkingen sterker dan MAE en laat uitschieters duidelijker meetellen.">RMSE</span>
+              = v<span class="formula-paren">(<span class="formula-frac"><span>S<sub>i</sub>?<sub>i</sub><sup>2</sup></span><span>n</span></span>)</span>
+            </p>
+            <p class="lp-formula-line">
+              <span class="lp-hover" tabindex="0" data-tooltip="SD_Delta laat zien hoe stabiel of wisselend de afwijkingen rond hun gemiddelde liggen.">SD<sub>?</sub></span>
+              = v mean((?<sub>i</sub> - mean(?))<sup>2</sup>)
+            </p>
+            <p class="lp-formula-line">
+              <span class="lp-hover" tabindex="0" data-tooltip="Pearson r meet of engine-uitkomsten en verwachte waarden samen oplopen. Het zegt iets over richting en samenhang, niet automatisch over absolute juistheid.">Pearson r</span>
+              =
+              <span class="formula-frac"><span>cov(LP<sub>eng</sub>, LP<sub>exp</sub>)</span><span>sd<sub>eng</sub> · sd<sub>exp</sub></span></span>
+            </p>
+            <p class="lp-formula-line">
+              <span class="lp-hover lp-hover-code" tabindex="0" data-tooltip="Bland-Altman maakt bias en spreiding zichtbaar: ligt de engine structureel hoger of lager dan de referentie, en hoe breed is de onzekerheidsband?">Bland-Altman</span>:
+              bias = mean(?); limits = bias ± 1.96 · SD<sub>?</sub>
+            </p>
+            <p class="lp-formula-line">
+              <span class="lp-hover" tabindex="0" data-tooltip="Valentieflips tellen gevallen waar engine en referentie aan verschillende kanten van de leerpretgrens vallen.">Valentieflips</span>
+              = count((LP<sub>eng</sub> = 0.60) ? (LP<sub>exp</sub> = 0.60));
+              <span class="lp-hover lp-hover-right" tabindex="0" data-tooltip="Rangrichting kijkt of paren in dezelfde volgorde blijven: als casus A hoger hoort dan B, zet de engine die dan ook hoger?">Rangrichting</span>
+              =
+              <span class="formula-frac"><span>same ordered pairs</span><span>comparable pairs</span></span>
+            </p>
+            <p class="lp-formula-line">
+              <span class="lp-hover" tabindex="0" data-tooltip="De toevalsbaseline vergelijkt de geobserveerde validatiescore met willekeurige scores.">Toevalsbaseline</span>:
+              p = share(random score = observed score);
+              <span class="lp-hover lp-hover-right" tabindex="0" data-tooltip="Schijnvalidatierisico weegt mee hoe sterk de bron, annotatie en herkomst de validatie kunnen vertekenen.">Schijnvalidatierisico</span>
+              = weighted provenance risk
+            </p>
+          </div>
+
+          <p class="formula-source-note">De dashboard-engine rekent in <code>backend/app/core/formula.py</code>; rapportstatistieken worden in de backend-validatielaag opgebouwd.</p>
+        </article>
+
+        <SourceCodeBrowser scope="engine" title="Leerpret-engine" />
+      </section>
+    </main>
+  </div>
+
+  <script>
+    import { apiPost, initSettings, renderMath } from '../js/api.js';
+
+    function setupEngineBlocks() {
+      const buttons = Array.from(document.querySelectorAll('[data-engine-block]'));
+      const panels = Array.from(document.querySelectorAll('[data-engine-panel]'));
+      const role = new URLSearchParams(window.location.search).get('role') || localStorage.getItem('active_role') || localStorage.getItem('leerpret.poc.role') || 'guest';
+      const canSeeCode = role === 'technologist';
+      const calculatorControls = document.querySelector('.engine-calculator-controls');
+      const codePerspectiveMenu = document.getElementById('engine-code-perspective-menu');
+      document.querySelectorAll('[data-technologist-only]').forEach((item) => { item.hidden = !canSeeCode; });
+      const activate = (id, updateLocation = false) => {
+        if (id === 'code' && !canSeeCode) id = 'calculator';
+        buttons.forEach((button) => {
+          const active = button.dataset.engineBlock === id;
+          button.classList.toggle('active', active);
+          button.setAttribute('aria-current', active ? 'page' : 'false');
+        });
+        panels.forEach((panel) => {
+          const active = panel.dataset.enginePanel === id;
+          panel.classList.toggle('active', active);
+          panel.hidden = !active;
+        });
+        localStorage.setItem('leerpret.blocks.engine', id);
+        if (updateLocation) {
+          const url = new URL(window.location.href);
+          url.searchParams.set('block', id);
+          history.replaceState({}, '', url);
+        }
+        if (calculatorControls) calculatorControls.hidden = id === 'code';
+        if (codePerspectiveMenu) codePerspectiveMenu.hidden = id !== 'code' || !canSeeCode;
+        renderMath(document.querySelector(`[data-engine-panel="${id}"]`));
+      };
+
+      buttons.forEach((button) => {
+        button.addEventListener('click', () => activate(button.dataset.engineBlock || 'calculator', true));
+      });
+
+      const openSourceReference = (trigger) => {
+        const detailPanel = document.getElementById('engine-code-perspective-detail');
+        const formulaOverview = document.getElementById('engine-formula-overview');
+        const title = trigger.dataset.title || trigger.textContent?.trim() || 'Engineonderdeel';
+        const text = trigger.dataset.body || trigger.dataset.engineDetail || 'Bijbehorend enginefragment.';
+        const path = trigger.dataset.engineSourcePath || '';
+        const symbol = trigger.dataset.engineSourceSymbol || '';
+        const search = trigger.dataset.engineSourceSearch || '';
+        if (formulaOverview) formulaOverview.hidden = title !== 'Formule';
+        document.querySelectorAll('.engine-code-perspective').forEach((item) => item.classList.toggle('active', item === trigger));
+        if (detailPanel) {
+          detailPanel.innerHTML = `
+            <span class="eyebrow">Codeperspectief</span>
+            <h3>${title}</h3>
+            <p class="muted-text">${text}</p>
+            ${path ? `<small>Code: <code>${path}${symbol ? `::${symbol}` : search ? ` Â· zoek: ${search}` : ''}</code></small>` : ''}
+          `;
+        }
+        if (!path) return;
+        activate('code', true);
+        const browser = document.querySelector('[data-source-browser][data-source-scope="engine"]');
+        browser?.dispatchEvent(new CustomEvent('leerpret-open-source', {
+          bubbles: true,
+          detail: { path, symbol, search },
+        }));
+      };
+
+      document.querySelectorAll('.engine-code-link').forEach((trigger) => {
+        trigger.addEventListener('click', () => openSourceReference(trigger));
+        trigger.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openSourceReference(trigger);
+          }
+        });
+      });
+
+      document.querySelectorAll('.engine-code-perspective').forEach((trigger) => {
+        trigger.addEventListener('click', () => openSourceReference(trigger));
+      });
+
+      const requested = new URLSearchParams(window.location.search).get('block');
+      const stored = localStorage.getItem('leerpret.blocks.engine');
+      const available = ['calculator', 'code'];
+      const initial = [requested, stored, 'calculator'].find((id) => id && available.includes(id));
+      activate(initial || 'calculator');
+      return activate;
+    }
+
+    async function handleEngineEvaluate(e, activate) {
+      e.preventDefault();
+      activate('calculator', true);
+
+      const form = e.target;
+      const output = document.getElementById('engine-json-output');
+      const btn = document.getElementById('btn-submit-engine');
+
+      if (!output || !btn) return;
+
+      initSettings();
+
+      const formData = new FormData(form);
+      const numeric = (name) => Number(formData.get(name) || 0);
+
+      const requestedAt = new Date().toISOString();
+      const payload = {
+        request_id: `engine-calc-${Date.now()}`,
+        STATEMENT: {
+          ACTOR: { TYPE: "ACTOR", id: "manual-calculator", role: "developer" },
+          CONTEXT: { TYPE: "CONTEXT", id: "local-calc", learning_box_id: "demo" },
+          TIME: { TYPE: "TIME", id: "calc-time", requested_at: requestedAt },
+          ACTION: {
+            TYPE: "ACTION",
+            id: "evaluate-marker-request",
+            data: {
+              duration: numeric("duration"),
+              actions: numeric("actions"),
+              unique_targets: numeric("unique_targets"),
+              frictions: numeric("frictions"),
+              recoveries: numeric("recoveries"),
+              successes: numeric("successes"),
+            }
+          },
+          WITH: [{ TYPE: "RESOURCE", id: "engine-page-form" }],
+          IN: [{ TYPE: "CONTEXT", id: "local" }],
+          WHEN: [{ TYPE: "TIME", id: "submit", data: { requested_at: requestedAt } }]
+        }
+      };
+
+      btn.disabled = true;
+      btn.textContent = 'Berekenen...';
+      output.textContent = 'Verzoek wordt verzonden naar de engine...';
+
+      try {
+        const response = await apiPost('/engine/evaluate', payload);
+        output.textContent = JSON.stringify(response, null, 2);
+      } catch (err) {
+        output.textContent = `Fout bij engine berekening: ${err.message || err}. Zorg dat de FastAPI backend actief is.`;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Bereken via Engine';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const activateEngineBlock = setupEngineBlocks();
+      document.getElementById('engine-evaluation-form')?.addEventListener('submit', (event) => handleEngineEvaluate(event, activateEngineBlock));
+      renderMath(document.querySelector('.engine-block-content'));
+    });
+  </script>
+</Layout>
+
+<style>
+  .engine-header-block {
+    margin-bottom: 20px;
+  }
+
+  .engine-workbench {
+    display: grid;
+    gap: 16px;
+  }
+
+  .engine-block-menu {
+    display: grid;
+    gap: 10px;
+    align-content: start;
+  }
+
+  .engine-calculator-controls {
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 4px;
+    padding-bottom: 14px;
+  }
+
+  .engine-calculator-controls h3 {
+    margin: 4px 0 12px;
+  }
+
+  .engine-sidebar-form {
+    gap: 10px;
+  }
+
+  .engine-sidebar-form .input-group {
+    gap: 5px;
+  }
+
+  .engine-sidebar-form .input-group label {
+    font-size: 0.82rem;
+  }
+
+  .engine-sidebar-form .input-group input {
+    min-height: 42px;
+    padding: 9px 11px;
+  }
+
+  .engine-sidebar-form .btn {
+    margin-top: 2px;
+    width: 100%;
+  }
+
+  .engine-block-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #10262d;
+    color: var(--ink);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 900;
+    padding: 16px;
+    text-align: left;
+  }
+
+  .engine-block-button:hover {
+    background: #15323a;
+    border-color: #3b6972;
+  }
+
+  .engine-block-button.active {
+    border-color: var(--teal);
+    background: #10343a;
+    color: var(--teal);
+    box-shadow: inset 4px 0 var(--teal);
+  }
+
+  .engine-block-button strong {
+    color: currentColor;
+  }
+
+  .engine-block-content {
+    display: grid;
+    gap: 12px;
+    align-content: start;
+    min-width: 0;
+  }
+
+  .engine-panel-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: flex-end;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .engine-panel-tab {
+    border: 1px solid transparent;
+    border-bottom: 0;
+    border-top: 3px solid var(--tab-role-color, transparent);
+    border-radius: 8px 8px 0 0;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font: 700 .84rem inherit;
+    padding: 9px 16px;
+    min-height: 0;
+  }
+
+  .engine-panel-tab:hover {
+    color: var(--ink);
+  }
+
+  .engine-panel-tab.role-shared { --tab-role-color: var(--teal); }
+  .engine-panel-tab.role-technologist { --tab-role-color: var(--plum); }
+
+  .engine-panel-tab.active {
+    border-color: var(--line);
+    border-top-color: var(--tab-role-color, var(--teal));
+    background: var(--panel);
+    color: var(--tab-role-color, var(--teal));
+    margin-bottom: -1px;
+    box-shadow: none;
+  }
+
+  .engine-code-link {
+    cursor: pointer;
+  }
+
+  .engine-code-link:hover,
+  .engine-code-link:focus-visible {
+    outline: 2px solid rgba(50, 221, 210, .32);
+    outline-offset: 3px;
+    filter: brightness(1.18);
+  }
+
+  .engine-formula-detail {
+    display: grid;
+    gap: 5px;
+    margin-top: 14px;
+    padding: 12px 14px;
+    border: 1px solid #31545d;
+    border-left: 4px solid var(--teal);
+    border-radius: 10px;
+    background: rgba(7, 23, 28, .68);
+  }
+
+  .engine-formula-detail strong {
+    color: #eaf8f7;
+    font-family: var(--font-heading);
+    letter-spacing: .03em;
+  }
+
+  .engine-formula-detail p,
+  .engine-formula-detail small {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  .engine-formula-detail code {
+    color: #8ff5e4;
+  }
+
+  .engine-perspective-card {
+    display: grid;
+    gap: 10px;
+  }
+
+  .engine-perspective-card h3 {
+    margin: 0;
+  }
+
+  .engine-perspective-card .btn {
+    justify-self: start;
+  }
+
+
+  .engine-code-perspective-menu {
+    display: grid;
+    gap: 8px;
+  }
+
+  .engine-code-perspective-menu[hidden] {
+    display: none;
+  }
+
+  .engine-code-perspective {
+    width: 100%;
+    min-height: 38px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: #10262d;
+    color: var(--muted);
+    cursor: pointer;
+    font: inherit;
+    font-size: .78rem;
+    font-weight: 900;
+    padding: 8px 10px;
+    text-align: left;
+  }
+
+  .engine-code-perspective:hover,
+  .engine-code-perspective.active {
+    border-color: var(--teal);
+    background: rgba(50, 221, 210, .12);
+    color: #fff;
+    box-shadow: inset 4px 0 var(--teal);
+  }
+
+  .engine-code-perspective-detail {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 12px;
+    border-left: 4px solid var(--teal);
+  }
+
+  .engine-code-perspective-detail h3,
+  .engine-code-perspective-detail p {
+    margin: 0;
+  }
+
+  .engine-code-perspective-detail small {
+    color: var(--muted);
+  }
+
+  .engine-code-perspective-detail code {
+    color: #8ff5e4;
+  }
+  .engine-panel {
+    display: none;
+  }
+
+  .engine-panel.active {
+    display: block;
+  }
+
+  .engine-panel-heading {
+    margin-bottom: 14px;
+  }
+
+  .engine-panel-heading h3 {
+    color: var(--ink);
+    font-size: 1.5rem;
+    margin: 2px 0 6px;
+  }
+
+  .engine-layout-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .json-output-box {
+    background: #0f172a;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    color: #38bdf8;
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: 0.8rem;
+    margin: 0;
+    max-height: 400px;
+    overflow-x: auto;
+    padding: 14px;
+    white-space: pre-wrap;
+  }
+
+  .formula-reference-card {
+    overflow: visible;
+  }
+
+  .formula-caption,
+  .formula-source-note {
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+
+  .lp-formula-panel {
+    display: grid;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .lp-formula-line {
+    background: #10262d;
+    border: 1px solid #31545d;
+    border-radius: 10px;
+    color: #dceced;
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    margin: 0;
+    overflow: visible;
+    padding: 14px;
+  }
+
+  .formula-frac {
+    align-items: center;
+    display: inline-grid;
+    gap: 2px;
+    justify-items: center;
+    line-height: 1.2;
+    margin: 0 4px;
+    vertical-align: middle;
+  }
+
+  .formula-frac > span:first-child {
+    border-bottom: 1px solid currentColor;
+    padding: 0 6px 2px;
+  }
+
+  .formula-frac > span:last-child {
+    padding: 1px 6px 0;
+  }
+
+  .formula-paren {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .lp-hover {
+    border-bottom: 1px dotted currentColor;
+    color: var(--teal);
+    cursor: help;
+    font-weight: 900;
+    position: relative;
+  }
+
+  .lp-hover:focus {
+    border-radius: 4px;
+    outline: 2px solid rgba(0, 128, 128, 0.25);
+    outline-offset: 3px;
+  }
+
+  .lp-hover::after {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    bottom: calc(100% + 10px);
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.25);
+    color: #e2e8f0;
+    content: attr(data-tooltip);
+    font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    left: 0;
+    line-height: 1.45;
+    max-width: 82vw;
+    opacity: 0;
+    padding: 10px 12px;
+    pointer-events: none;
+    position: absolute;
+    transform: translateY(6px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    white-space: pre-wrap;
+    width: min(360px, 82vw);
+    z-index: 20;
+  }
+
+  .lp-hover:hover::after,
+  .lp-hover:focus::after {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .lp-hover-code::after {
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    width: min(520px, 84vw);
+  }
+
+  .lp-hover-right::after {
+    left: auto;
+    right: 0;
+  }
+
+  .lp-hover-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .lp-hover-chip {
+    background: rgba(0, 128, 128, 0.08);
+    border: 1px solid rgba(0, 128, 128, 0.24);
+    border-radius: 999px;
+    color: var(--teal);
+    display: inline-flex;
+    padding: 8px 12px;
+  }
+
+  .formula-source-note {
+    margin: 18px 0 0;
+  }
+
+  .formula-source-note code {
+    background: #10262d;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: #dceced;
+    padding: 2px 5px;
+  }
+
+  .source-browser-card {
+    background: #181818;
+    border: 1px solid #3c3c3c;
+    border-radius: 12px;
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18);
+    color: #d4d4d4;
+    overflow: hidden;
+  }
+
+  .source-titlebar {
+    align-items: center;
+    background: #323233;
+    border-bottom: 1px solid #454545;
+    display: grid;
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: 0.78rem;
+    grid-template-columns: 76px 1fr 76px;
+    min-height: 38px;
+    padding: 0 12px;
+    text-align: center;
+  }
+
+  .source-window-dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .source-window-dots i {
+    background: #ff5f57;
+    border-radius: 50%;
+    height: 10px;
+    width: 10px;
+  }
+
+  .source-window-dots i:nth-child(2) { background: #febc2e; }
+  .source-window-dots i:nth-child(3) { background: #28c840; }
+
+  .source-workbench {
+    display: grid;
+    grid-template-columns: minmax(190px, 250px) minmax(0, 1fr);
+    min-height: 560px;
+  }
+
+  .source-explorer {
+    background: #252526;
+    border-right: 1px solid #3c3c3c;
+    min-width: 0;
+    overflow: auto;
+  }
+
+  .source-explorer-heading {
+    color: #bbbbbb;
+    font-size: 0.68rem;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+    padding: 12px 14px 8px;
+  }
+
+  .source-file-tree {
+    color: #cccccc;
+    font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+    font-size: 0.72rem;
+    padding-bottom: 12px;
+  }
+
+  .source-loading {
+    color: #a0a0a0;
+    margin: 8px 14px;
+  }
+
+  .source-file-type {
+    color: #4fc1ff;
+    flex: 0 0 auto;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.6rem;
+    font-weight: 900;
+  }
+
+  .source-editor {
+    background: #1e1e1e;
+    display: grid;
+    grid-template-rows: 36px minmax(0, 1fr) 24px;
+    min-width: 0;
+  }
+
+  .source-editor-tabbar {
+    align-items: center;
+    background: #252526;
+    border-bottom: 1px solid #2d2d2d;
+    display: flex;
+    gap: 8px;
+    min-width: 0;
+    padding: 0 14px;
+  }
+
+  .source-editor-tabbar strong {
+    color: #e7e7e7;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.75rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .source-editor-scroll {
+    max-height: 500px;
+    overflow: auto;
+  }
+
+  .source-code-lines {
+    color: #d4d4d4;
+    counter-reset: source-line;
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: 0.77rem;
+    line-height: 1.55;
+    list-style: none;
+    margin: 0;
+    min-width: max-content;
+    padding: 12px 18px 28px 64px;
+  }
+
+  .source-statusbar {
+    align-items: center;
+    background: #007acc;
+    color: #ffffff;
+    display: flex;
+    font-size: 0.64rem;
+    gap: 12px;
+    justify-content: space-between;
+    min-width: 0;
+    padding: 0 10px;
+  }
+
+  .source-statusbar span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 720px) {
+    .source-workbench {
+      grid-template-columns: 1fr;
+      grid-template-rows: minmax(150px, 220px) minmax(420px, 1fr);
+    }
+
+    .source-explorer {
+      border-bottom: 1px solid #3c3c3c;
+      border-right: 0;
+    }
+  }
+
+  @media (min-width: 900px) {
+    .engine-workbench {
+      grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .engine-block-menu {
+      position: sticky;
+      top: 16px;
+    }
+
+    .engine-layout-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: flex-start;
+    }
+  }
+</style>

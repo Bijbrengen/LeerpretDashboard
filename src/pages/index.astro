@@ -1,0 +1,859 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Home" description="Verken de onderdelen en kies vanuit het overzicht waar je verder wilt werken.">
+  
+
+
+  <!-- Mobile Stacked Flowchart (Base CSS) -->
+  <section class="mobile-flow-section">
+    <div class="section-header-row">
+      <span class="eyebrow">Dashboard Kaart</span>
+      <h2 class="section-title">Leerpret Structuurkaart</h2>
+      <p class="muted-text">Volg de stroom van gedragsspoor tot leerpret-score. Tap op een stap om die te openen.</p>
+    </div>
+
+    <div class="mobile-flow-list">
+      
+      <a href="/park" class="flow-step-card teal-accent">
+        <div class="step-num">1</div>
+        <div class="step-details">
+          <h4>Leerattractie</h4>
+          <p>Digitale pilots (bijv. Drukwerkplaats of LEARNgame) waar acties plaatsvinden.</p>
+        </div>
+        <span class="arrow-right">→</span>
+      </a>
+
+      <div class="flow-divider">↓</div>
+
+      <a href="/learningbox" class="flow-step-card teal-accent">
+        <div class="step-num">2</div>
+        <div class="step-details">
+          <h4>Leerbox (Digitale Tweeling)</h4>
+          <p>Definieert de toegestane routes en didactische markers.</p>
+        </div>
+        <span class="arrow-right">→</span>
+      </a>
+
+      <div class="flow-divider">↓</div>
+
+      <a href="/engine" class="flow-step-card green-accent" id="home-flow-engine">
+        <div class="step-num">3</div>
+        <div class="step-details">
+          <h4>Leerpret Engine</h4>
+          <p>Vertaalt gedragsspoor-statements naar engagement vectoren.</p>
+        </div>
+        <span class="arrow-right">→</span>
+      </a>
+
+      <div class="flow-divider">↓</div>
+
+      <a href="/service" class="flow-step-card blue-accent">
+        <div class="step-num">4</div>
+        <div class="step-details">
+          <h4>Service API</h4>
+          <p>FastAPI endpoints die de dashboards en de engine voeden.</p>
+        </div>
+        <span class="arrow-right">→</span>
+      </a>
+
+      <div class="flow-divider">↓</div>
+
+      <div class="flow-step-card gray-accent">
+        <div class="step-num">5</div>
+        <div class="step-details">
+          <h4>Rapportage</h4>
+          <p>Samenvatting van scores en diagnostische archetype-mix.</p>
+        </div>
+      </div>
+
+      <div class="flow-divider">↓</div>
+
+      <a href="/service?role=learner" class="flow-step-card violet-accent">
+        <div class="step-num">6</div>
+        <div class="step-details">
+          <h4>Lerende</h4>
+          <p>Ontvangt direct feedback in de vorm van actieve leerpret.</p>
+        </div>
+        <span class="arrow-right">→</span>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- Desktop Interactive SVG map (Hidden on mobile) -->
+  <section class="desktop-map-section">
+    <div class="section-header-row">
+      <span class="eyebrow">Interactieve Kaart</span>
+      <h2 class="section-title">Dashboardstructuur</h2>
+    </div>
+    <div class="home-map">
+      <svg class="home-structure-svg" viewBox="0 0 1280 620" role="img" aria-labelledby="home-map-title home-map-desc">
+        <title id="home-map-title">Leerpretengine dashboardstructuur</title>
+        <desc id="home-map-desc">Klikbare kaart: de Leerpretarchitect ontwerpt de leerbox; de Leerprettechnoloog bouwt aan de engine en service; de leerattractie levert leerboxmetadata en ontvangt een rapport; de lerende levert acties en krijgt leerpret terug.</desc>
+        <defs>
+          <marker id="home-arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+            <path d="M2,2 L10,6 L2,10 Z" fill="#ea9c72"></path>
+          </marker>
+        </defs>
+
+        <!-- Uitleg linksboven: de rollen in het dashboard. -->
+        <g class="home-explanation-panel" transform="translate(30 18)" aria-label="Uitleg van de rollen">
+          <rect width="300" height="156" rx="12"></rect>
+          <text x="18" y="34" class="home-explanation-title">Meerdere perspectieven</text>
+          <text x="18" y="61" class="home-explanation-text">
+            <tspan x="18" dy="0">Het dashboard kent meerdere perspectieven.</tspan>
+            <tspan x="18" dy="22">Wat zichtbaar is, hangt af van de rol.</tspan>
+            <tspan x="18" dy="22">De Lerende staat voorop; de overige</tspan>
+            <tspan x="18" dy="22">rollen en onderdelen zijn dienend.</tspan>
+          </text>
+          <a href="/help" aria-label="Meer uitleg over de rollen">
+            <text x="282" y="146" class="home-explanation-more" text-anchor="end">Meer…</text>
+          </a>
+        </g>
+
+        <!-- Uitleg rechtsboven: de onderdelen en informatiestroom. -->
+        <g class="home-explanation-panel" transform="translate(950 18)" aria-label="Uitleg van de Service en Leerpret-engine">
+          <rect width="300" height="156" rx="12"></rect>
+          <text x="18" y="34" class="home-explanation-title">Opzet van de Service</text>
+          <text x="18" y="59" class="home-explanation-text">
+            <tspan x="18" dy="0">Rollen maken via de Service contact</tspan>
+            <tspan x="18" dy="19">met de Leerpret-engine. Die is gebouwd</tspan>
+            <tspan x="18" dy="19">op basis van Artikelen en wordt getraind</tspan>
+            <tspan x="18" dy="19">met simulatie- en praktijkdata.</tspan>
+          </text>
+          <a href="/help" aria-label="Meer uitleg over de Service en Leerpret-engine">
+            <text x="282" y="146" class="home-explanation-more" text-anchor="end">Meer…</text>
+          </a>
+        </g>
+
+        <!-- De bestaande kaart is omlaag geschoven om ruimte te maken voor de rolbediening. -->
+        <g class="home-map-main" transform="translate(0 170)">
+        
+        <!-- Service Shell -->
+        <g class="home-service-shell cursor-pointer" data-href="/service" role="button" tabindex="0" aria-label="Service" transform="translate(430 54)">
+          <title>Service: verbindt de rollen met de Leerpret-engine, die op Artikelen is gebouwd en met simulatie- en praktijkdata wordt getraind.</title>
+          <rect width="448" height="330" rx="14"></rect>
+          <text x="28" y="46" class="home-map-label">Service</text>
+        </g>
+        
+        <!-- Flows -->
+        <path class="home-flow secondary" d="M392 174 C408 174 418 174 430 174" marker-end="url(#home-arrow)"></path>
+        <path class="home-flow secondary" d="M430 264 C414 264 404 264 392 264" marker-end="url(#home-arrow)"></path>
+        <path class="home-flow learner-flow" d="M1060 140 C994 140 944 140 878 140" marker-end="url(#home-arrow)"></path>
+        <path class="home-flow learner-flow" d="M878 302 C944 302 994 302 1060 302" marker-end="url(#home-arrow)"></path>
+        
+        <text x="995" y="122" class="home-flow-label" text-anchor="middle">Acties</text>
+        <text x="995" y="158" class="home-flow-sub" text-anchor="middle">person_id, leerbox_id</text>
+        <text x="995" y="170" class="home-flow-sub" text-anchor="middle">leerobject_id, timestamp</text>
+        <text x="995" y="326" class="home-flow-label" text-anchor="middle">Leerpret</text>
+
+        <!-- Leerattractie -->
+        <g class="home-leerattractie cursor-pointer" data-href="/park" role="button" tabindex="0" aria-label="Leerattractie" transform="translate(40 126)">
+          <title>Leerattractie: beheert de leeromgeving en ontvangt rapportages over het gebruik van de leerbox.</title>
+          <g class="rollercoaster-icon" transform="translate(0 0) scale(0.34)">
+            <path d="M455.5,352H455v-192.06c0-2.274-1.014-4.312-2.613-5.688c-5.258-4.692-11.009-8.857-17.093-12.379C419.621,132.798,401.71,128,383.5,128c-30.364,0-57.138,11.978-77.445,34.644L247.5,220.919l-65.539-65.225c-0.029-0.029-0.06-0.052-0.09-0.081c-0.032-0.031-0.059-0.064-0.092-0.094C162.604,137.774,137.645,128,111.5,128C54.43,128,8,174.43,8,231.5V352H7.5c-4.142,0-7.5,3.358-7.5,7.5s3.358,7.5,7.5,7.5h448c4.142,0,7.5-3.358,7.5-7.5S459.643,352,455.5,352z M440,163.38V352h-33V146.175c7.254,1.991,14.245,4.897,20.778,8.68C432.072,157.341,436.171,160.201,440,163.38z M392.005,143.412c0,0.03-0.004,0.058-0.004,0.088V352h-33V146.283c7.779-2.17,15.973-3.282,24.5-3.282C386.348,143,389.185,143.141,392.005,143.412z M317.096,172.8c7.898-8.85,16.946-15.798,26.904-20.756V352h-33V178.885l5.791-5.763C316.896,173.018,316.998,172.911,317.096,172.8z M104,334.727V352H71v-25.257C81.261,331.124,92.367,333.89,104,334.727z M119,334.729c11.452-0.824,22.584-3.532,33-7.961V352h-33V334.729z M167,318.872c5.211-3.317,10.156-7.114,14.763-11.375c0.067-0.062,0.133-0.125,0.198-0.19L200,289.354V352h-33V318.872z M215,274.426l33-32.842V352h-33V274.426z M263,226.656l33-32.842V352h-33V226.656z M56,162.621V271.5c0,4.142,3.358,7.5,7.5,7.5s7.5-3.358,7.5-7.5V152.826c10.042-5.19,21.2-8.511,33.01-9.506c-0.001,0.06-0.009,0.119-0.009,0.179v152c0,4.142,3.358,7.5,7.5,7.5s7.5-3.358,7.5-7.5v-152c0-0.057-0.007-0.113-0.009-0.169c11.6,0.977,22.793,4.211,33.019,9.482c-0.002,0.071-0.011,0.14-0.011,0.211v120.809c0,4.142,3.358,7.5,7.5,7.5s7.5-3.358,7.5-7.5V162.592c1.541,1.243,3.058,2.524,4.523,3.877L200,194.809v31.203c0,4.142,3.358,7.5,7.5,7.5s7.5-3.358,7.5-7.5v-16.275l21.868,21.763l-65.389,65.075C155.099,311.682,133.803,320,111.5,320C62.701,320,23,280.299,23,231.5C23,203.7,35.889,178.858,56,162.621z M23,285.119c8.278,13.613,19.609,25.172,33.033,33.727C56.014,319.062,56,319.28,56,319.5V352H23V285.119z"></path>
+          </g>
+          <text x="80" y="172" class="home-map-label small" text-anchor="middle">Leerattractie</text>
+        </g>
+        
+        <!-- Leerbox Node -->
+        <g class="home-map-node home-leerbox-node cursor-pointer" data-href="/learningbox" role="button" tabindex="0" aria-label="Leerbox" transform="translate(246 132)">
+          <title>Leerbox: bundelt de leerobjecten en de inrichting van een leerervaring.</title>
+          <path class="leerbox-lid" d="M12 -14 H134 L146 0 H0 Z"></path>
+          <rect class="leerbox-face" width="146" height="84" rx="8"></rect>
+          <path class="leerbox-side" d="M0 0 L12 -14 H22 L10 0 V84 H0 Z"></path>
+          <path class="leerbox-right-side" d="M136 0 H146 V84 H136 Z"></path>
+          <text x="30" y="52" class="home-map-label">Leerbox</text>
+        </g>
+
+        <!-- Article Foundation (Pillars + Document Icons) -->
+        <g class="home-article-foundation cursor-pointer" data-href="/article" role="button" tabindex="0" aria-label="Artikel" transform="translate(560 274)">
+          <title>Artikelen: vormen de inhoudelijke onderbouwing van de Leerpretengine.</title>
+          <!-- Pillars -->
+          <g class="article-pillar" transform="translate(8 0)">
+            <g transform="translate(-22 -41) scale(0.68)">
+              <rect x="43.64" y="27.83" width="3.57" height="44.34"></rect>
+              <rect x="48.21" y="27.83" width="3.58" height="44.34"></rect>
+              <rect x="52.79" y="27.83" width="3.57" height="44.34"></rect>
+              <path d="M38.43,76.67c0,0.04,0.03,0.08,0.07,0.08h23c0.04,0,0.07-0.04,0.07-0.08v-3.42c0-0.05-0.03-0.08-0.07-0.08h-23c-0.04,0-0.07,0.03-0.07,0.08V76.67z"></path>
+              <path d="M67.46,77.75H32.54c-0.12,0-0.21,0.09-0.21,0.2v3.17c0,0.11,0.09,0.2,0.21,0.2h34.92c0.12,0,0.21-0.09,0.21-0.2v-3.17C67.67,77.84,67.58,77.75,67.46,77.75z"></path>
+              <path d="M61.57,26.75v-3.42c0-0.04-0.03-0.08-0.07-0.08h-23c-0.04,0-0.07,0.04-0.07,0.08v3.42c0,0.05,0.03,0.08,0.07,0.08h23C61.54,26.83,61.57,26.8,61.57,26.75z"></path>
+              <path d="M67.46,18.68H32.54c-0.12,0-0.21,0.09-0.21,0.2v3.17c0,0.11,0.09,0.2,0.21,0.2h34.92c0.12,0,0.21-0.09,0.21-0.2v-3.17C67.67,18.77,67.58,18.68,67.46,18.68z"></path>
+            </g>
+          </g>
+          <g class="article-pillar" transform="translate(50 0)">
+            <g transform="translate(-22 -41) scale(0.68)">
+              <rect x="43.64" y="27.83" width="3.57" height="44.34"></rect>
+              <rect x="48.21" y="27.83" width="3.58" height="44.34"></rect>
+              <rect x="52.79" y="27.83" width="3.57" height="44.34"></rect>
+              <path d="M38.43,76.67c0,0.04,0.03,0.08,0.07,0.08h23c0.04,0,0.07-0.04,0.07-0.08v-3.42c0-0.05-0.03-0.08-0.07-0.08h-23c-0.04,0-0.07,0.03-0.07,0.08V76.67z"></path>
+              <path d="M67.46,77.75H32.54c-0.12,0-0.21,0.09-0.21,0.2v3.17c0,0.11,0.09,0.2,0.21,0.2h34.92c0.12,0,0.21-0.09,0.21-0.2v-3.17C67.67,77.84,67.58,77.75,67.46,77.75z"></path>
+              <path d="M61.57,26.75v-3.42c0-0.04-0.03-0.08-0.07-0.08h-23c-0.04,0-0.07,0.04-0.07,0.08v3.42c0,0.05,0.03,0.08,0.07,0.08h23C61.54,26.83,61.57,26.8,61.57,26.75z"></path>
+              <path d="M67.46,18.68H32.54c-0.12,0-0.21,0.09-0.21,0.2v3.17c0,0.11,0.09,0.2,0.21,0.2h34.92c0.12,0,0.21-0.09,0.21-0.2v-3.17C67.67,18.77,67.58,18.68,67.46,18.68z"></path>
+            </g>
+          </g>
+          <g class="article-pillar" transform="translate(92 0)">
+            <g transform="translate(-22 -41) scale(0.68)">
+              <rect x="43.64" y="27.83" width="3.57" height="44.34"></rect>
+              <rect x="48.21" y="27.83" width="3.58" height="44.34"></rect>
+              <rect x="52.79" y="27.83" width="3.57" height="44.34"></rect>
+              <path d="M38.43,76.67c0,0.04,0.03,0.08,0.07,0.08h23c0.04,0,0.07-0.04,0.07-0.08v-3.42c0-0.05-0.03-0.08-0.07-0.08h-23c-0.04,0-0.07,0.03-0.07,0.08V76.67z"></path>
+              <path d="M67.46,77.75H32.54c-0.12,0-0.21,0.09-0.21,0.2v3.17c0,0.11,0.09,0.2,0.21,0.2h34.92c0.12,0,0.21-0.09,0.21-0.2v-3.17C67.67,77.84,67.58,77.75,67.46,77.75z"></path>
+              <path d="M61.57,26.75v-3.42c0-0.04-0.03-0.08-0.07-0.08h-23c-0.04,0-0.07,0.04-0.07,0.08v3.42c0,0.05,0.03,0.08,0.07,0.08h23C61.54,26.83,61.57,26.8,61.57,26.75z"></path>
+              <path d="M67.46,18.68H32.54c-0.12,0-0.21,0.09-0.21,0.2v3.17c0,0.11,0.09,0.2,0.21,0.2h34.92c0.12,0,0.21-0.09,0.21-0.2v-3.17C67.67,18.77,67.58,18.68,67.46,18.68z"></path>
+            </g>
+          </g>
+          <g class="article-pillar" transform="translate(134 0)">
+            <g transform="translate(-22 -41) scale(0.68)">
+              <rect x="43.64" y="27.83" width="3.57" height="44.34"></rect>
+              <rect x="48.21" y="27.83" width="3.58" height="44.34"></rect>
+              <rect x="52.79" y="27.83" width="3.57" height="44.34"></rect>
+              <path d="M38.43,76.67c0,0.04,0.03,0.08,0.07,0.08h23c0.04,0,0.07-0.04,0.07-0.08v-3.42c0-0.05-0.03-0.08-0.07-0.08h-23c-0.04,0-0.07,0.03-0.07,0.08V76.67z"></path>
+              <path d="M67.46,77.75H32.54c-0.12,0-0.21,0.09-0.21,0.2v3.17c0,0.11,0.09,0.2,0.21,0.2h34.92c0.12,0,0.21-0.09,0.21-0.2v-3.17C67.67,77.84,67.58,77.75,67.46,77.75z"></path>
+              <path d="M61.57,26.75v-3.42c0-0.04-0.03-0.08-0.07-0.08h-23c-0.04,0-0.07,0.04-0.07,0.08v3.42c0,0.05,0.03,0.08,0.07,0.08h23C61.54,26.83,61.57,26.8,61.57,26.75z"></path>
+              <path d="M67.46,18.68H32.54c-0.12,0-0.21,0.09-0.21,0.2v3.17c0,0.11,0.09,0.2,0.21,0.2h34.92c0.12,0,0.21-0.09,0.21-0.2v-3.17C67.67,18.77,67.58,18.68,67.46,18.68z"></path>
+            </g>
+          </g>
+          <g class="article-pillar" transform="translate(176 0)">
+            <g transform="translate(-22 -41) scale(0.68)">
+              <rect x="43.64" y="27.83" width="3.57" height="44.34"></rect>
+              <rect x="48.21" y="27.83" width="3.58" height="44.34"></rect>
+              <rect x="52.79" y="27.83" width="3.57" height="44.34"></rect>
+              <path d="M38.43,76.67c0,0.04,0.03,0.08,0.07,0.08h23c0.04,0,0.07-0.04,0.07-0.08v-3.42c0-0.05-0.03-0.08-0.07-0.08h-23c-0.04,0-0.07,0.03-0.07,0.08V76.67z"></path>
+              <path d="M67.46,77.75H32.54c-0.12,0-0.21,0.09-0.21,0.2v3.17c0,0.11,0.09,0.2,0.21,0.2h34.92c0.12,0,0.21-0.09,0.21-0.2v-3.17C67.67,77.84,67.58,77.75,67.46,77.75z"></path>
+              <path d="M61.57,26.75v-3.42c0-0.04-0.03-0.08-0.07-0.08h-23c-0.04,0-0.07,0.04-0.07,0.08v3.42c0,0.05,0.03,0.08,0.07,0.08h23C61.54,26.83,61.57,26.8,61.57,26.75z"></path>
+              <path d="M67.46,18.68H32.54c-0.12,0-0.21,0.09-0.21,0.2v3.17c0,0.11,0.09,0.2,0.21,0.2h34.92c0.12,0,0.21-0.09,0.21-0.2v-3.17C67.67,18.77,67.58,18.68,67.46,18.68z"></path>
+            </g>
+          </g>
+          <rect class="article-foundation-base" x="-22" y="54" width="252" height="16" rx="8"></rect>
+          <!-- Icons -->
+          <g class="article-icon" transform="translate(0 0)">
+            <path d="M0 0 H28 L40 12 V52 H0 Z"></path>
+            <path class="article-fold" d="M28 0 V12 H40"></path>
+            <line x1="8" y1="22" x2="30" y2="22"></line>
+            <line x1="8" y1="32" x2="30" y2="32"></line>
+            <text x="13" y="47">1</text>
+          </g>
+          <g class="article-icon" transform="translate(42 0)">
+            <path d="M0 0 H28 L40 12 V52 H0 Z"></path>
+            <path class="article-fold" d="M28 0 V12 H40"></path>
+            <line x1="8" y1="22" x2="30" y2="22"></line>
+            <line x1="8" y1="32" x2="30" y2="32"></line>
+            <text x="13" y="47">2</text>
+          </g>
+          <g class="article-icon" transform="translate(84 0)">
+            <path d="M0 0 H28 L40 12 V52 H0 Z"></path>
+            <path class="article-fold" d="M28 0 V12 H40"></path>
+            <line x1="8" y1="22" x2="30" y2="22"></line>
+            <line x1="8" y1="32" x2="30" y2="32"></line>
+            <text x="13" y="47">3</text>
+          </g>
+          <g class="article-icon" transform="translate(126 0)">
+            <path d="M0 0 H28 L40 12 V52 H0 Z"></path>
+            <path class="article-fold" d="M28 0 V12 H40"></path>
+            <line x1="8" y1="22" x2="30" y2="22"></line>
+            <line x1="8" y1="32" x2="30" y2="32"></line>
+            <text x="13" y="47">4</text>
+          </g>
+          <g class="article-icon" transform="translate(168 0)">
+            <path d="M0 0 H28 L40 12 V52 H0 Z"></path>
+            <path class="article-fold" d="M28 0 V12 H40"></path>
+            <line x1="8" y1="22" x2="30" y2="22"></line>
+            <line x1="8" y1="32" x2="30" y2="32"></line>
+            <text x="13" y="47">5</text>
+          </g>
+          <text x="104" y="100" class="home-map-label small" text-anchor="middle">Artikelen</text>
+        </g>
+
+        <!-- Help Icon Node -->
+        <g class="home-help cursor-pointer" data-href="/help" role="button" tabindex="0" aria-label="Help" transform="translate(812 68)">
+          <title>Help: geeft uitleg over het dashboard en de begrippen.</title>
+          <circle cx="20" cy="20" r="16" fill="var(--panel)" stroke="var(--blue)" stroke-width="2.2"></circle>
+          <text x="20" y="26" font-family="var(--font-heading)" font-weight="700" font-size="17" fill="var(--blue)" text-anchor="middle">?</text>
+          <text x="20" y="52" class="home-map-label tiny" text-anchor="middle" fill="var(--muted)">Help</text>
+        </g>
+
+        <!-- Engine Core -->
+        <g class="home-engine-core cursor-pointer" data-href="/engine" role="button" tabindex="0" aria-label="Engine" transform="translate(520 128)">
+          <title>Engine: zet actiereeksen om in berekende leerpret en bijbehorende inzichten.</title>
+          <rect width="260" height="118" rx="10"></rect>
+          <g transform="translate(24 22)">
+            <path class="engine-gear" d="M52 4 L62 12 L76 10 L84 22 L78 34 L86 46 L78 58 L64 56 L52 66 L40 58 L26 60 L18 48 L26 36 L18 24 L26 12 L40 14 Z"></path>
+            <circle class="engine-hole" cx="52" cy="35" r="15"></circle>
+          </g>
+          <text x="112" y="57" class="home-map-label" dominant-baseline="middle">Engine</text>
+        </g>
+        
+        <!-- Data Store -->
+        <g class="home-data-store cursor-pointer" data-href="/data" role="button" tabindex="0" aria-label="Data" transform="translate(806 150)">
+          <title>Data: bewaart de informatie die de engine nodig heeft en voortbrengt.</title>
+          <path class="data-hose" d="M-26 38 C-15 24 -2 22 13 30"></path>
+          <path class="data-hose action-hose" d="M52 12 C72 -8 92 -10 112 -10 C130 -10 144 -10 160 -10"></path>
+          <g class="data-cylinder">
+            <ellipse class="data-top" cx="28" cy="12" rx="28" ry="10"></ellipse>
+            <path class="data-lid-rim" d="M2 12 C2 6 13 2 28 2 C43 2 54 6 54 12"></path>
+            <path class="data-body" d="M0 12 V62 C0 68 12 74 28 74 C44 74 56 68 56 62 V12"></path>
+            <path class="data-liquid" d="M0 39 C0 45 12 51 28 51 C44 51 56 45 56 39 V62 C56 68 44 74 28 74 C12 74 0 68 0 62 Z"></path>
+            <ellipse class="data-liquid-surface" cx="28" cy="39" rx="28" ry="10"></ellipse>
+            <ellipse class="data-bottom" cx="28" cy="62" rx="28" ry="10"></ellipse>
+            <path class="data-stripe" d="M0 30 C0 36 12 42 28 42 C44 42 56 36 56 30"></path>
+            <path class="data-stripe" d="M0 46 C0 52 12 58 28 58 C44 58 56 52 56 46"></path>
+          </g>
+          <text x="30" y="94" class="home-map-label tiny" text-anchor="middle">Data</text>
+        </g>
+        
+        <!-- Result Node -->
+        <g class="home-result-node" transform="translate(246 222)">
+          <title>Rapport: toont samengevoegde resultaten voor de beheerder van de leerattractie.</title>
+          <rect width="146" height="84" rx="8"></rect>
+          <text x="18" y="34" class="home-map-label">Rapport</text>
+          <line x1="20" y1="46" x2="112" y2="46"></line>
+          <line x1="20" y1="58" x2="126" y2="58"></line>
+          <line x1="20" y1="70" x2="84" y2="70"></line>
+        </g>
+        
+        <!-- Learner -->
+        <g class="home-learner cursor-pointer" data-href="/article?role=learner" role="button" tabindex="0" aria-label="Lerende" transform="translate(1062 86)">
+          <title>Lerende: staat voorop; zijn acties vormen de basis voor het vaststellen van zijn leerpret.</title>
+          <circle class="learner-head" cx="76" cy="82" r="24"></circle>
+          <path class="learner-body" d="M34 196 C38 150 54 116 76 116 C98 116 114 150 118 196 Z"></path>
+          <path class="learner-smile" d="M64 83 C70 89 82 89 88 83"></path>
+          <text x="76" y="232" class="home-map-label small" text-anchor="middle">Lerende</text>
+        </g>
+
+        </g>
+
+        <!-- Links boven: Leerpretarchitect -> Editor -> Service -->
+        <g class="home-architect cursor-pointer" data-href="/editor?role=architect" role="button" tabindex="0" aria-label="Leerpretarchitect via Editor naar Service" transform="translate(480 2)">
+          <title>Leerpretarchitect: ontwerpt via de Editor de leerbox, inhoud en werking van de service.</title>
+          <g class="architect-person" transform="translate(40 0)">
+            <circle class="architect-head" cx="20" cy="22" r="12"></circle>
+            <path class="architect-hair" d="M8 22 C8 7 16 6 23 8 C32 10 34 17 31 24 C27 17 20 16 8 22 Z"></path>
+            <path class="architect-glasses" d="M12 22 H18 M22 22 H28 M18 22 H22 M12 22 Q12 28 17 28 Q20 28 20 22 M22 22 Q22 28 26 28 Q31 28 31 22"></path>
+            <path class="architect-body" d="M10 39 Q20 34 30 39 L35 66 H5 Z"></path>
+            <path class="architect-arm" d="M30 42 L45 48"></path>
+          </g>
+          <text x="60" y="85" class="home-map-label small" text-anchor="middle">Leerpretarchitect</text>
+
+          <g class="editor-icon" transform="translate(16 106)">
+            <title>Editor: het ontwerpgereedschap van de Leerpretarchitect.</title>
+            <rect class="editor-window" width="88" height="48" rx="6"></rect>
+            <path class="editor-toolbar" d="M0 11 H88"></path>
+            <circle cx="8" cy="6" r="2"></circle>
+            <circle cx="15" cy="6" r="2"></circle>
+            <circle cx="22" cy="6" r="2"></circle>
+            <path class="editor-sidebar" d="M22 11 V48"></path>
+            <path class="editor-layout" d="M30 18 H53 V38 H30 Z M59 18 H80 M59 25 H76 M59 32 H80"></path>
+            <path class="editor-pencil" d="M69 42 L84 27"></path>
+          </g>
+          <text x="60" y="174" class="home-map-label tiny" text-anchor="middle">Editor</text>
+          <path class="tool-service-arrow" d="M60 180 V212" marker-end="url(#home-arrow)"></path>
+        </g>
+
+        <!-- Rechts boven: Leerprettechnoloog -> Code/IDE -> Service -->
+        <g class="home-technologist cursor-pointer" data-href="/engine?role=technologist&amp;block=code" role="button" tabindex="0" aria-label="Leerprettechnoloog via Code naar Service" transform="translate(700 2)">
+          <title>Leerprettechnoloog: bouwt en onderhoudt via Code de engine en technische service.</title>
+          <g class="technologist-person" transform="translate(45 5) scale(0.88)">
+            <circle class="builder-head" cx="28" cy="24" r="13"></circle>
+            <path class="builder-smile" d="M23 27 C26 30 31 30 34 27"></path>
+            <path class="builder-helmet" d="M13 20 C14 8 20 3 28 3 C37 3 43 9 44 20 Z"></path>
+            <path class="builder-helmet-rim" d="M10 20 H47"></path>
+            <path class="builder-body" d="M15 42 Q28 36 41 42 L47 72 H9 Z"></path>
+            <path class="builder-overalls" d="M20 40 V64 H36 V40 M20 55 H36"></path>
+          </g>
+          <text x="70" y="86" class="home-map-label small" text-anchor="middle">Leerprettechnoloog</text>
+
+          <g class="code-ide" transform="translate(18 106)">
+            <title>Code: het technische gereedschap van de Leerprettechnoloog.</title>
+            <rect class="ide-window" width="104" height="48" rx="6"></rect>
+            <path class="ide-toolbar" d="M0 13 H104"></path>
+            <circle cx="9" cy="7" r="2"></circle>
+            <circle cx="17" cy="7" r="2"></circle>
+            <circle cx="25" cy="7" r="2"></circle>
+            <path class="ide-sidebar" d="M25 13 V48"></path>
+            <path class="ide-lines" d="M34 22 H78 M34 31 H91 M34 40 H72"></path>
+            <text x="67" y="38" class="ide-code-mark" text-anchor="middle">&lt;/&gt;</text>
+          </g>
+          <text x="70" y="174" class="home-map-label tiny" text-anchor="middle">Code</text>
+          <path class="tool-service-arrow" d="M70 180 V212" marker-end="url(#home-arrow)"></path>
+        </g>
+        
+        <!-- De handiconen horen bij de omlaag geschoven hoofdkaart. -->
+        <g class="home-map-hands" transform="translate(0 170)">
+        <!-- Hands / Learner Hands -->
+        <g class="home-user home-hands" aria-hidden="true" transform="translate(56 80)">
+          <path class="hand-shape noun-hand giving-hand" transform="translate(260 81) scale(-0.9 -0.9)" d="m93.996 55.383-11.203-11.203c-10.148-10.148-20.875-8.1641-26.359-6.0742-2.4141 0.91797-5.0195 1.3555-7.7734 1.2969-0.50781-0.011719-12.492-0.30469-14.422-0.30469-1.7812 0-3.1836 0.25781-4.5625 1.4883l-12.316-12.32c-0.039063-0.042969-0.078125-0.085937-0.11719-0.12891-2.6328-2.6328-6.9141-2.6328-9.5469 0-2.6328 2.6328-2.6328 6.9141 0.035157 9.5781l22.867 22.867c2.8359 2.8359 6.75 4.4062 10.766 4.2539l24.953-0.8125 9.5195 9.5195c0.19531 0.19531 0.45312 0.29297 0.70703 0.29297 0.25391 0 0.51172-0.097657 0.70703-0.29297l16.75-16.75c0.39062-0.39062 0.39062-1.0234 0-1.4141z"></path>
+          <path class="hand-shape noun-hand receiving-hand" transform="translate(260 194) scale(-0.9 0.9)" d="m93.996 55.383-11.203-11.203c-10.148-10.148-20.875-8.1641-26.359-6.0742-2.4141 0.91797-5.0195 1.3555-7.7734 1.2969-0.50781-0.011719-12.492-0.30469-14.422-0.30469-1.7812 0-3.1836 0.25781-4.5625 1.4883l-12.316-12.32c-0.039063-0.042969-0.078125-0.085937-0.11719-0.12891-2.6328-2.6328-6.9141-2.6328-9.5469 0-2.6328 2.6328-2.6328 6.9141 0.035157 9.5781l22.867 22.867c2.8359 2.8359 6.75 4.4062 10.766 4.2539l24.953-0.8125 9.5195 9.5195c0.19531 0.19531 0.45312 0.29297 0.70703 0.29297 0.25391 0 0.51172-0.097657 0.70703-0.29297l16.75-16.75c0.39062-0.39062 0.39062-1.0234 0-1.4141z"></path>
+        </g>
+        <g class="home-learner-hands" aria-hidden="true">
+          <path class="noun-hand learner-giving-hand" transform="translate(964 124) scale(0.66 -0.66)" d="m93.996 55.383-11.203-11.203c-10.148-10.148-20.875-8.1641-26.359-6.0742-2.4141 0.91797-5.0195 1.3555-7.7734 1.2969-0.50781-0.011719-12.492-0.30469-14.422-0.30469-1.7812 0-3.1836 0.25781-4.5625 1.4883l-12.316-12.32c-0.039063-0.042969-0.078125-0.085937-0.11719-0.12891-2.6328-2.6328-6.9141-2.6328-9.5469 0-2.6328 2.6328-2.6328 6.9141 0.035157 9.5781l22.867 22.867c2.8359 2.8359 6.75 4.4062 10.766 4.2539l24.953-0.8125 9.5195 9.5195c0.19531 0.19531 0.45312 0.29297 0.70703 0.29297 0.25391 0 0.51172-0.097657 0.70703-0.29297l16.75-16.75c0.39062-0.39062 0.39062-1.0234 0-1.4141z"></path>
+          <path class="noun-hand learner-receiving-hand" transform="translate(964 322) scale(0.66 0.66)" d="m93.996 55.383-11.203-11.203c-10.148-10.148-20.875-8.1641-26.359-6.0742-2.4141 0.91797-5.0195 1.3555-7.7734 1.2969-0.50781-0.011719-12.492-0.30469-14.422-0.30469-1.7812 0-3.1836 0.25781-4.5625 1.4883l-12.316-12.32c-0.039063-0.042969-0.078125-0.085937-0.11719-0.12891-2.6328-2.6328-6.9141-2.6328-9.5469 0-2.6328 2.6328-2.6328 6.9141 0.035157 9.5781l22.867 22.867c2.8359 2.8359 6.75 4.4062 10.766 4.2539l24.953-0.8125 9.5195 9.5195c0.19531 0.19531 0.45312 0.29297 0.70703 0.29297 0.25391 0 0.51172-0.097657 0.70703-0.29297l16.75-16.75c0.39062-0.39062 0.39062-1.0234 0-1.4141z"></path>
+        </g>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- Help & Fallback Offline Alerts -->
+  <section class="mobile-card alert-panel" id="offline-fallback-card" hidden>
+    <div class="stale-warning">
+      <h4>Geen service verbinding</h4>
+      <p>
+        De Leerpret-service is offline. Er kunnen momenteel geen berekeningen worden uitgevoerd
+        en de live datastream is onderbroken. De offline functionaliteit laat u de theorie en
+        opgeslagen checklist-items inzien.
+      </p>
+    </div>
+  </section>
+
+  <!-- Client-side logic for Home view -->
+  <script>
+    // Get current active role
+    const activeRole = localStorage.getItem('active_role') || localStorage.getItem('leerpret.poc.role') || 'architect';
+    const isTechnologist = activeRole === 'technologist';
+    const isArchitect = activeRole === 'architect';
+
+    // 1. Enforce access rules for Engine Elements
+    const engineMobileLink = document.getElementById('home-flow-engine');
+    const engineSvgNode = document.querySelector('.home-engine-core');
+
+    if (!isTechnologist && !isArchitect) {
+      if (engineMobileLink) {
+        engineMobileLink.removeAttribute('href');
+        engineMobileLink.style.opacity = '0.5';
+        engineMobileLink.style.pointerEvents = 'none';
+        const arrow = engineMobileLink.querySelector('.arrow-right');
+        if (arrow) arrow.textContent = '🔒';
+      }
+      if (engineSvgNode) {
+        engineSvgNode.removeAttribute('data-href');
+        engineSvgNode.classList.remove('cursor-pointer');
+        engineSvgNode.style.opacity = '0.35';
+        engineSvgNode.style.pointerEvents = 'none';
+        engineSvgNode.setAttribute('aria-disabled', 'true');
+        // Add a visual lock text or indicator inside the SVG group if needed
+      }
+    }
+
+    // 2. Enforce access rules for Data Elements
+    const dataSvgNode = document.querySelector('.home-data-store');
+    
+    if (!isTechnologist && !isArchitect) {
+      if (dataSvgNode) {
+        dataSvgNode.removeAttribute('data-href');
+        dataSvgNode.classList.remove('cursor-pointer');
+        dataSvgNode.style.opacity = '0.35';
+        dataSvgNode.style.pointerEvents = 'none';
+        dataSvgNode.setAttribute('aria-disabled', 'true');
+      }
+    }
+
+    // Navigation trigger on SVG Map nodes with data-href
+    document.querySelectorAll('[data-href]').forEach(node => {
+      node.addEventListener('click', () => {
+        const href = node.getAttribute('data-href');
+        if (href) window.location.href = href;
+      });
+      node.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          const href = node.getAttribute('data-href');
+          if (href) window.location.href = href;
+        }
+      });
+    });
+  </script>
+</Layout>
+
+<style>
+
+
+  /* Mobile Flow list styling */
+  .mobile-flow-section {
+    margin-bottom: 28px;
+  }
+
+  .section-header-row {
+    margin-bottom: 18px;
+  }
+
+  .mobile-flow-list {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .flow-step-card {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    min-height: 48px;
+  }
+
+  .flow-step-card:active {
+    transform: scale(0.98);
+  }
+
+  .flow-step-card.teal-accent {
+    border-left: 5px solid var(--teal);
+  }
+  
+  .flow-step-card.green-accent {
+    border-left: 5px solid var(--green);
+  }
+
+  .flow-step-card.blue-accent {
+    border-left: 5px solid var(--blue);
+  }
+
+  .flow-step-card.gray-accent {
+    border-left: 5px solid var(--muted);
+    pointer-events: none;
+  }
+
+  .flow-step-card.violet-accent {
+    border-left: 5px solid var(--violet);
+  }
+
+  .step-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    display: grid;
+    place-items: center;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+  }
+
+  .step-details {
+    flex: 1;
+  }
+
+  .step-details h4 {
+    margin: 0 0 2px 0;
+    font-size: 1rem;
+  }
+
+  .step-details p {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.3;
+  }
+
+  .arrow-right {
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .flow-divider {
+    font-size: 1.2rem;
+    color: var(--muted);
+    margin: 4px 0;
+    font-weight: 900;
+  }
+
+  .home-technologist {
+    outline: none;
+  }
+
+  .home-technologist .builder-head {
+    fill: #fff8f1;
+    stroke: var(--blue);
+    stroke-width: 3;
+  }
+
+  .home-technologist .builder-helmet {
+    fill: #f7c948;
+    stroke: #9a6700;
+    stroke-width: 3;
+    stroke-linejoin: round;
+  }
+
+  .home-technologist .builder-helmet-rim,
+  .home-technologist .builder-smile,
+  .home-technologist .builder-overalls,
+  .home-technologist .builder-leg,
+  .home-technologist .builder-arm {
+    fill: none;
+    stroke: var(--blue);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .home-technologist .builder-body {
+    fill: #eaf2ff;
+    stroke: var(--blue);
+    stroke-width: 3;
+  }
+
+  .home-technologist:hover .builder-body,
+  .home-technologist:focus .builder-body {
+    fill: #dceaff;
+  }
+
+  .home-technologist .ide-window {
+    fill: #152238;
+    stroke: var(--blue);
+    stroke-width: 3;
+  }
+
+  .home-technologist .ide-toolbar,
+  .home-technologist .ide-sidebar,
+  .home-technologist .ide-lines {
+    fill: none;
+    stroke: #78b7ff;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+
+  .home-technologist .code-ide circle {
+    fill: #f7c948;
+  }
+
+  .home-technologist .ide-code-mark {
+    fill: #7fe7d7;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  .home-technologist:hover .ide-window,
+  .home-technologist:focus .ide-window {
+    fill: #1d3152;
+  }
+
+  .home-architect {
+    outline: none;
+  }
+
+  .home-architect .architect-head {
+    fill: #fff8f1;
+    stroke: var(--violet);
+    stroke-width: 3;
+  }
+
+  .home-architect .architect-hair {
+    fill: var(--violet);
+  }
+
+  .home-architect .architect-glasses,
+  .home-architect .architect-arm,
+  .home-architect .architect-leg {
+    fill: none;
+    stroke: var(--violet);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .home-architect .architect-body {
+    fill: #f1ecff;
+    stroke: var(--violet);
+    stroke-width: 3;
+  }
+
+  .home-architect .editor-window {
+    fill: #f7fffd;
+    stroke: var(--teal);
+    stroke-width: 3;
+  }
+
+  .home-architect .editor-toolbar,
+  .home-architect .editor-sidebar,
+  .home-architect .editor-layout,
+  .home-architect .editor-pencil {
+    fill: none;
+    stroke: var(--teal);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .home-architect .editor-icon circle {
+    fill: var(--violet);
+  }
+
+  .home-architect:hover .editor-window,
+  .home-architect:focus .editor-window {
+    fill: #dff2f2;
+  }
+
+  .home-architect .tool-service-arrow,
+  .home-technologist .tool-service-arrow {
+    fill: none;
+    stroke: var(--teal);
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+
+  .home-explanation-panel rect {
+    fill: #f8fbff;
+    stroke: var(--line);
+    stroke-width: 2;
+  }
+
+  .home-explanation-title {
+    fill: var(--ink);
+    font-family: var(--font-heading);
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  .home-explanation-text {
+    fill: var(--muted);
+    font-family: var(--font-body);
+    font-size: 13px;
+  }
+
+  .home-explanation-more {
+    fill: var(--blue);
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 750;
+    text-decoration: underline;
+  }
+
+  .home-explanation-panel a:hover .home-explanation-more,
+  .home-explanation-panel a:focus .home-explanation-more {
+    fill: var(--teal);
+  }
+
+  /* Home map colour layer, overridden by the original Leerpret command palette below. */
+  .home-map { background: #000 !important; border-color: #825a71 !important; }
+  .home-flow { stroke: #ea9c72; }
+  .home-flow-label { fill: #f90; }
+  .home-flow-sub { fill: #d7a588; }
+
+  .home-service-shell rect {
+    fill: #080808;
+    stroke: #8899ff;
+    filter: none;
+  }
+
+  .home-service-shell:hover rect,
+  .home-service-shell:focus rect { fill: #171020; stroke: #c2aee8; }
+
+  .home-result-node rect { fill: #080808; stroke: #c888af; }
+  .home-result-node line { stroke: #c888af; }
+  .home-leerattractie .rollercoaster-icon path { fill: #080808; stroke: #f90; }
+  .home-leerattractie:hover .rollercoaster-icon path,
+  .home-leerattractie:focus .rollercoaster-icon path { fill: #2b1d0b; }
+
+  .home-learner .learner-head,
+  .home-learner .learner-body,
+  .home-user .user-head,
+  .home-user .user-body { fill: #080808; stroke: #cf4f4f; }
+  .home-learner .learner-smile { stroke: #cf4f4f; }
+  .home-user .hand-shape,
+  .home-user .noun-hand,
+  .home-learner-hands .noun-hand { fill: #cf4f4f; stroke: #cf4f4f; }
+
+  .home-leerbox-node .leerbox-lid,
+  .home-leerbox-node .leerbox-face { fill: #080808; stroke: #ea9c72; filter: none; }
+  .home-leerbox-node .leerbox-side,
+  .home-leerbox-node .leerbox-right-side { fill: #ea9c72; stroke: #ea9c72; }
+  .home-leerbox-node .leerbox-lid-line { stroke: #d7a588; }
+
+  .home-engine-core rect { fill: #080808; stroke: #c2aee8; filter: none; }
+  .engine-gear { fill: #1b1320; stroke: #c2aee8; }
+  .engine-hole { fill: #000; stroke: #c2aee8; }
+
+  .home-data-store .data-hose,
+  .home-data-store .data-lid-rim { stroke: #f90; }
+  .home-data-store .action-hose,
+  .home-data-store .data-stripe { stroke: #ea9c72; }
+  .home-data-store .data-top,
+  .home-data-store .data-bottom,
+  .home-data-store .data-body { fill: #080808; stroke: #f90; }
+  .home-data-store .data-liquid,
+  .home-data-store .data-liquid-surface { fill: #c888af; }
+
+  .article-foundation-base { fill: #825a71; }
+  .article-pillar rect,
+  .article-pillar path,
+  .article-icon path:first-child { fill: #080808; stroke: #c888af; }
+  .article-icon line { stroke: #d7a588; }
+
+  .home-map-label { fill: #f5f6fa; }
+  .home-map-sub { fill: #d7a588; }
+  .home-explanation-panel rect { fill: #080808; stroke: #825a71; }
+  .home-explanation-title { fill: #c2aee8; }
+  .home-explanation-text { fill: #d7a588; }
+  .home-explanation-more { fill: #f90; }
+
+  .home-technologist .builder-head,
+  .home-technologist .builder-body { fill: #080808; stroke: #8899ff; }
+  .home-technologist .builder-helmet,
+  .home-technologist .code-ide circle { fill: #f90; stroke: #ca826d; }
+  .home-technologist .ide-window { fill: #080808; stroke: #8899ff; }
+  .home-technologist .ide-toolbar,
+  .home-technologist .ide-sidebar,
+  .home-technologist .ide-lines { stroke: #c2aee8; }
+  .home-technologist .ide-code-mark { fill: #efb97b; }
+
+  .home-architect .architect-head,
+  .home-architect .architect-body { fill: #080808; stroke: #c2aee8; }
+  .home-architect .editor-window { fill: #080808; stroke: #ea9c72; }
+  .home-architect .editor-toolbar,
+  .home-architect .editor-sidebar,
+  .home-architect .editor-layout,
+  .home-architect .editor-pencil,
+  .home-architect .tool-service-arrow,
+  .home-technologist .tool-service-arrow { stroke: #ea9c72; }
+
+  .flow-step-card { background: #080808; border-color: #825a71; }
+
+  /* Desktop SVG map - Hidden on mobile */
+  .desktop-map-section {
+    display: none;
+  }
+
+  /* Responsive styles */
+  @media (min-width: 768px) {
+
+
+    .mobile-flow-section {
+      display: none;
+    }
+
+    .desktop-map-section {
+      display: block;
+      margin-bottom: 28px;
+    }
+
+    .home-map {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.01);
+    }
+
+    .home-structure-svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    
+    .cursor-pointer {
+      cursor: pointer;
+    }
+  }
+</style>

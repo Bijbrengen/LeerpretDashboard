@@ -1,0 +1,1417 @@
+﻿---
+import Layout from '../layouts/Layout.astro';
+import SourceCodeBrowser from '../components/SourceCodeBrowser.astro';
+import AnalyticsDashboard from '../components/AnalyticsDashboard.astro';
+import DataStructureViewer from '../components/DataStructureViewer.astro';
+---
+
+<Layout title="Data" description="Onderzoek bron-, test- en rapportdata en controleer hoe de gegevens samenhangen.">
+  <div class="data-workbench-layout">
+    <aside class="mobile-card data-workbench-menu">
+      <section class="data-side-panel" data-side-panel="type">
+        <span class="eyebrow">Type</span>
+        <div class="data-subtool-grid data-type-menu" aria-label="Datatype">
+          <button type="button" class="data-subtool active" data-type-tab="source"><span>▤</span><strong>Brondata</strong></button>
+          <button type="button" class="data-subtool" data-type-tab="test"><span>✓</span><strong>Testdata</strong></button>
+          <button type="button" class="data-subtool" data-type-tab="report"><span>▣</span><strong>Rapportdata</strong></button>
+        </div>
+        <div class="data-type-help active" data-type-help="source">
+          <p class="muted-text">Overzicht van records, artikelen en gekoppelde leerboxdata.</p>
+        </div>
+        <div class="data-type-help" data-type-help="test">
+          <p class="muted-text">Bekijk de testbestanden en gekoppelde testdata voor de gekozen leerbox.</p>
+        </div>
+        <div class="data-type-help" data-type-help="report">
+          <p class="muted-text">Contract en voorbeeldpayload voor rapportdata.</p>
+        </div>
+      </section>
+      <section class="data-side-panel analytics-menu active" data-side-panel="analytics" aria-label="Analyticsinstellingen">
+        <div class="analytics-menu-heading">
+          <span class="eyebrow">Leerpret Analytics</span>
+          <h2>Dashboard</h2>
+          <span class="mock-badge">Mockdata</span>
+        </div>
+
+        <div class="analytics-filter-group">
+          <label for="analytics-leerbox">Leerbox</label>
+          <select id="analytics-leerbox" class="spacious-select">
+            <option value="phile">Phile</option>
+            <option value="elektro">Elektro-Exploratiebox</option>
+            <option value="logica">Logica-Schakelbox</option>
+          </select>
+
+          <label for="analytics-cohort">Groep</label>
+          <select id="analytics-cohort" class="spacious-select">
+            <option value="all">Alle actieve lerenden</option>
+            <option value="starter">Startende lerenden</option>
+            <option value="advanced">Gevorderde lerenden</option>
+          </select>
+
+          <label for="analytics-period">Periode</label>
+          <select id="analytics-period" class="spacious-select">
+            <option value="6">Laatste 6 weken</option>
+            <option value="12">Laatste 12 weken</option>
+          </select>
+        </div>
+
+        <p class="analytics-menu-label">Perspectief</p>
+        <nav class="analytics-view-menu">
+          <button type="button" class="active" data-analytics-view="development" aria-current="page">
+            <span class="analytics-menu-icon" aria-hidden="true">↗</span><span><strong>Leerontwikkeling</strong><small>Voortgang en alpha</small></span>
+          </button>
+          <button type="button" data-analytics-view="resistance">
+            <span class="analytics-menu-icon" aria-hidden="true">◆</span><span><strong>Weerstandsimpact</strong><small>Frictie per object</small></span>
+          </button>
+          <button type="button" data-analytics-view="flow">
+            <span class="analytics-menu-icon" aria-hidden="true">⇣</span><span><strong>Doorstroom</strong><small>Conversie en uitval</small></span>
+          </button>
+        </nav>
+
+        <div class="analytics-data-note">
+          <strong>Databron</strong>
+          <p>Deze mockup is voorbereid op geaggregeerde engine-, actie- en leerboxdata. Er worden geen persoonsgegevens getoond.</p>
+        </div>
+      </section>
+      <section class="data-side-panel" data-side-panel="ai_validation">
+        <span class="eyebrow">AI Validatie</span>
+        <p class="muted-text">Valideer JSON-testsets tegen de engine-uitkomst en genereer het testrapport vanuit de datalaag.</p>
+        <div class="validation-controls">
+          <div class="validation-mode-toggle" role="radiogroup" aria-label="Rapportmodus">
+            <label><input type="radio" name="data-validation-mode" value="single" checked /> Een dataset</label>
+            <label><input type="radio" name="data-validation-mode" value="all" /> Alle JSON-testsets</label>
+          </div>
+          <select id="data-validation-dataset-select" class="spacious-select">
+            <option value="">Leerpret gesimuleerd: Claude Sonnet 4.6 Validatie Set uit een empty set (140 profielen)</option>
+          </select>
+          <button class="btn btn-primary" type="button" id="btn-data-generate-validation-report">Genereer Testrapport (LaTeX/Tabel)</button>
+        </div>
+      </section>
+      <section class="data-side-panel structure-menu" data-side-panel="data_structure" aria-label="Datastructuurweergaven">
+        <div class="structure-menu-head">
+          <span class="eyebrow">Data-architectuur</span>
+          <h2>Structuurviewer</h2>
+          <span class="mock-badge">Mockdata</span>
+        </div>
+        <label class="structure-search">
+          <span>Zoek object</span>
+          <input type="search" data-node-search placeholder="ID, naam of type..." />
+        </label>
+        <p class="structure-menu-label">Weergave</p>
+        <nav class="structure-view-menu">
+          <button type="button" class="active" data-structure-view="network" aria-current="page">
+            <span class="view-icon" aria-hidden="true">⌘</span>
+            <span><strong>Netwerkgraaf</strong><small>Objecten en datastroom</small></span>
+          </button>
+          <button type="button" data-structure-view="erd">
+            <span class="view-icon" aria-hidden="true">▦</span>
+            <span><strong>Schema / ERD</strong><small>Modellen en veldrelaties</small></span>
+          </button>
+        </nav>
+        <section class="structure-legend" data-structure-legend aria-label="Legenda">
+          <p class="structure-menu-label">Entiteiten</p>
+          <ul>
+            <li><i class="person"></i><span>Person-ID</span><strong>1</strong></li>
+            <li><i class="action"></i><span>Acties</span><strong>2</strong></li>
+            <li><i class="learningbox"></i><span>Leerbox</span><strong>1</strong></li>
+            <li><i class="learningobject"></i><span>Leerobjecten</span><strong>2</strong></li>
+            <li><i class="resistance"></i><span>Weerstand</span><strong>1</strong></li>
+            <li><i class="measurement"></i><span>Leerpretmeting</span><strong>1</strong></li>
+          </ul>
+        </section>
+        <div class="structure-help">
+          <strong>Bediening</strong>
+          <p>Sleep knooppunten, zoom met het muiswiel en selecteer een object om relaties en JSON te bekijken.</p>
+        </div>
+      </section>
+    </aside>
+
+    <div class="data-content-area">
+      <nav class="data-tabs-bar" aria-label="Datablokken" id="data-tabs-bar">
+        <button class="data-tab role-shared active" data-tab="analytics"><strong>Analytics</strong><small>Scores en doorstroom</small></button>
+        <button class="data-tab role-shared" data-tab="data_structure"><strong>Datastructuur</strong><small>Netwerk en ERD</small></button>
+        <button class="data-tab role-shared" data-tab="type"><strong>Type</strong><small>Bron, test en rapport</small></button>
+        <button class="data-tab role-technologist" data-tab="code" data-technologist-only><strong>Code</strong><small>Datalaag</small></button>
+        <button class="data-tab role-technologist" data-tab="ai_validation" data-technologist-only><strong>AI Validatie</strong><small>Testrapport</small></button>
+      </nav>
+    
+    <!-- Tab 1: BRONDATA -->
+    <div class="data-panel" id="data-panel-source">
+      <div class="mobile-card">
+        <h3>Recente records</h3>
+        <div class="vertical-item-list" id="src-records-list">
+          <p class="muted-text">Laden...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: TESTDATA -->
+    <div class="data-panel" id="data-panel-test">
+      <div class="mobile-card">
+        <h3>Testdata voor geselecteerde leerbox</h3>
+        <div id="selected-testdata-panel">
+          <p class="muted-text">Laden...</p>
+        </div>
+      </div>
+
+      <div class="mobile-card">
+        <h3>Catalogusbestanden</h3>
+        <div class="vertical-item-list" id="test-files-list">
+          <p class="muted-text">Laden...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2b: AI VALIDATIE -->
+    <div class="data-panel" id="data-panel-ai_validation">
+      <div class="mobile-card validation-report-card" id="data-validation-report-card" hidden>
+        <span class="eyebrow">AI Validatie</span>
+        <h3>AI Validatie & Testrapport</h3>
+        <p class="muted-text">De uitkomst van de validatie verschijnt hier als testrapport.</p>
+        <div id="data-validation-report-output" class="validation-report-output">
+          <p class="muted-text">Kies een validatieset en genereer een rapport.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: RAPPORTDATA -->
+    <div class="data-panel" id="data-panel-report">
+      <div class="mobile-card">
+        <h3>Rapport Velden Contract</h3>
+        <p class="muted-text">Vastgestelde JSON-datavelden die retour worden gestuurd vanuit de Leerpret-engine:</p>
+        
+        <div class="contract-fields-list">
+          <code>timestamp</code>
+          <code>user_id</code>
+          <code>learning_object_id</code>
+          <code>leerpret_score</code>
+          <code>archetype</code>
+          <code>diagnose</code>
+        </div>
+      </div>
+
+      <div class="mobile-card">
+        <h3>JSON Voorbeeld Payload</h3>
+        <pre class="dsl-code-block" id="report-json-example"><code>// Laden...</code></pre>
+      </div>
+    </div>
+
+    <!-- Tab 4: CODE, uitsluitend voor de Leerprettechnoloog -->
+    <div class="data-panel" id="data-panel-code">
+      <div class="data-code-heading">
+        <span class="eyebrow">Broncode</span>
+        <h3>Datacode</h3>
+        <p class="muted-text">Bekijk de inventarisatie-, validatie- en analysecode achter de Data-pagina.</p>
+      </div>
+      <SourceCodeBrowser scope="data" title="Data" />
+    </div>
+
+    <div class="data-panel data-wide-panel active" id="data-panel-analytics">
+      <AnalyticsDashboard />
+    </div>
+
+    <div class="data-panel data-wide-panel" id="data-panel-data_structure">
+      <DataStructureViewer />
+    </div>
+
+    </div>
+  </div>
+
+  <script>
+    import { apiGet, apiPost, initSettings, escapeHtml, renderMath } from '../js/api.js';
+    import { activeBlockRole, loadBlockAccess } from '../js/pageBlocks.js';
+
+    const dataQuery = new URLSearchParams(window.location.search);
+    const requestedDataTab = dataQuery.get('block');
+    const requestedDataRole = activeBlockRole();
+    const TYPE_TABS = ['source', 'test', 'report'];
+    const TOP_TABS = ['analytics', 'data_structure', 'type', 'code', 'ai_validation'];
+    let currentTab = ['type', 'source', 'test', 'report', 'analytics', 'data_structure', 'code', 'ai_validation'].includes(requestedDataTab || '') ? requestedDataTab : 'analytics';
+    if (currentTab === 'type') {
+      const storedTypeTab = localStorage.getItem('leerpret.data.typeTab') || 'source';
+      currentTab = TYPE_TABS.includes(storedTypeTab) ? storedTypeTab : 'source';
+    }
+    if ((currentTab === 'code' || currentTab === 'ai_validation') && requestedDataRole !== 'technologist') currentTab = 'analytics';
+    let allowedDataBlocks = new Set(['source', 'test', 'report', 'analytics', 'data_structure']);
+    let simulatorData = null;
+    let stepsData = null;
+    let codeData = null;
+    let loadedValidationDatasets = [];
+    let plotlyModulePromise = null;
+
+    async function initDataWorkbench() {
+      initSettings();
+      document.querySelectorAll('[data-technologist-only]').forEach((item) => { item.hidden = requestedDataRole !== 'technologist'; });
+      try {
+        const policy = await loadBlockAccess(activeBlockRole(), 'data');
+        const allowed = new Set(Object.keys(policy.pages?.data?.blocks || {}));
+        allowedDataBlocks = allowed;
+        document.querySelectorAll('[data-type-tab]').forEach((button) => {
+          const tab = button.getAttribute('data-type-tab');
+          button.hidden = !allowed.has(tab);
+        });
+        document.querySelectorAll('.data-tab').forEach((button) => {
+          const tab = button.getAttribute('data-tab');
+          if (tab === 'type') {
+            button.hidden = !TYPE_TABS.some((id) => allowed.has(id));
+          } else if (tab === 'ai_validation') {
+            button.hidden = !canUseDataTab('ai_validation');
+          } else {
+            button.hidden = !allowed.has(tab);
+          }
+        });
+        if (!canUseDataTab(currentTab)) {
+          currentTab = ['analytics', 'data_structure', ...TYPE_TABS, 'code', 'ai_validation'].find((id) => canUseDataTab(id)) || 'analytics';
+        }
+      } catch (error) {
+        document.querySelector('.data-content-area').innerHTML = '<section class="mobile-card"><h2>Data niet beschikbaar</h2><p class="muted-text">De toegangsrechten konden niet bij de backend worden opgehaald.</p></section>';
+        console.warn('Data block access could not be loaded.', error);
+        return;
+      }
+
+      // Highlight active tab
+      document.querySelectorAll('.data-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-tab') === topTabFor(currentTab));
+      });
+      updateTypeMenu();
+      updateSidePanel();
+
+      await loadData();
+    }
+
+    async function loadData() {
+      try {
+        simulatorData = await apiGet('/simulator/datasets');
+        const devSteps = await apiGet('/developer/steps');
+        codeData = await apiGet('/developer/code');
+        stepsData = devSteps.steps || [];
+
+        renderDataView();
+      } catch (err) {
+        document.querySelectorAll('.vertical-item-list').forEach(list => {
+          list.innerHTML = '<p class="muted-text text-danger">Fout bij verbinding met service.</p>';
+        });
+      }
+    }
+
+    function renderDataView() {
+      // Hide all panels, show active
+      document.querySelectorAll('.data-panel').forEach(panel => {
+        panel.classList.remove('active');
+      });
+      const activePanel = document.getElementById(`data-panel-${currentTab}`);
+      if (activePanel) activePanel.classList.add('active');
+      updateSidePanel();
+      updateWorkbenchLayout();
+      requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+      updateDataHeaderMetrics();
+
+      if (currentTab === 'source') {
+        renderSourcePanel();
+      } else if (currentTab === 'test') {
+        renderTestPanel();
+      } else if (currentTab === 'ai_validation') {
+        renderAiValidationPanel();
+      } else if (currentTab === 'report') {
+        renderReportPanel();
+      }
+    }
+
+    function updateSidePanel() {
+      document.querySelectorAll('[data-side-panel]').forEach((panel) => {
+        panel.classList.toggle('active', panel.getAttribute('data-side-panel') === topTabFor(currentTab));
+      });
+    }
+
+    function updateWorkbenchLayout() {
+      document.querySelector('.data-workbench-layout')?.classList.toggle('data-code-fullwidth', currentTab === 'code');
+    }
+
+    function topTabFor(tab) {
+      return TYPE_TABS.includes(tab) ? 'type' : tab;
+    }
+
+    function canUseDataTab(tab) {
+      if (tab === 'ai_validation') return allowedDataBlocks.has('ai_validation') && requestedDataRole === 'technologist';
+      if (tab === 'code') return allowedDataBlocks.has('code') && requestedDataRole === 'technologist';
+      return allowedDataBlocks.has(tab);
+    }
+
+    function updateTypeMenu() {
+      document.querySelectorAll('[data-type-tab]').forEach((button) => {
+        button.classList.toggle('active', button.getAttribute('data-type-tab') === currentTab);
+      });
+      document.querySelectorAll('[data-type-help]').forEach((panel) => {
+        panel.classList.toggle('active', panel.getAttribute('data-type-help') === currentTab);
+      });
+    }
+
+    function updateDataHeaderMetrics() {
+      const groups = simulatorData?.groups || [];
+      const summary = codeData?.summary || {};
+      const totalFiles = groups.reduce((sum, group) => sum + Number(group.file_count || 0), 0);
+      const values = {
+        'status-metric-attractions': simulatorData ? groups.length : '-',
+        'status-metric-objects': simulatorData ? totalFiles : '-',
+        'status-metric-routes': simulatorData ? groups.length : '-',
+        'status-metric-code-fragments': codeData ? (summary.linked_fragments ?? '-') : '-',
+      };
+
+      Object.entries(values).forEach(([id, value]) => {
+        const metric = document.getElementById(id);
+        const number = metric?.querySelector('.metric-num');
+        if (number) number.textContent = String(value);
+      });
+    }
+
+    function renderSourcePanel() {
+      const steps = stepsData || [];
+      const twins = simulatorData?.leerbox_twins || [];
+      const groups = simulatorData?.groups || [];
+      const summary = codeData?.summary || {};
+
+      const list = document.getElementById('src-records-list');
+      if (list) {
+        const items = [];
+        steps.slice(0, 4).forEach(s => {
+          items.push({ title: s.title, meta: s.article || "Stap" });
+        });
+        twins.slice(0, 4).forEach(t => {
+          items.push({ title: t.title || t.id, meta: t.status || "leerbox" });
+        });
+
+        list.innerHTML = items.map(item => `
+          <div class="data-record-item">
+            <strong>${escapeHtml(item.title)}</strong>
+            <span class="badge badge-record-meta">${escapeHtml(item.meta)}</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    function renderTestPanel() {
+      const groups = simulatorData?.groups || [];
+      const totalFiles = groups.reduce((sum, g) => sum + Number(g.file_count || 0), 0);
+
+      renderSelectedLeerboxData();
+
+      const list = document.getElementById('test-files-list');
+      if (list) {
+        if (groups.length === 0) {
+          list.innerHTML = '<p class="muted-text">Geen testbestanden gevonden.</p>';
+          return;
+        }
+
+        list.innerHTML = groups.map(g => `
+          <div class="data-record-item">
+            <strong>${escapeHtml(g.title || g.id)}</strong>
+            <span>${g.file_count || 0} bestanden</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    function renderAiValidationPanel() {
+      const validationCard = document.getElementById('data-validation-report-card');
+      const activeRole = localStorage.getItem('active_role') || localStorage.getItem('leerpret.poc.role') || 'architect';
+      if (validationCard) {
+        validationCard.hidden = activeRole !== 'technologist';
+        if (activeRole === 'technologist') {
+          setupValidationReportPanel().then(() => {
+            const output = document.getElementById('data-validation-report-output');
+            const button = document.getElementById('btn-data-generate-validation-report');
+            if (output && button && !output.dataset.autoGenerated) {
+              output.dataset.autoGenerated = 'true';
+              button.click();
+            }
+          });
+        }
+      }
+    }
+
+    function activeLeerboxTwin() {
+      const twins = simulatorData?.leerbox_twins || [];
+      const activeId = localStorage.getItem('leerpret.leerbox.id') || '';
+      return twins.find((item) => item.id === activeId) || twins[0] || null;
+    }
+
+    function normalizedSearchTerms(twin) {
+      const raw = [
+        twin?.id,
+        String(twin?.id || '').replace(/^leerbox-/, ''),
+        twin?.title,
+        String(twin?.title || '').replace(/^De\s+/i, ''),
+      ];
+      return [...new Set(
+        raw
+          .filter(Boolean)
+          .flatMap((value) => {
+            const text = String(value).toLowerCase();
+            return [text, text.replaceAll('-', ' '), text.replaceAll(' ', '-')]
+              .filter((item) => item.length >= 3);
+          })
+      )];
+    }
+
+    function selectedLeerboxFiles(twin, groups) {
+      const terms = normalizedSearchTerms(twin);
+      if (!twin || terms.length === 0) return [];
+
+      return groups.flatMap((group) => {
+        const groupText = `${group.id || ''} ${group.title || ''} ${group.relative_dir || ''}`.toLowerCase();
+        return (group.files || [])
+          .filter((file) => {
+            const fileText = `${file.name || ''} ${file.path || ''} ${file.data_url || ''}`.toLowerCase();
+            const haystack = `${groupText} ${fileText}`;
+            return terms.some((term) => haystack.includes(term));
+          })
+          .map((file) => ({ ...file, groupTitle: group.title || group.id }));
+      });
+    }
+
+    function renderSelectedLeerboxData() {
+      const target = document.getElementById('selected-testdata-panel');
+      if (!target) return;
+
+      const groups = simulatorData?.groups || [];
+      const twin = activeLeerboxTwin();
+      if (!twin) {
+        target.innerHTML = '<p class="muted-text">Geen actieve leerbox geselecteerd.</p>';
+        return;
+      }
+
+      const files = selectedLeerboxFiles(twin, groups);
+      const title = twin.title || twin.id || 'Geselecteerde leerbox';
+      if (files.length === 0) {
+        target.innerHTML = `
+          <div class="selected-testdata-header">
+            <strong>${escapeHtml(title)}</strong>
+            <span>${escapeHtml(twin.id || "leerbox")}</span>
+          </div>
+          <p class="muted-text">Geen specifiek gekoppelde testdata gevonden voor deze leerbox. De volledige catalogus staat hieronder.</p>
+        `;
+        return;
+      }
+
+      target.innerHTML = `
+        <div class="selected-testdata-header">
+          <strong>${escapeHtml(title)}</strong>
+          <span>${files.length} gekoppelde bestanden</span>
+        </div>
+        <div class="selected-testdata-grid">
+          ${files.slice(0, 8).map(renderSelectedSimulatorFile).join('')}
+        </div>
+      `;
+    }
+
+    function renderSelectedSimulatorFile(file) {
+      return `
+        <div class="selected-testdata-item">
+          <strong>${escapeHtml(file.name)}</strong>
+          <small>${escapeHtml(file.groupTitle || "testdata")} - ${formatBytes(file.bytes)} - ${escapeHtml(file.items ?? "-")} items</small>
+        </div>
+      `;
+    }
+
+    function formatBytes(value) {
+      const bytes = Number(value || 0);
+      if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+      if (bytes >= 1024) return `${Math.round(bytes / 1024)} KB`;
+      return `${bytes} B`;
+    }
+
+    function renderReportPanel() {
+      const block = document.getElementById('report-json-example');
+      if (block) {
+        const payload = [
+          {
+            timestamp: new Date().toISOString(),
+            user_id: "lerende-001",
+            learning_object_id: "phile-discussion-area",
+            leerpret_score: 85,
+            archetype: "Verkenner",
+            diagnose: "Hoge actiegranulariteit gedurende 420s"
+          }
+        ];
+        block.querySelector('code').textContent = JSON.stringify(payload, null, 2);
+      }
+    }
+
+    async function loadPlotly() {
+      if (!plotlyModulePromise) {
+        plotlyModulePromise = import('plotly.js-dist-min');
+      }
+      const module = await plotlyModulePromise;
+      return module.default || module;
+    }
+
+    async function setupValidationReportPanel() {
+      const select = document.getElementById('data-validation-dataset-select');
+      const button = document.getElementById('btn-data-generate-validation-report');
+      const output = document.getElementById('data-validation-report-output');
+      if (!select || !button || !output) return;
+
+      if (!loadedValidationDatasets.length) {
+        try {
+          const response = await apiGet('/simulator/validation-datasets');
+          loadedValidationDatasets = response.datasets || [];
+        } catch {
+          loadedValidationDatasets = [];
+        }
+      }
+
+      if (!loadedValidationDatasets.length) {
+        select.innerHTML = '<option value="">Geen validatiedatasets gevonden</option>';
+        button.disabled = true;
+        output.innerHTML = '<p class="muted-text">Er zijn geen validatiedatasets gevonden in backend/simulator/testdata.</p>';
+        return;
+      }
+
+      if (!select.dataset.hydrated) {
+        select.innerHTML = loadedValidationDatasets.map((dataset) => `
+          <option value="${escapeHtml(dataset.id)}">${escapeHtml(validationDatasetLabel(dataset))}</option>
+        `).join('');
+        select.dataset.hydrated = 'true';
+      }
+
+      const updateButtonLabel = () => {
+        const dataset = loadedValidationDatasets.find(item => item.id === select.value);
+        button.textContent = dataset?.is_validatable ? 'Genereer Testrapport (LaTeX/Tabel)' : 'Genereer Controleoverzicht';
+      };
+
+      if (!select.dataset.bound) {
+        select.addEventListener('change', updateButtonLabel);
+        select.dataset.bound = 'true';
+      }
+      updateButtonLabel();
+
+      if (!button.dataset.bound) {
+        button.addEventListener('click', generateValidationReport);
+        button.dataset.bound = 'true';
+      }
+
+      document.querySelectorAll('input[name="data-validation-mode"]').forEach((radio) => {
+        if (radio.dataset.bound) return;
+        radio.addEventListener('change', renderValidationModePreview);
+        radio.dataset.bound = 'true';
+      });
+    }
+
+    function validationDatasetLabel(dataset) {
+      const suffix = dataset.is_template ? ' [sjabloon]' : (!dataset.is_validatable ? ' [onvolledig]' : '');
+      return `${dataset.name} (${dataset.profile_count || 0} profielen)${suffix}`;
+    }
+
+    function renderValidationModePreview() {
+      const output = document.getElementById('data-validation-report-output');
+      const mode = document.querySelector('input[name="data-validation-mode"]:checked')?.value || 'single';
+      if (!output || mode !== 'all') return;
+      output.innerHTML = `
+        <h4>Alle JSON-testsets</h4>
+        <p class="muted-text">Het volledige vergelijkingsdashboard over alle testsets is een vervolgstap. Hieronder staat alvast de datasetlijst.</p>
+        ${renderValidationTable(
+          loadedValidationDatasets.map(dataset => ({
+            Naam: dataset.name,
+            Profielen: dataset.profile_count,
+            Status: dataset.is_validatable ? 'valideerbaar' : (dataset.is_template ? 'sjabloon' : 'onvolledig'),
+            Bestand: dataset.source_filename,
+          }))
+        )}
+      `;
+    }
+
+    async function generateValidationReport() {
+      const select = document.getElementById('data-validation-dataset-select');
+      const button = document.getElementById('btn-data-generate-validation-report');
+      const output = document.getElementById('data-validation-report-output');
+      const mode = document.querySelector('input[name="data-validation-mode"]:checked')?.value || 'single';
+      if (!select || !button || !output) return;
+
+      if (mode === 'all') {
+        renderValidationModePreview();
+        return;
+      }
+
+      button.disabled = true;
+      output.innerHTML = '<p class="muted-text">Testrapport genereren...</p>';
+      try {
+        const report = await apiPost(`/simulator/validation-datasets/${encodeURIComponent(select.value)}/report`, {});
+        if (report.mode === 'incomplete') {
+          renderIncompleteValidationReport(report);
+        } else {
+          await renderFullValidationReport(report);
+        }
+      } catch (error) {
+        output.innerHTML = `<p class="muted-text text-danger">Fout bij genereren van validatierapport: ${escapeHtml(error.message || error)}</p>`;
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    function renderIncompleteValidationReport(report) {
+      const output = document.getElementById('data-validation-report-output');
+      if (!output) return;
+      const invalidSet = new Set((report.invalid_cells || []).map(cell => `${cell.row}:${cell.column}`));
+      output.innerHTML = `
+        <h4>Controleoverzicht</h4>
+        <p class="muted-text">Deze set is niet valideerbaar; rood gemarkeerde cellen missen verplichte of geldige waarden. Er is geen LaTeX-output beschikbaar.</p>
+        ${renderValidationTable(report.rows || [], invalidSet)}
+      `;
+    }
+
+    async function renderFullValidationReport(report) {
+      const output = document.getElementById('data-validation-report-output');
+      if (!output) return;
+      const stats = report.statistics || {};
+      output.innerHTML = `
+        <h4>Overzicht</h4>
+        <div class="validation-stats-strip">
+          <span>\\(n=${formatStat(stats.case_count, 0)}\\)</span>
+          <span>gem. \\(LP_{\\mathrm{eng}}=${formatStat(stats.mean_lp_eng)}\\)</span>
+          <span>gem. \\(LP_{\\mathrm{exp}}=${formatStat(stats.mean_lp_exp)}\\)</span>
+          <span>\\(bias=${formatSignedStat(stats.mean_delta)}\\)</span>
+          <span>MAE=${formatStat(stats.mean_abs_delta)}</span>
+          <span>\\(RMSE=${formatStat(stats.rmse)}\\)</span>
+          <span>max \\(|\\Delta|=${formatStat(stats.max_abs_delta)}\\)</span>
+          <span>relevant=${formatStat(stats.relevant_delta_count, 0)}</span>
+          <span>formulecheck max=${formatScientific(stats.formula_check_max_abs_delta)}</span>
+        </div>
+        ${renderValidationTable(report.rows || [])}
+        <div class="validation-chart-panel">
+          <div class="validation-chart-toolbar">
+            <strong>Grafische verdelingscontrole</strong>
+            <select id="data-validation-comparison-direction" class="spacious-select">
+              <option value="eng-minus-exp">Gemeten t.o.v. verwacht (LPeng - LPexp)</option>
+              <option value="exp-minus-eng">Verwacht t.o.v. gemeten (LPexp - LPeng)</option>
+            </select>
+          </div>
+          <div id="data-validation-comparison-plot" class="validation-comparison-plot"></div>
+        </div>
+        <details class="validation-latex-details" open>
+          <summary>LaTeX Output</summary>
+          <p class="muted-text">Deze LaTeX-code kan direct in documentatie worden gebruikt.</p>
+          <pre class="validation-latex-code"><code class="language-latex">${escapeHtml(report.latex || '')}</code></pre>
+        </details>
+      `;
+      await renderMath(output);
+      const direction = document.getElementById('data-validation-comparison-direction');
+      direction?.addEventListener('change', () => renderValidationComparisonPlot(report, direction.value));
+      await renderValidationComparisonPlot(report, direction?.value || 'eng-minus-exp');
+    }
+
+    function renderValidationTable(rows, invalidSet = new Set()) {
+      if (!rows?.length) return '<p class="muted-text">Geen rijen beschikbaar.</p>';
+      const columns = Object.keys(rows[0]);
+      return `
+        <div class="table-wrapper validation-table-wrapper">
+          <table class="validation-report-table">
+            <thead><tr>${columns.map(column => `<th>${escapeHtml(column)}</th>`).join('')}</tr></thead>
+            <tbody>
+              ${rows.map((row, rowIndex) => `
+                <tr>${columns.map(column => `<td class="${invalidSet.has(`${rowIndex}:${column}`) ? 'invalid-cell' : ''}">${escapeHtml(row[column] ?? '')}</td>`).join('')}</tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    async function renderValidationComparisonPlot(report, direction = 'eng-minus-exp') {
+      const plot = document.getElementById('data-validation-comparison-plot');
+      if (!plot) return;
+      const points = report.chart_points || [];
+      if (!points.length) {
+        plot.innerHTML = '<p class="muted-text">Geen plotpunten beschikbaar.</p>';
+        return;
+      }
+      const measuredMinusExpected = direction === 'eng-minus-exp';
+      const x = points.map(point => measuredMinusExpected ? point.lp_exp : point.lp_eng);
+      const y = points.map(point => measuredMinusExpected ? point.lp_eng : point.lp_exp);
+      const xLabel = measuredMinusExpected ? 'Verwachte leerpret uit dataset/bron' : 'Gemeten leerpret door engine';
+      const yLabel = measuredMinusExpected ? 'Gemeten leerpret door engine' : 'Verwachte leerpret uit dataset/bron';
+      const Plotly = await loadPlotly();
+      Plotly.newPlot(plot, [{
+        type: 'scatter',
+        mode: 'markers',
+        x,
+        y,
+        text: points.map(point => `${point.name}<br>LP<sub>eng</sub> ${point.lp_eng.toFixed(2)}<br>LP<sub>exp</sub> ${point.lp_exp.toFixed(2)}`),
+        hoverinfo: 'text',
+        marker: { color: '#29B09D', size: 9, line: { color: '#ffffff', width: 1.5 } },
+      }, {
+        type: 'scatter',
+        mode: 'lines',
+        x: [0, 1],
+        y: [0, 1],
+        hoverinfo: 'skip',
+        showlegend: false,
+        line: { color: 'rgba(100,116,139,0.55)', dash: 'dash' },
+      }], {
+        height: 320,
+        margin: { l: 58, r: 20, t: 16, b: 56 },
+        xaxis: { title: { text: xLabel }, range: [0, 1] },
+        yaxis: { title: { text: yLabel }, range: [0, 1] },
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(248,250,252,0.72)',
+      }, { responsive: true, displayModeBar: false });
+    }
+
+    function formatStat(value, digits = 3) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number.toFixed(digits) : '-';
+    }
+
+    function formatSignedStat(value) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return '-';
+      return `${number >= 0 ? '+' : ''}${number.toFixed(3)}`;
+    }
+
+    function formatScientific(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number.toExponential(2) : '-';
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initDataWorkbench();
+
+      // Bind tab clicks
+      document.querySelectorAll('.data-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const requestedTab = btn.getAttribute('data-tab') || 'type';
+          currentTab = requestedTab === 'type'
+            ? (TYPE_TABS.includes(localStorage.getItem('leerpret.data.typeTab') || '')
+              ? localStorage.getItem('leerpret.data.typeTab')
+              : TYPE_TABS.find((id) => canUseDataTab(id)) || 'source')
+            : requestedTab;
+          const url = new URL(window.location.href);
+          url.searchParams.set('block', topTabFor(currentTab));
+          history.replaceState({}, '', url);
+          
+          document.querySelectorAll('.data-tab').forEach(t => t.classList.remove('active'));
+          document.querySelector(`.data-tab[data-tab="${topTabFor(currentTab)}"]`)?.classList.add('active');
+
+          renderDataView();
+        });
+      });
+
+      document.querySelectorAll('[data-type-tab]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const nextTab = btn.getAttribute('data-type-tab') || 'source';
+          if (!canUseDataTab(nextTab)) return;
+          currentTab = nextTab;
+          localStorage.setItem('leerpret.data.typeTab', currentTab);
+          const url = new URL(window.location.href);
+          url.searchParams.set('block', currentTab);
+          history.replaceState({}, '', url);
+          document.querySelectorAll('.data-tab').forEach(t => t.classList.toggle('active', t.getAttribute('data-tab') === 'type'));
+          updateTypeMenu();
+          renderDataView();
+        });
+      });
+    });
+
+    window.addEventListener('service-connection-changed', () => {
+      loadData();
+    });
+  </script>
+</Layout>
+
+<style is:global>
+  .data-workbench-layout { display:grid; gap:18px; align-items:start; }
+  .data-workbench-layout.data-code-fullwidth {
+    grid-template-columns: 1fr;
+  }
+  .data-workbench-layout.data-code-fullwidth .data-workbench-menu {
+    display: none;
+  }
+  .data-workbench-menu { display:grid; gap:14px; }
+  .data-content-area { min-width:0; display:grid; gap:14px; }
+
+  .data-side-panel {
+    display: none;
+    gap: 12px;
+  }
+
+  .data-side-panel.active {
+    display: grid;
+  }
+
+  .analytics-menu-heading,
+  .structure-menu-head {
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    gap: 4px;
+    padding-bottom: 14px;
+    position: relative;
+  }
+
+  .analytics-menu-heading h2,
+  .structure-menu-head h2 {
+    font-size: 1.22rem;
+    margin: 0;
+  }
+
+  .mock-badge {
+    background: #0c3c3f;
+    border: 1px solid #2c7578;
+    border-radius: 999px;
+    color: var(--teal);
+    font-size: .61rem;
+    font-weight: 850;
+    padding: 4px 7px;
+    position: absolute;
+    right: 0;
+    top: 0;
+    text-transform: uppercase;
+  }
+
+  .analytics-filter-group,
+  .structure-search {
+    display: grid;
+    gap: 6px;
+  }
+
+  .analytics-filter-group label,
+  .analytics-menu-label,
+  .structure-search span,
+  .structure-menu-label {
+    color: var(--muted);
+    font-size: .67rem;
+    font-weight: 850;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+
+  .analytics-filter-group label:not(:first-child) {
+    margin-top: 7px;
+  }
+
+  .analytics-menu-label {
+    border-top: 1px solid var(--line);
+    margin: 0;
+    padding-top: 14px;
+  }
+
+  .analytics-view-menu,
+  .structure-view-menu {
+    display: grid;
+    gap: 6px;
+  }
+
+  .analytics-view-menu button,
+  .structure-view-menu button {
+    align-items: center;
+    background: #10262d;
+    border: 1px solid #294b54;
+    border-radius: 10px;
+    color: var(--ink);
+    cursor: pointer;
+    display: grid;
+    font: inherit;
+    gap: 9px;
+    grid-template-columns: 31px 1fr;
+    padding: 9px;
+    text-align: left;
+  }
+
+  .analytics-view-menu button.active,
+  .structure-view-menu button.active {
+    background: #10343a;
+    border-color: var(--teal);
+    box-shadow: inset 4px 0 var(--teal);
+  }
+
+  .analytics-view-menu button > span:last-child,
+  .structure-view-menu button > span:last-child {
+    display: grid;
+    gap: 2px;
+  }
+
+  .analytics-view-menu strong,
+  .structure-view-menu strong {
+    font-size: .75rem;
+  }
+
+  .analytics-view-menu small,
+  .structure-view-menu small {
+    color: var(--muted);
+    font-size: .62rem;
+  }
+
+  .analytics-menu-icon,
+  .view-icon {
+    align-items: center;
+    background: #07171c;
+    border: 1px solid #31545d;
+    border-radius: 7px;
+    color: var(--teal);
+    display: flex;
+    font-weight: 900;
+    height: 29px;
+    justify-content: center;
+    width: 29px;
+  }
+
+  .analytics-data-note,
+  .structure-help {
+    background: #0c2026;
+    border: 1px solid #294b54;
+    border-radius: 10px;
+    padding: 10px;
+  }
+
+  .analytics-data-note strong,
+  .structure-help strong {
+    font-size: .69rem;
+  }
+
+  .analytics-data-note p,
+  .structure-help p {
+    color: var(--muted);
+    font-size: .62rem;
+    line-height: 1.5;
+    margin: 4px 0 0;
+  }
+
+  .structure-search input {
+    background: #07171c;
+    border: 1px solid #31545d;
+    border-radius: 9px;
+    color: var(--ink);
+    font: inherit;
+    font-size: .73rem;
+    padding: 9px 10px;
+    width: 100%;
+  }
+
+  .structure-search input:focus {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(0,128,128,.1);
+    outline: 0;
+  }
+
+  .structure-legend {
+    border-top: 1px solid var(--line);
+    display: grid;
+    gap: 9px;
+    padding-top: 14px;
+  }
+
+  .structure-legend ul {
+    display: grid;
+    gap: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .structure-legend li {
+    align-items: center;
+    display: grid;
+    font-size: .69rem;
+    gap: 8px;
+    grid-template-columns: 10px 1fr auto;
+  }
+
+  .structure-legend li i {
+    background: var(--legend-color);
+    border-radius: 50%;
+    height: 9px;
+    width: 9px;
+  }
+
+  .structure-legend li i.person { --legend-color:#e11d48; }
+  .structure-legend li i.action { --legend-color:#7c3aed; }
+  .structure-legend li i.learningbox { --legend-color:#059669; }
+  .structure-legend li i.learningobject { --legend-color:#2563eb; }
+  .structure-legend li i.resistance { --legend-color:#d97706; }
+  .structure-legend li i.measurement { --legend-color:#0891b2; }
+
+  .structure-legend li strong {
+    align-items: center;
+    background: #1b3440;
+    border-radius: 999px;
+    color: #a8c4cb;
+    display: flex;
+    font-size: .59rem;
+    height: 20px;
+    justify-content: center;
+    width: 24px;
+  }
+
+  .data-side-panel h3 {
+    margin: -4px 0 0;
+    color: var(--ink);
+    font-family: var(--font-heading);
+    letter-spacing: .02em;
+  }
+
+  .data-control-label,
+  .data-perspective-label {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: .66rem;
+    font-weight: 900;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .data-type-help {
+    display: none;
+  }
+
+  .data-type-help.active {
+    display: grid;
+    gap: 12px;
+  }
+
+  /* Data Tabs */
+  .data-tabs-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: flex-end;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .data-tab {
+    border: 1px solid transparent;
+    border-bottom: 0;
+    border-top: 3px solid var(--tab-role-color, transparent);
+    background: transparent;
+    padding: 9px 16px;
+    border-radius: 8px 8px 0 0;
+    font: 700 .84rem inherit;
+    color: var(--muted);
+    transition: all 0.2s ease;
+    text-align: left;
+    min-height: 0;
+    display: inline-flex;
+    align-items: center;
+    cursor:pointer;
+  }
+  .data-tab[hidden],
+  .data-side-panel[hidden],
+  .data-panel[hidden] {
+    display: none !important;
+  }
+
+  .data-tab:hover { color: var(--ink); }
+  .data-tab strong { color:inherit; font-size:.84rem; }
+  .data-tab small { display:none; }
+  .data-tab.role-shared { --tab-role-color: var(--teal); }
+  .data-tab.role-technologist { --tab-role-color: var(--plum, #b586ff); }
+
+  .data-tab.active {
+    background: var(--panel);
+    color: var(--green);
+    border-color:var(--line);
+    border-top-color: var(--tab-role-color, var(--teal));
+    margin-bottom: -1px;
+    box-shadow: none;
+  }
+
+  .data-tab.active strong { color:var(--tab-role-color, var(--teal)); }
+
+  /* Panels visibility */
+  .data-panel {
+    display: none;
+  }
+
+  .data-panel.active {
+    display: block;
+  }
+
+  /* Record item stacked layout */
+  .data-record-item {
+    background: #10262d;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .badge-record-meta {
+    font-size: 0.68rem;
+    background: #1b3440;
+    color: #a8c4cb;
+  }
+
+  .selected-testdata-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .selected-testdata-header strong {
+    color: var(--ink);
+    font-family: var(--font-heading);
+    font-size: 1rem;
+  }
+
+  .selected-testdata-header span {
+    color: var(--muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .selected-testdata-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .selected-testdata-item {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #10262d;
+  }
+
+  .selected-testdata-item strong {
+    color: var(--ink);
+    font-size: 0.86rem;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  .selected-testdata-item small {
+    color: var(--muted);
+    font-size: 0.74rem;
+    line-height: 1.35;
+  }
+
+  .validation-report-card {
+    overflow: hidden;
+  }
+
+  .validation-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    margin-top: 0;
+  }
+
+  .validation-mode-toggle {
+    display: grid;
+    gap: 8px;
+  }
+
+  .validation-mode-toggle label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: #10262d;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--ink);
+  }
+
+  .data-subtool-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .data-subtool,
+  .data-perspective-button {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #10262d;
+    color: var(--ink);
+    min-height: 46px;
+    padding: 9px;
+    display: grid;
+    gap: 4px;
+    align-content: center;
+    justify-items: center;
+    cursor: pointer;
+    font-family: var(--font-heading);
+    font-weight: 900;
+  }
+
+  .data-subtool span,
+  .data-perspective-button span {
+    color: var(--teal);
+    font-size: 1rem;
+  }
+
+  .data-subtool strong,
+  .data-perspective-button strong {
+    font-size: .66rem;
+    line-height: 1.1;
+  }
+
+  .data-perspective-button small {
+    color: var(--muted);
+    font-size: .58rem;
+    line-height: 1.15;
+  }
+
+  .data-subtool.active,
+  .data-perspective-button.active {
+    border-color: var(--yellow);
+    box-shadow: inset 4px 0 var(--yellow);
+  }
+
+  .data-perspective-buttons {
+    display: grid;
+    gap: 8px;
+  }
+
+  .validation-report-output {
+    margin-top: 16px;
+  }
+
+  .validation-stats-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0 14px;
+  }
+
+  .validation-stats-strip span {
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--teal);
+    border-radius: 999px;
+    padding: 6px 10px;
+    background: #10262d;
+    font-size: 0.74rem;
+    font-weight: 800;
+    color: var(--ink);
+  }
+
+  .validation-table-wrapper {
+    max-height: 420px;
+    overflow: auto;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+  }
+
+  .validation-report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.74rem;
+    background: #0b1d23;
+  }
+
+  .validation-report-table th,
+  .validation-report-table td {
+    border-bottom: 1px solid var(--line);
+    padding: 8px;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  .validation-report-table th {
+    position: sticky;
+    top: 0;
+    background: #10262d;
+    color: var(--muted);
+    text-transform: uppercase;
+    font-size: 0.66rem;
+    z-index: 1;
+  }
+
+  .validation-report-table td.invalid-cell {
+    background: #5b2222;
+    color: #ffffff;
+    font-weight: 800;
+  }
+
+  .validation-chart-panel,
+  .validation-latex-details {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #0c2026;
+    padding: 14px;
+    margin-top: 14px;
+  }
+
+  .validation-chart-toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .validation-comparison-plot {
+    min-height: 320px;
+  }
+
+  .validation-latex-details summary {
+    cursor: pointer;
+    font-weight: 900;
+    color: var(--ink);
+  }
+
+  .validation-latex-code {
+    background: #0f172a;
+    color: #e2e8f0;
+    border-radius: 10px;
+    padding: 12px;
+    overflow: auto;
+    max-height: 360px;
+    font-size: 0.72rem;
+  }
+
+  /* Contract list styling */
+  .contract-fields-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .contract-fields-list code {
+    background: #10262d;
+    color: #b9a8ee;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  /* Desktop layout optimization */
+  @media (min-width: 768px) {
+    .data-panel:not(.data-wide-panel) {
+      max-width: none;
+    }
+  }
+
+  @media (min-width: 980px) {
+    .data-workbench-layout { grid-template-columns:minmax(220px,270px) minmax(0,1fr); }
+    .data-workbench-layout.data-code-fullwidth { grid-template-columns:1fr; }
+    .data-workbench-menu { position:sticky; top:16px; max-height:calc(100vh - 32px); overflow:auto; }
+  }
+
+  @media (max-width: 720px) {
+    .selected-testdata-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .validation-controls,
+    .validation-chart-toolbar {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 460px) {
+    .selected-testdata-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+
+
