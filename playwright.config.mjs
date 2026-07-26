@@ -26,10 +26,10 @@ function dotenv(filePath) {
 
 const defaults = dotenv(path.join(__dirname, '.env.example'));
 const local = dotenv(path.join(__dirname, '.env'));
-const appUrl = process.env.LEERPRET_DASHBOARD_URL || local.LEERPRET_DASHBOARD_URL || defaults.LEERPRET_DASHBOARD_URL || 'http://127.0.0.1:47112/';
+const appUrl = process.env.PLAYWRIGHT_TEST_URL || 'http://127.0.0.1:47119/';
 
 const endpoint = new URL(appUrl);
-const port = endpoint.port || '47112';
+const port = endpoint.port || '47119';
 const hostname = endpoint.hostname || '127.0.0.1';
 
 export default defineConfig({
@@ -72,7 +72,7 @@ export default defineConfig({
     command: `python scripts/serve_dashboard.py ${port} --bind ${hostname}`,
     cwd: __dirname,
     url: appUrl,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 30_000,
   },
 });

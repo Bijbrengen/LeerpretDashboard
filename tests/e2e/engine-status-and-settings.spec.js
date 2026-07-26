@@ -2,6 +2,26 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Engine Status and Settings Acceptance Tests', () => {
   test.beforeEach(async ({ page }) => {
+    await page.route('**/api/access/blocks*', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          role: 'technologist',
+          authenticated: true,
+          pages: {
+            settings: {
+              default: 'connection',
+              blocks: {
+                connection: { allowed: true },
+                access_management: { allowed: true },
+              },
+            },
+          },
+        }),
+      });
+    });
+
     await page.addInitScript(() => {
       localStorage.setItem('api_key', 'leerpret-local-dev');
       localStorage.setItem('active_role', 'technologist');
@@ -36,14 +56,14 @@ test.describe('Engine Status and Settings Acceptance Tests', () => {
     const accessBtn = page.locator('button[data-settings-block="access_management"]');
     const connBtn = page.locator('button[data-settings-block="connection"]');
 
-    if (await accessBtn.isVisible()) {
-      await accessBtn.click();
-      const accessPanel = page.locator('section[data-settings-panel="access_management"]');
-      await expect(accessPanel).toHaveClass(/active/);
+    await expect(accessBtn).toBeVisible();
+    await accessBtn.click();
+    const accessPanel = page.locator('section[data-settings-panel="access_management"]');
+    await expect(accessPanel).toHaveClass(/active/);
 
-      await connBtn.click();
-      const connPanel = page.locator('section[data-settings-panel="connection"]');
-      await expect(connPanel).toHaveClass(/active/);
-    }
+    await expect(connBtn).toBeVisible();
+    await connBtn.click();
+    const connPanel = page.locator('section[data-settings-panel="connection"]');
+    await expect(connPanel).toHaveClass(/active/);
   });
 });

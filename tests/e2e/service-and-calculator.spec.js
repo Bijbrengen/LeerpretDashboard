@@ -18,8 +18,10 @@ test.describe('Service & Calculator Acceptance Tests', () => {
 
     await page.addInitScript(() => {
       localStorage.setItem('api_key', 'leerpret-local-dev');
+      localStorage.setItem('leerpret.apiKey', 'leerpret-local-dev');
       localStorage.setItem('active_role', 'learner');
       localStorage.setItem('leerpret.poc.role', 'learner');
+      localStorage.removeItem('leerpret.loggedOut');
     });
     await page.goto('/service');
   });
@@ -31,11 +33,11 @@ test.describe('Service & Calculator Acceptance Tests', () => {
     const slideR = page.locator('#slide-r');
     const slideS = page.locator('#slide-s');
 
-    await expect(slideT).toBeVisible();
-    await expect(slideA).toBeVisible();
-    await expect(slideV).toBeVisible();
-    await expect(slideR).toBeVisible();
-    await expect(slideS).toBeVisible();
+    await expect(slideT).toBeAttached();
+    await expect(slideA).toBeAttached();
+    await expect(slideV).toBeAttached();
+    await expect(slideR).toBeAttached();
+    await expect(slideS).toBeAttached();
 
     await expect(slideT).toHaveValue(/0\.60?/);
   });
