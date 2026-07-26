@@ -7,10 +7,6 @@ on:
         description: 'Run headed mode (true/false)'
         required: false
         default: 'false'
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
 
 jobs:
   test:
