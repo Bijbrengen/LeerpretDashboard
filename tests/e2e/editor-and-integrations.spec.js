@@ -4,8 +4,8 @@ test.describe('Editor and Integrations Acceptance Tests', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem('api_key', 'leerpret-local-dev');
-      localStorage.setItem('active_role', 'architect');
-      localStorage.setItem('leerpret.poc.role', 'architect');
+      localStorage.setItem('active_role', 'technologist');
+      localStorage.setItem('leerpret.poc.role', 'technologist');
     });
   });
 

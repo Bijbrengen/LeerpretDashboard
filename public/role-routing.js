@@ -10,7 +10,7 @@
     learner: ["/", "/park", "/article", "/learningbox", "/preview", "/service", "/help", "/settings"],
     guest: ["/", "/park", "/article", "/learningbox", "/preview", "/service", "/help"],
   };
-  const PUBLIC_ROUTES = new Set(["/login"]);
+  const PUBLIC_ROUTES = new Set(["/login", "/privacy", "/404", "/404.html"]);
 
   function normalizeRole(value) {
     const role = ROLE_ALIASES[String(value || "").toLowerCase()] || String(value || "").toLowerCase();

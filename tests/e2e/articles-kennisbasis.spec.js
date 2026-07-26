@@ -7,7 +7,7 @@ test.describe('Articles Kennisbasis Acceptance Tests', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          role: 'architect',
+          role: 'technologist',
           authenticated: true,
           pages: {
             article: {
@@ -26,8 +26,8 @@ test.describe('Articles Kennisbasis Acceptance Tests', () => {
 
     await page.addInitScript(() => {
       localStorage.setItem('api_key', 'leerpret-local-dev');
-      localStorage.setItem('active_role', 'architect');
-      localStorage.setItem('leerpret.poc.role', 'architect');
+      localStorage.setItem('active_role', 'technologist');
+      localStorage.setItem('leerpret.poc.role', 'technologist');
     });
     await page.goto('/article');
   });

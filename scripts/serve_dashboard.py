@@ -14,6 +14,17 @@ class RoleAwareFrontendHandler(SimpleHTTPRequestHandler):
     def send_error(self, code: int, message: str | None = None, explain: str | None = None) -> None:
         accept = self.headers.get("Accept", "")
         if code == 404 and self.command in {"GET", "HEAD"} and "text/html" in accept:
+            import os
+            directory = getattr(self, "directory", ".")
+            custom_404 = os.path.join(directory, "404.html")
+            if os.path.exists(custom_404):
+                self.send_response(404)
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.send_header("Cache-Control", "no-cache, must-revalidate")
+                self.end_headers()
+                with open(custom_404, "rb") as file_handle:
+                    self.wfile.write(file_handle.read())
+                return
             query = parse_qs(urlsplit(self.path).query)
             role = query.get("role", ["learner"])[0]
             location = f"/?{urlencode({'role': role})}"

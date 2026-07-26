@@ -34,6 +34,6 @@ test.describe('Error Handling and 404 Acceptance Tests', () => {
   test('should render privacy statement on /privacy', async ({ page }) => {
     await page.goto('/privacy');
     await expect(page).toHaveURL(/\/privacy/);
-    await expect(page.locator('h1, h2')).toBeVisible();
+    await expect(page.locator('h1').first()).toBeVisible();
   });
 });
