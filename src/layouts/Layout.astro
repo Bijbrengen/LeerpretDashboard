@@ -28,11 +28,11 @@ const isActive = (path) => {
     <meta http-equiv="Cache-Control" content="no-store" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta name="description" content={description} />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="shortcut icon" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href={`${import.meta.env.BASE_URL}favicon.svg`} />
+    <link rel="shortcut icon" href={`${import.meta.env.BASE_URL}favicon.svg`} />
     <title>{title} | Leerpret Dashboard</title>
-    <script is:inline src="/runtime-config.js"></script>
-    <script is:inline src="/role-routing.js"></script>
+    <script is:inline src={`${import.meta.env.BASE_URL}runtime-config.js`}></script>
+    <script is:inline src={`${import.meta.env.BASE_URL}role-routing.js`}></script>
     
     <!-- Premium Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
