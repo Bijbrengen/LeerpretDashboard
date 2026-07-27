@@ -21,6 +21,13 @@
       <span>Log in met Google</span>
     </button>
   </div>
+  <label class="profile-choice">
+    <input id="share-google-profile" type="checkbox" />
+    <span>
+      Deel eenmalig mijn naam en e-mailadres, zodat ik verhoogde rechten kan
+      aanvragen. Zonder deze koppeling blijven alleen de basisfuncties beschikbaar.
+    </span>
+  </label>
   <p id="login-status" class="login-status" role="status" aria-live="polite"></p>
 
   <div class="privacy-bullet-points">
@@ -187,6 +194,15 @@
     color: #b91c1c;
   }
 
+  .profile-choice {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.76rem;
+    line-height: 1.4;
+    color: var(--muted, #64748b);
+  }
+
   .login-card-footer {
     border-top: 1px dashed var(--line, #e2e8f0);
     padding-top: 16px;
@@ -212,8 +228,10 @@
 </style>
 
 <script>
+  import { apiPost } from '../js/api.js';
   const loginBtn = document.getElementById('google-login-trigger');
   const loginStatus = document.getElementById('login-status');
+  const profileChoice = document.getElementById('share-google-profile');
 
   function safeReturnTarget(rawTarget) {
     if (!rawTarget) return '/';
@@ -230,6 +248,37 @@
       return '/';
     }
   }
+
+  async function completeGoogleLogin() {
+    const parameters = new URLSearchParams(window.location.search);
+    const code = parameters.get('code');
+    if (!code) return false;
+    const expectedState = sessionStorage.getItem('leerpret.oauth.state');
+    if (!expectedState || parameters.get('state') !== expectedState) {
+      throw new Error('De Google-aanmelding kon niet veilig worden bevestigd.');
+    }
+    const shareProfile = sessionStorage.getItem('leerpret.oauth.shareProfile') === 'true';
+    const redirectUri = `${window.location.origin}${window.location.pathname}`;
+    await apiPost('/auth/google-code', {
+      code,
+      redirect_uri: redirectUri,
+      share_profile: shareProfile
+    }, { 'X-Requested-With': 'XmlHttpRequest' });
+    if (shareProfile) await apiPost('/auth/access-request', {});
+    const returnTarget = safeReturnTarget(sessionStorage.getItem('leerpret.oauth.return'));
+    sessionStorage.removeItem('leerpret.oauth.state');
+    sessionStorage.removeItem('leerpret.oauth.shareProfile');
+    sessionStorage.removeItem('leerpret.oauth.return');
+    window.location.href = returnTarget;
+    return true;
+  }
+
+  completeGoogleLogin().catch((error) => {
+    if (loginStatus) {
+      loginStatus.textContent = error instanceof Error ? error.message : 'Aanmelden is niet gelukt.';
+      loginStatus.classList.add('is-error');
+    }
+  });
 
   if (loginBtn) {
     loginBtn.addEventListener('click', async () => {
@@ -262,6 +311,24 @@
       localStorage.setItem('leerpret.apiBase', apiBase);
 
       try {
+        const googleConfig = await import('../js/api.js').then(({ apiGet }) => apiGet('/auth/google/config'));
+        if (googleConfig.enabled) {
+          const shareProfile = Boolean(profileChoice?.checked);
+          const oauthState = crypto.randomUUID();
+          const redirectUri = `${window.location.origin}${window.location.pathname}`;
+          sessionStorage.setItem('leerpret.oauth.state', oauthState);
+          sessionStorage.setItem('leerpret.oauth.shareProfile', String(shareProfile));
+          sessionStorage.setItem('leerpret.oauth.return', returnTarget);
+          const authorization = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+          authorization.searchParams.set('client_id', googleConfig.client_id);
+          authorization.searchParams.set('redirect_uri', redirectUri);
+          authorization.searchParams.set('response_type', 'code');
+          authorization.searchParams.set('scope', shareProfile ? googleConfig.optional_profile_scope : googleConfig.scope);
+          authorization.searchParams.set('state', oauthState);
+          authorization.searchParams.set('prompt', 'select_account');
+          window.location.href = authorization.toString();
+          return;
+        }
         const organization = localStorage.getItem('org_id') || 'local-dev';
         const apiKey = localStorage.getItem('api_key') || 'leerpret-local-dev';
         const endpoint = isLeerboxLogin ? '/auth/leerbox/session' : '/auth/session';
@@ -270,13 +337,7 @@
           : { organization, api_key: apiKey };
         if (isLeerboxLogin && !leerboxId) throw new Error('De leerbox-ID ontbreekt.');
 
-        const response = await fetch(`${apiBase}${endpoint}`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-        if (!response.ok) throw new Error('Aanmelden bij Leerpret is niet gelukt.');
+        await apiPost(endpoint, body);
 
         if (!isLeerboxLogin) {
           localStorage.setItem('org_id', organization);

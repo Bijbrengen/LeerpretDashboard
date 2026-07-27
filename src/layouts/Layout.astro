@@ -247,14 +247,8 @@ const isActive = (path) => {
         const configured = localStorage.getItem('api_base')
           || localStorage.getItem('leerpret.apiBase')
           || window.LEERPRET_CONFIG.apiBase;
-        const serviceRoot = configured.replace(/\/api\/?$/, '').replace(/\/+$/, '');
         try {
-          const response = await fetch(`${serviceRoot}/api/ui/theme-tokens?surface=dashboard`, {
-            credentials: 'include',
-            cache: 'no-store'
-          });
-          if (!response.ok) return;
-          const { tokens = {}, version = 'api' } = await response.json();
+          const { tokens = {}, version = 'api' } = await apiGet('/ui/theme-tokens?surface=dashboard');
           const variables = {
             bg: '--bg',
             panel: '--panel',

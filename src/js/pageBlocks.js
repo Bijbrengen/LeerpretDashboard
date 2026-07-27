@@ -24,19 +24,10 @@ export async function loadBlockAccess(role = activeBlockRole(), pageId = "") {
   if (!blockAccessPromises.has(key)) {
     const query = new URLSearchParams({ role });
     if (pageId) query.set("page", pageId);
-    const organization = localStorage.getItem("org_id") || localStorage.getItem("leerpret.organization") || "";
-    const apiKey = localStorage.getItem("api_key") || localStorage.getItem("leerpret.apiKey") || "";
-    const headers = {};
-    if (organization) headers["X-Organization"] = organization;
-    if (apiKey) headers["X-API-Key"] = apiKey;
-    blockAccessPromises.set(key, fetch(`${apiBase}/access/blocks?${query}`, {
-      cache: "no-store",
-      credentials: "include",
-      headers
-    }).then((response) => {
-      if (!response.ok) throw new Error(`Block access configuration: ${response.status}`);
-      return response.json();
-    }));
+    blockAccessPromises.set(
+      key,
+      import("./api.js").then(({ apiGet }) => apiGet(`/access/blocks?${query}`))
+    );
   }
   return blockAccessPromises.get(key);
 }

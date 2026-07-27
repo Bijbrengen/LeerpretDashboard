@@ -99,22 +99,54 @@ export function authHeaders(extra = {}) {
   return headers;
 }
 
-export async function apiGet(path) {
-  const response = await fetch(`${state.apiBase}${path}`, {
+let sdkClientPromise;
+
+async function sdkClient() {
+  if (!sdkClientPromise) {
+    sdkClientPromise = (async () => {
+      const manifestResponse = await fetch(`${state.apiBase}/sdk/manifest.json`, { credentials: "include" });
+      if (!manifestResponse.ok) throw new Error("LeerpretSDK-manifest kon niet worden geladen.");
+      const manifest = await manifestResponse.json();
+      const component = manifest.components["api-client"];
+      await new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = `${state.apiBase}/sdk/api-client/client.js?v=${encodeURIComponent(manifest.version)}`;
+        script.integrity = component.integrity["client.js"];
+        script.crossOrigin = "anonymous";
+        script.onload = resolve;
+        script.onerror = () => reject(new Error("LeerpretSDK kon niet worden geladen."));
+        document.head.appendChild(script);
+      });
+      return window.LeerpretSDK.create({
+        apiBase: state.apiBase,
+        clientId: "dashboard",
+        loginUrl: "/login",
+      });
+    })();
+  }
+  return sdkClientPromise;
+}
+
+async function sdkRequest(path, options = {}) {
+  const client = await sdkClient();
+  return client.request(path, {
     cache: "no-store",
-    credentials: "include",
-    headers: authHeaders(),
+    ...options,
+    headers: authHeaders(options.headers || {}),
   });
+}
+
+export async function apiGet(path) {
+  const response = await sdkRequest(path);
   if (!response.ok) throw await apiError(response);
   return response.json();
 }
 
-export async function apiPost(path, body) {
+export async function apiPost(path, body, extraHeaders = {}) {
   const payload = path === "/engine/evaluate" ? withEngineRefinements(body) : body;
-  const response = await fetch(`${state.apiBase}${path}`, {
+  const response = await sdkRequest(path, {
     method: "POST",
-    credentials: "include",
-    headers: authHeaders({ "Content-Type": "application/json" }),
+    headers: authHeaders({ "Content-Type": "application/json", ...extraHeaders }),
     body: JSON.stringify(payload),
   });
   if (!response.ok) throw await apiError(response);
@@ -151,9 +183,8 @@ function withEngineRefinements(body) {
 }
 
 export async function apiPut(path, body) {
-  const response = await fetch(`${state.apiBase}${path}`, {
+  const response = await sdkRequest(path, {
     method: "PUT",
-    credentials: "include",
     headers: authHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify(body),
   });
@@ -211,9 +242,9 @@ export async function establishSession() {
 
 export async function clearServerSession() {
   try {
-    await fetch(`${state.apiBase}/auth/logout`, {
+    const client = await sdkClient();
+    await client.request("/auth/logout", {
       method: "POST",
-      credentials: "include",
       headers: authHeaders(),
     });
   } catch (error) {
