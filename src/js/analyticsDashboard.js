@@ -46,6 +46,16 @@ export async function initializeAnalyticsDashboard() {
   const period = document.getElementById('analytics-period');
   if (!leerbox || !cohort || !period) return;
 
+  // Bind interactiviteit direct, onafhankelijk van de netwerk-round-trip, zodat
+  // een klik nooit verloren gaat terwijl de toegangsrechten laden.
+  [leerbox, cohort, period].forEach((control) => control.addEventListener('change', renderDashboard));
+  document.querySelectorAll('[data-analytics-view]').forEach((button) => button.addEventListener('click', () => selectView(button.dataset.analyticsView)));
+  document.querySelectorAll('[data-impact-metric]').forEach((button) => button.addEventListener('click', () => {
+    activeImpactMetric = button.dataset.impactMetric || 'friction';
+    document.querySelectorAll('[data-impact-metric]').forEach((item) => { const active=item===button; item.classList.toggle('active',active); item.setAttribute('aria-pressed',String(active)); });
+    renderResistanceChart(currentSelection());
+  }));
+
   try {
     const policy = await loadBlockAccess(activeBlockRole(), 'data');
     const blocks = policy.pages?.data?.blocks;
@@ -57,14 +67,6 @@ export async function initializeAnalyticsDashboard() {
     showAccessError(error);
     return;
   }
-
-  [leerbox, cohort, period].forEach((control) => control.addEventListener('change', renderDashboard));
-  document.querySelectorAll('[data-analytics-view]').forEach((button) => button.addEventListener('click', () => selectView(button.dataset.analyticsView)));
-  document.querySelectorAll('[data-impact-metric]').forEach((button) => button.addEventListener('click', () => {
-    activeImpactMetric = button.dataset.impactMetric || 'friction';
-    document.querySelectorAll('[data-impact-metric]').forEach((item) => { const active=item===button; item.classList.toggle('active',active); item.setAttribute('aria-pressed',String(active)); });
-    renderResistanceChart(currentSelection());
-  }));
   renderDashboard();
 }
 

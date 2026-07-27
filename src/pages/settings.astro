@@ -58,16 +58,18 @@ import Layout from '../layouts/Layout.astro';
 
     async function initializeSettings() {
       initSettings();
+      // Bind interactiviteit direct, onafhankelijk van de netwerk-round-trip,
+      // zodat een klik nooit verloren gaat terwijl de toegangsrechten laden.
+      initializeConnectionForm();
+      initializeRolePicker();
+      bindSettingsEvents();
+      selectSettingsBlock(activeSettingsBlock);
       try {
         const policy = await loadBlockAccess(actorRole, 'settings');
         const allowed = new Set(Object.keys(policy.pages?.settings?.blocks || {}));
         document.querySelectorAll('[data-settings-block]').forEach((button) => button.hidden = !allowed.has(button.dataset.settingsBlock));
-        if (!allowed.has(activeSettingsBlock)) activeSettingsBlock = 'connection';
-      } catch { activeSettingsBlock = 'connection'; }
-      initializeConnectionForm();
-      initializeRolePicker();
-      selectSettingsBlock(activeSettingsBlock);
-      bindSettingsEvents();
+        if (!allowed.has(activeSettingsBlock)) selectSettingsBlock('connection');
+      } catch { /* geen toegangsdata: UI is al interactief, huidige block blijft */ }
     }
 
     function initializeConnectionForm() {

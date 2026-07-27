@@ -223,11 +223,35 @@ export async function checkHealth() {
 }
 
 export async function establishSession() {
-  if (localStorage.getItem("leerpret.loggedOut") === "true" || !state.apiKey) {
+  if (localStorage.getItem("leerpret.loggedOut") === "true") {
     state.authorized = false;
     return { authorized: false, error: "Niet ingelogd." };
   }
   try {
+    const client = await sdkClient();
+    try {
+      const getSession = await client.request("/auth/session", { method: "GET" });
+      if (getSession && getSession.authenticated) {
+        state.authorized = true;
+        if (getSession.user) {
+          localStorage.setItem("leerpret.user", JSON.stringify(getSession.user));
+        }
+        if (Array.isArray(getSession.roles) && getSession.roles.length > 0) {
+          const mainRole = getSession.roles.includes("architect") ? "architect" : getSession.roles[0];
+          localStorage.setItem("active_role", mainRole);
+          localStorage.setItem("leerpret.poc.role", mainRole);
+        }
+        return { authorized: true, label: getSession.user?.label || "Google-gebruiker", roles: getSession.roles };
+      }
+    } catch {
+      // Fall back to org API key if GET session returns 401
+    }
+
+    if (!state.apiKey) {
+      state.authorized = false;
+      return { authorized: false, error: "Niet ingelogd." };
+    }
+
     const response = await apiPost("/auth/session", {
       organization: state.organization,
       api_key: state.apiKey,
