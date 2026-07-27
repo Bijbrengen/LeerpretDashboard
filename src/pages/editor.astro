@@ -355,8 +355,8 @@ import Layout from '../layouts/Layout.astro';
         preview_url: previewUrl.toString(),
         capture: data.capture
       }));
-      const query = new URLSearchParams({ role: activeRole(), id: leerboxId, generated: data.preview_id || previewUrl.pathname.split('/')[3] || '1' });
-      window.location.href = `/preview?${query.toString()}`;
+      const base = window.location.pathname.startsWith('/LeerpretDashboard') ? '/LeerpretDashboard' : '';
+      window.location.href = `${base}/preview?${query.toString()}`;
     }
 
     window.addEventListener('message', (event) => {

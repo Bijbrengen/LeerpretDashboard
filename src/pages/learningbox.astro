@@ -347,9 +347,8 @@ import Layout from '../layouts/Layout.astro';
       localStorage.setItem('active_role', activeRole);
       localStorage.setItem('leerpret.poc.role', activeRole);
       if (activeRole === 'learner') {
-        const previewQuery = new URLSearchParams({ role: 'learner' });
-        if (currentTwinId) previewQuery.set('id', currentTwinId);
-        window.location.replace(`/preview?${previewQuery.toString()}`);
+        const base = window.location.pathname.startsWith('/LeerpretDashboard') ? '/LeerpretDashboard' : '';
+        window.location.replace(`${base}/preview?${previewQuery.toString()}`);
         return;
       }
       const editAction = document.getElementById('edit-leerbox-action');

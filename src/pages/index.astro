@@ -450,16 +450,24 @@ import Layout from '../layouts/Layout.astro';
       }
     }
 
+    const getSubpath = (path) => {
+      const base = window.location.pathname.startsWith('/LeerpretDashboard') ? '/LeerpretDashboard' : '';
+      if (!path) return base || '/';
+      if (path.startsWith('http://') || path.startsWith('https://')) return path;
+      if (base && path.startsWith(base)) return path;
+      return `${base}${path.startsWith('/') ? '' : '/'}${path}`;
+    };
+
     // Navigation trigger on SVG Map nodes with data-href
     document.querySelectorAll('[data-href]').forEach(node => {
       node.addEventListener('click', () => {
         const href = node.getAttribute('data-href');
-        if (href) window.location.href = href;
+        if (href) window.location.href = getSubpath(href);
       });
       node.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           const href = node.getAttribute('data-href');
-          if (href) window.location.href = href;
+          if (href) window.location.href = getSubpath(href);
         }
       });
     });
