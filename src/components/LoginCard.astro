@@ -233,8 +233,14 @@
   const loginStatus = document.getElementById('login-status');
   const profileChoice = document.getElementById('share-google-profile');
 
+  function getDashboardBase() {
+    if (typeof window === 'undefined') return '/';
+    return window.location.pathname.startsWith('/LeerpretDashboard') ? '/LeerpretDashboard/' : '/';
+  }
+
   function safeReturnTarget(rawTarget) {
-    if (!rawTarget) return '/';
+    const base = getDashboardBase();
+    if (!rawTarget) return base;
     try {
       const target = new URL(rawTarget, window.location.origin);
       const current = new URL(window.location.href);
@@ -243,9 +249,9 @@
       const isLocalLoopback = ['127.0.0.1', 'localhost'].includes(target.hostname)
         && ['127.0.0.1', 'localhost'].includes(current.hostname)
         && target.protocol === current.protocol;
-      return isSameOrigin || isSameHost || isLocalLoopback ? target.href : '/';
+      return isSameOrigin || isSameHost || isLocalLoopback ? target.href : base;
     } catch {
-      return '/';
+      return base;
     }
   }
 

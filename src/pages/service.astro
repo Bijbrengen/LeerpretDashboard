@@ -1914,8 +1914,9 @@ import SourceCodeBrowser from '../components/SourceCodeBrowser.astro';
        te tonen die alleen maar kan teleurstellen. */
     function stuurGastNaarInloggen() {
       if (currentServiceRole() !== 'guest') return false;
-      const doel = new URL('/login/', window.location.origin);
-      doel.searchParams.set('next', '/service/');
+      const base = window.location.pathname.startsWith('/LeerpretDashboard') ? '/LeerpretDashboard' : '';
+      const doel = new URL(`${base}/login/`, window.location.origin);
+      doel.searchParams.set('next', `${base}/service/`);
       window.location.replace(`${doel.pathname}${doel.search}`);
       return true;
     }
