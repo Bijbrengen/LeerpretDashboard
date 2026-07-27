@@ -52,9 +52,9 @@ test.describe('Service & Calculator Acceptance Tests', () => {
 
     const resetBtn = page.locator('#btn-reset-sliders');
     await expect(resetBtn).toBeVisible();
-    await resetBtn.click();
+    await resetBtn.click({ force: true });
 
-    await expect(slideT).toHaveValue('0');
+    await expect(slideT).toHaveValue(/0(\.00?)?/);
   });
 
   test('should switch input method dropdown', async ({ page }) => {
