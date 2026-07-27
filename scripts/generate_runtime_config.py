@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import os
 from pathlib import Path
 
@@ -22,25 +21,34 @@ def dotenv(path: Path) -> dict[str, str]:
 
 
 def setting(name: str, defaults: dict[str, str], local: dict[str, str]) -> str:
-    value = os.getenv(name) or local.get(name) or defaults.get(name)
-    if not value:
-        raise SystemExit(f"Ontbrekende configuratie: {name}")
-    return value
+    return os.getenv(name) or local.get(name) or defaults.get(name) or ""
 
 
 defaults = dotenv(ROOT / ".env.example")
 local = dotenv(ROOT / ".env")
-config = {
-    "apiBase": setting("LEERPRET_API_URL", defaults, local),
-    "dashboardUrl": setting("LEERPRET_DASHBOARD_URL", defaults, local),
-    "editorUrl": setting("LEERBOX_EDITOR_URL", defaults, local),
-    "learngameOmUrl": setting("LEARNGAME_OM_URL", defaults, local),
-}
-payload = (
-    "window.LEERPRET_CONFIG = Object.freeze("
-    + json.dumps(config, ensure_ascii=False, indent=2)
-    + ");\n"
-)
+
+api_url = setting("LEERPRET_API_URL", defaults, local) or "http://127.0.0.1:47111/api"
+dashboard_url = setting("LEERPRET_DASHBOARD_URL", defaults, local) or "http://127.0.0.1:47112/"
+editor_url = setting("LEERBOX_EDITOR_URL", defaults, local) or "http://127.0.0.1:47114/"
+learngame_om_url = setting("LEARNGAME_OM_URL", defaults, local) or "http://127.0.0.1:47113/"
+tunnel_url = os.getenv("LEERPRET_TUNNEL_URL") or "https://intent-carries-travelers-media.trycloudflare.com/api"
+
+payload = f"""(function() {{
+  var isLocal = typeof window !== "undefined" && (
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname === "localhost"
+  );
+  var tunnelUrl = "{tunnel_url}";
+
+  window.LEERPRET_CONFIG = Object.freeze({{
+    "apiBase": isLocal ? "{api_url}" : tunnelUrl,
+    "dashboardUrl": isLocal ? "{dashboard_url}" : "https://bijbrengen.github.io/LeerpretDashboard/",
+    "editorUrl": isLocal ? "{editor_url}" : "https://bijbrengen.github.io/LeerboxEditor/",
+    "learngameOmUrl": isLocal ? "{learngame_om_url}" : "https://bijbrengen.github.io/Learngame-Operations-Management/"
+  }});
+}})();
+"""
+
 targets = [
     ROOT / "public" / "runtime-config.js",
     ROOT / "dist" / "runtime-config.js",
