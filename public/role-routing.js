@@ -12,6 +12,15 @@
   };
   const PUBLIC_ROUTES = new Set(["/login", "/privacy", "/404", "/404.html"]);
 
+  function getBasePath() {
+    if (typeof window === "undefined") return "";
+    const pathname = window.location.pathname || "";
+    if (pathname.startsWith("/LeerpretDashboard")) {
+      return "/LeerpretDashboard";
+    }
+    return "";
+  }
+
   function normalizeRole(value) {
     const role = ROLE_ALIASES[String(value || "").toLowerCase()] || String(value || "").toLowerCase();
     return Object.hasOwn(ROUTES_BY_ROLE, role) ? role : PUBLIC_ROLE;
@@ -19,6 +28,10 @@
 
   function normalizePath(value) {
     let path = String(value || "/").split("?", 1)[0].replace(/\/+$/, "") || "/";
+    const base = getBasePath();
+    if (base && path.startsWith(base)) {
+      path = path.slice(base.length) || "/";
+    }
     if (path.endsWith("/index.html")) path = path.slice(0, -"/index.html".length) || "/";
     if (path === "/index.html") path = "/";
     return path;
@@ -42,14 +55,17 @@
   }
 
   function homeForRole(role) {
-    return `/?role=${encodeURIComponent(normalizeRole(role))}`;
+    const base = getBasePath();
+    return `${base}/?role=${encodeURIComponent(normalizeRole(role))}`;
   }
 
   function routeForRole(path, role) {
     const normalizedRole = normalizeRole(role);
     const normalizedPath = normalizePath(path);
+    const base = getBasePath();
+    const relativeTarget = normalizedPath === "/" ? "/" : normalizedPath;
     if (!routeAllowed(normalizedPath, normalizedRole)) return homeForRole(normalizedRole);
-    return `${normalizedPath}?role=${encodeURIComponent(normalizedRole)}`;
+    return `${base}${relativeTarget}?role=${encodeURIComponent(normalizedRole)}`;
   }
 
   function enforce() {
