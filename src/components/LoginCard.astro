@@ -265,12 +265,21 @@
     }
     const shareProfile = sessionStorage.getItem('leerpret.oauth.shareProfile') === 'true';
     const redirectUri = `${window.location.origin}${window.location.pathname}`;
-    await apiPost('/auth/google-code', {
+    const result = await apiPost('/auth/google-code', {
       code,
       redirect_uri: redirectUri,
       share_profile: shareProfile
     }, { 'X-Requested-With': 'XmlHttpRequest' });
     if (shareProfile) await apiPost('/auth/access-request', {});
+    
+    localStorage.removeItem('leerpret.loggedOut');
+    localStorage.setItem('api_key', 'google-session');
+    localStorage.setItem('leerpret.apiKey', 'google-session');
+    if (result && Array.isArray(result.roles) && result.roles.includes('architect')) {
+      localStorage.setItem('active_role', 'architect');
+      localStorage.setItem('leerpret.poc.role', 'architect');
+    }
+
     const returnTarget = safeReturnTarget(sessionStorage.getItem('leerpret.oauth.return'));
     sessionStorage.removeItem('leerpret.oauth.state');
     sessionStorage.removeItem('leerpret.oauth.shareProfile');

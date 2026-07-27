@@ -38,7 +38,7 @@
   }
 
   function isLoggedOut() {
-    const storedKey = localStorage.getItem("api_key") || localStorage.getItem("leerpret.apiKey") || "";
+    const storedKey = localStorage.getItem("api_key") || localStorage.getItem("leerpret.apiKey") || localStorage.getItem("leerpret.sessionToken") || "";
     return localStorage.getItem("leerpret.loggedOut") === "true" || !storedKey;
   }
 
