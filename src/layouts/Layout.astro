@@ -6,17 +6,19 @@ interface Props {
 
 const { title, description = "Proof of Concept Leerpretengine - Mobile-First Dashboard" } = Astro.props;
 const currentPath = Astro.url.pathname;
-const usesParkMetrics = currentPath.startsWith('/park');
-const usesHomeMetrics = currentPath === '/' || currentPath === '/index.html';
-const usesArticleMetrics = currentPath.startsWith('/article');
-const usesHelpMetrics = currentPath.startsWith('/help');
-const usesDataMetrics = currentPath.startsWith('/data');
-const usesServiceMetrics = currentPath.startsWith('/service');
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const usesParkMetrics = currentPath.startsWith('/park') || currentPath.startsWith(`${base}/park`);
+const usesHomeMetrics = currentPath === '/' || currentPath === '/index.html' || currentPath === `${base}` || currentPath === `${base}/`;
+const usesArticleMetrics = currentPath.startsWith('/article') || currentPath.startsWith(`${base}/article`);
+const usesHelpMetrics = currentPath.startsWith('/help') || currentPath.startsWith(`${base}/help`);
+const usesDataMetrics = currentPath.startsWith('/data') || currentPath.startsWith(`${base}/data`);
+const usesServiceMetrics = currentPath.startsWith('/service') || currentPath.startsWith(`${base}/service`);
 
 // Active state helper for server-side templates
 const isActive = (path) => {
-  if (path === '/') return currentPath === '/' || currentPath === '/index.html';
-  return currentPath.startsWith(path);
+  const target = `${base}${path}`;
+  if (path === '/') return currentPath === '/' || currentPath === '/index.html' || currentPath === `${base}` || currentPath === `${base}/`;
+  return currentPath.startsWith(target);
 };
 ---
 
@@ -124,14 +126,14 @@ const isActive = (path) => {
           </svg>
         </button>
         <nav class="dock-menu role-menu" id="role-menu" aria-label="Rolperspectief" data-i18n-aria-label="dock.role">
-          <a href="/article?role=architect" class="role-link">
+          <a href={`${base}/article?role=architect`} class="role-link">
             <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M5 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5z"/>
               <path d="m6 6 12 12M13 6l5 5M8 11l5 5"/>
             </svg>
             <strong>Leerpretarchitect</strong>
           </a>
-          <a href="/article?role=technologist" class="role-link">
+          <a href={`${base}/article?role=technologist`} class="role-link">
             <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
               <line x1="8" y1="21" x2="16" y2="21"/>
@@ -139,21 +141,21 @@ const isActive = (path) => {
             </svg>
             <strong>Leerprettechnoloog</strong>
           </a>
-          <a href="/article?role=user" class="role-link">
+          <a href={`${base}/article?role=user`} class="role-link">
             <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M6 18h12M3 22h18M18 10a6 6 0 0 0-12 0c0 4 6 8 6 8s6-4 6-8z"/>
               <circle cx="12" cy="10" r="2"/>
             </svg>
             <strong data-i18n="role.attraction">Leerattractie</strong>
           </a>
-          <a href="/article?role=learner" class="role-link">
+          <a href={`${base}/article?role=learner`} class="role-link">
             <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
             <strong data-i18n="role.learner">Lerende</strong>
           </a>
-          <a href="/article?role=guest" class="role-link">
+          <a href={`${base}/article?role=guest`} class="role-link">
             <svg class="role-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="8" r="4"/>
               <path d="M4 21a8 8 0 0 1 16 0"/>
@@ -173,16 +175,16 @@ const isActive = (path) => {
           </svg>
         </button>
         <nav class="dock-menu view-menu nav" aria-label="Werkbanken" data-i18n-aria-label="dock.workbenches">
-          <a href="/" data-route="/" class={`nav-button ${isActive('/') ? 'active' : ''}`} data-i18n="nav.home">Home</a>
-          <a href="/park" data-route="/park" class={`nav-button ${isActive('/park') ? 'active' : ''}`} data-i18n="nav.park">Leerpretpark</a>
-          <a href="/article" data-route="/article" class={`nav-button ${isActive('/article') ? 'active' : ''}`} id="nav-link-article" data-i18n="nav.article">Artikel</a>
-          <a href="/learningbox" data-route="/learningbox" class={`nav-button ${isActive('/learningbox') ? 'active' : ''}`} data-i18n="nav.learningbox">Leerbox</a>
-          <a href="/editor" data-route="/editor" class={`nav-button ${isActive('/editor') ? 'active' : ''}`} id="nav-link-editor" data-i18n="nav.editor">Editor</a>
-          <a href="/preview" data-route="/preview" class={`nav-button ${isActive('/preview') ? 'active' : ''}`} id="nav-link-preview" data-i18n="nav.preview">Preview</a>
-          <a href="/engine" data-route="/engine" class={`nav-button ${isActive('/engine') ? 'active' : ''}`} id="nav-link-engine" data-i18n="nav.engine">Engine</a>
-          <a href="/data" data-route="/data" class={`nav-button ${isActive('/data') ? 'active' : ''}`} id="nav-link-data" data-i18n="nav.data">Data</a>
-          <a href="/service" data-route="/service" class={`nav-button ${isActive('/service') ? 'active' : ''}`} data-i18n="nav.service">Service</a>
-          <a href="/help" data-route="/help" class={`nav-button ${isActive('/help') ? 'active' : ''}`} id="nav-link-help" data-i18n="nav.help">Help</a>
+          <a href={`${base}/`} data-route="/" class={`nav-button ${isActive('/') ? 'active' : ''}`} data-i18n="nav.home">Home</a>
+          <a href={`${base}/park`} data-route="/park" class={`nav-button ${isActive('/park') ? 'active' : ''}`} data-i18n="nav.park">Leerpretpark</a>
+          <a href={`${base}/article`} data-route="/article" class={`nav-button ${isActive('/article') ? 'active' : ''}`} id="nav-link-article" data-i18n="nav.article">Artikel</a>
+          <a href={`${base}/learningbox`} data-route="/learningbox" class={`nav-button ${isActive('/learningbox') ? 'active' : ''}`} data-i18n="nav.learningbox">Leerbox</a>
+          <a href={`${base}/editor`} data-route="/editor" class={`nav-button ${isActive('/editor') ? 'active' : ''}`} id="nav-link-editor" data-i18n="nav.editor">Editor</a>
+          <a href={`${base}/preview`} data-route="/preview" class={`nav-button ${isActive('/preview') ? 'active' : ''}`} id="nav-link-preview" data-i18n="nav.preview">Preview</a>
+          <a href={`${base}/engine`} data-route="/engine" class={`nav-button ${isActive('/engine') ? 'active' : ''}`} id="nav-link-engine" data-i18n="nav.engine">Engine</a>
+          <a href={`${base}/data`} data-route="/data" class={`nav-button ${isActive('/data') ? 'active' : ''}`} id="nav-link-data" data-i18n="nav.data">Data</a>
+          <a href={`${base}/service`} data-route="/service" class={`nav-button ${isActive('/service') ? 'active' : ''}`} data-i18n="nav.service">Service</a>
+          <a href={`${base}/help`} data-route="/help" class={`nav-button ${isActive('/help') ? 'active' : ''}`} id="nav-link-help" data-i18n="nav.help">Help</a>
         </nav>
       </div>
 
@@ -595,7 +597,8 @@ const isActive = (path) => {
 
         document.getElementById('auth-login')?.addEventListener('click', () => {
           if (isLoggedOut()) {
-            window.location.href = `/login?role=${PUBLIC_ROLE}`;
+            const base = window.location.pathname.startsWith('/LeerpretDashboard') ? '/LeerpretDashboard' : '';
+            window.location.href = `${base}/login?role=${PUBLIC_ROLE}`;
             return;
           }
           save();
