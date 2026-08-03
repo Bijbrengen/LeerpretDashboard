@@ -31,6 +31,7 @@ api_url = setting("LEERPRET_API_URL", defaults, local) or "http://127.0.0.1:4711
 dashboard_url = setting("LEERPRET_DASHBOARD_URL", defaults, local) or "http://127.0.0.1:47112/"
 editor_url = setting("LEERBOX_EDITOR_URL", defaults, local) or "http://127.0.0.1:47114/"
 learngame_om_url = setting("LEARNGAME_OM_URL", defaults, local) or "http://127.0.0.1:47113/"
+phile_url = setting("PHILE_URL", defaults, local) or "http://127.0.0.1:47115/"
 tunnel_url = os.getenv("LEERPRET_TUNNEL_URL") or "https://intent-carries-travelers-media.trycloudflare.com/api"
 
 payload = f"""(function() {{
@@ -44,7 +45,8 @@ payload = f"""(function() {{
     "apiBase": isLocal ? "{api_url}" : tunnelUrl,
     "dashboardUrl": isLocal ? "{dashboard_url}" : "https://bijbrengen.github.io/LeerpretDashboard/",
     "editorUrl": isLocal ? "{editor_url}" : "https://bijbrengen.github.io/LeerboxEditor/",
-    "learngameOmUrl": isLocal ? "{learngame_om_url}" : "https://bijbrengen.github.io/Learngame-Operations-Management/"
+    "learngameOmUrl": isLocal ? "{learngame_om_url}" : "https://bijbrengen.github.io/Learngame-Operations-Management/",
+    "phileUrl": isLocal ? "{phile_url}" : "https://bijbrengen.github.io/Phile/"
   }});
 }})();
 """

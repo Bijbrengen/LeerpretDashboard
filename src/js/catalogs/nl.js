@@ -64,6 +64,7 @@ export const messages = {
   "nav.editor": "Editor",
   "nav.preview": "Preview",
   "nav.engine": "Engine",
+  "nav.snnInnovationTest": "SNN Innovatietest",
   "nav.data": "Data",
   "nav.service": "Service",
   "nav.help": "Help",

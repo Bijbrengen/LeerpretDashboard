@@ -4,8 +4,8 @@
   const PUBLIC_ROLE = "guest";
   const ROLE_ALIASES = { lerende: "learner", gebruiker: "user", gast: "guest" };
   const ROUTES_BY_ROLE = {
-    architect: ["/", "/park", "/article", "/learningbox", "/editor", "/preview", "/data", "/service", "/help", "/settings"],
-    technologist: ["/", "/park", "/article", "/learningbox", "/editor", "/preview", "/engine", "/data", "/service", "/help", "/settings"],
+    architect: ["/", "/park", "/article", "/learningbox", "/editor", "/preview", "/snn-innovation-test", "/data", "/service", "/help", "/settings"],
+    technologist: ["/", "/park", "/article", "/learningbox", "/editor", "/preview", "/engine", "/snn-innovation-test", "/data", "/service", "/help", "/settings"],
     user: ["/", "/park", "/article", "/learningbox", "/preview", "/service", "/help", "/settings"],
     learner: ["/", "/park", "/article", "/learningbox", "/preview", "/service", "/help", "/settings"],
     guest: ["/", "/park", "/article", "/learningbox", "/preview", "/service", "/help"],

@@ -1,0 +1,136 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="SNN Innovatietest" description="Dedicated simulatietest voor de live koppeling Phile → LeerpretEngine → Dashboard.">
+  <div class="snn-test-layout">
+    <aside class="snn-test-menu" aria-label="SNN-testsoorten">
+      <div class="snn-menu-heading">
+        <span class="eyebrow">SNN-subsidietraject</span>
+        <h2>Innovatietest</h2>
+        <p>Volg de technische bewijslijn van leerbox tot meting.</p>
+      </div>
+      <nav class="snn-test-types">
+        <button type="button" data-test-type="validation">
+          <span class="snn-test-index">01</span>
+          <span><strong>Validatietest</strong><small>Nog in ontwikkeling</small></span>
+        </button>
+        <button type="button" data-test-type="integration">
+          <span class="snn-test-index">02</span>
+          <span><strong>Integratietest</strong><small>Nog in ontwikkeling</small></span>
+        </button>
+        <button type="button" class="active" data-test-type="practice" aria-current="page">
+          <span class="snn-test-index">03</span>
+          <span><strong>Simulatietest</strong><small>Actieve omgeving</small></span>
+        </button>
+      </nav>
+      <div class="snn-chain-note">
+        <span class="live-dot" aria-hidden="true"></span>
+        <div><strong>Testketen</strong><p>Phile → Engine → Dashboard</p></div>
+      </div>
+    </aside>
+
+    <section class="snn-test-content">
+      <section class="snn-placeholder" data-test-panel="validation" hidden>
+        <nav class="snn-tabs" aria-label="Validatietest-tabbladen"><button class="active" type="button">Overzicht</button></nav>
+        <div class="development-message" role="status"><span>01</span><div><h2>Validatietest</h2><p>Nog in ontwikkeling</p></div></div>
+      </section>
+
+      <section class="snn-placeholder" data-test-panel="integration" hidden>
+        <nav class="snn-tabs" aria-label="Integratietest-tabbladen"><button class="active" type="button">Overzicht</button></nav>
+        <div class="development-message" role="status"><span>02</span><div><h2>Integratietest</h2><p>Nog in ontwikkeling</p></div></div>
+      </section>
+
+      <section data-test-panel="practice">
+        <nav class="snn-tabs" aria-label="Simulatietest-tabbladen">
+          <button class="active" type="button" aria-selected="true">Phile Live</button>
+        </nav>
+
+        <div class="phile-live-panel">
+          <header class="live-header">
+            <div>
+              <span class="eyebrow">Simulatietest · real-time monitor</span>
+              <h2>Phile Live</h2>
+              <p>Volg iedere actie door ontvangst, transformatie en Leerpret-meting.</p>
+            </div>
+            <div class="live-header-actions">
+              <span class="connection-pill waiting" id="phile-live-status" role="status" aria-live="polite"><i></i> Verbinden…</span>
+              <a class="open-phile-button" id="open-phile-test" href="#" target="_blank" rel="noopener">Open Phile ↗</a>
+            </div>
+          </header>
+
+          <section class="live-metrics" aria-label="Status testketen">
+            <article><span>Ontvangen acties</span><strong id="live-action-count">0</strong><small>deze Engine-runtime</small></article>
+            <article><span>Transmissie</span><strong id="live-transport-latency">—</strong><small>Phile → Engine</small></article>
+            <article><span>Verwerking</span><strong id="live-processing-latency">—</strong><small>in de Engine</small></article>
+            <article><span>Dashboardlevering</span><strong id="live-last-signal">—</strong><small>Engine → Dashboard</small></article>
+          </section>
+
+          <section class="processing-pipeline" aria-label="Verwerkingsstappen">
+            <article class="pipeline-step receiving" data-live-step="1">
+              <header><span class="step-number">1</span><div><small>Actie-ontvangst</small><h3>Live uit Phile</h3></div><i class="step-state"></i></header>
+              <dl>
+                <div><dt>Actie</dt><dd id="live-action-type">Wachten op actie…</dd></div>
+                <div><dt>Leerobject</dt><dd id="live-object-id">—</dd></div>
+                <div><dt>Objectrol</dt><dd id="live-object-role">—</dd></div>
+                <div><dt>Pseudonieme sessie</dt><dd id="live-session-id">—</dd></div>
+              </dl>
+            </article>
+
+            <div class="pipeline-arrow" aria-hidden="true">→</div>
+
+            <article class="pipeline-step transforming" data-live-step="2">
+              <header><span class="step-number">2</span><div><small>Verwerking &amp; transformatie</small><h3>Actiereeks naar markers</h3></div><i class="step-state"></i></header>
+              <div class="marker-grid" aria-label="Gedragsmarkers">
+                <div><span>T</span><strong data-marker="T">—</strong><small>Tijd</small></div>
+                <div><span>F</span><strong data-marker="A">—</strong><small>Frequentie (A)</small></div>
+                <div><span>V</span><strong data-marker="V">—</strong><small>Variatie</small></div>
+                <div><span>R</span><strong data-marker="R">—</strong><small>Resilience</small></div>
+                <div><span>S</span><strong data-marker="S">—</strong><small>Succes</small></div>
+              </div>
+              <p class="series-status" id="live-series-status">Nog geen actiereeks ontvangen.</p>
+            </article>
+
+            <div class="pipeline-arrow" aria-hidden="true">→</div>
+
+            <article class="pipeline-step measuring" data-live-step="3">
+              <header><span class="step-number">3</span><div><small>Leerpret-meting</small><h3>Score na voldoende bewijs</h3></div><i class="step-state"></i></header>
+              <div class="score-result">
+                <div class="score-orb" id="live-score-orb"><strong id="live-score">—</strong><small>Leerpret</small></div>
+                <div><span id="live-measurement-state">Markers verzamelen</span><strong id="live-archetype">Nog onbepaald</strong><p id="live-measurement-detail">De Engine wacht tot de actiereeks aan de geldigheidscriteria voldoet.</p></div>
+              </div>
+              <div class="evidence-progress"><span id="live-evidence-progress"></span></div>
+            </article>
+          </section>
+
+          <section class="live-feed-card">
+            <header><div><span class="eyebrow">Engine-auditbuffer</span><h3>Live datastroom</h3></div><span id="live-feed-count">0 gebeurtenissen</span></header>
+            <ol class="live-feed" id="phile-live-feed" aria-live="polite">
+              <li class="empty-feed">Start Phile en voer een actie uit; de gebeurtenis verschijnt hier direct.</li>
+            </ol>
+          </section>
+        </div>
+      </section>
+    </section>
+  </div>
+</Layout>
+
+<script>
+  import '../js/snnInnovationTest.js';
+</script>
+
+<style>
+  .snn-test-layout{align-items:start;display:grid;gap:18px;grid-template-columns:minmax(220px,270px) minmax(0,1fr)}
+  .snn-test-menu,.snn-test-content{min-width:0}.snn-test-menu{background:linear-gradient(165deg,#07191f,#0c2930);border:1px solid #28505a;border-radius:16px;color:#e6fbfb;display:grid;gap:18px;padding:18px;position:sticky;top:16px}
+  .snn-menu-heading{display:grid;gap:5px}.snn-menu-heading h2{font-size:1.3rem;margin:0}.snn-menu-heading p{color:#9dc1c7;font-size:.69rem;line-height:1.55;margin:0}.snn-menu-heading .eyebrow{color:#55d6cb}
+  .snn-test-types{display:grid;gap:8px}.snn-test-types button{align-items:center;background:#102c34;border:1px solid #2b4e57;border-radius:12px;color:#d8eff1;cursor:pointer;display:grid;font:inherit;gap:10px;grid-template-columns:34px 1fr;min-height:62px;padding:9px;text-align:left}.snn-test-types button:hover{background:#153740;border-color:#4b7780}.snn-test-types button.active{background:linear-gradient(135deg,#0c494c,#123d46);border-color:#48c7bb;box-shadow:inset 4px 0 #4ee2d3}.snn-test-types button>span:last-child{display:grid;gap:2px}.snn-test-types strong{font-size:.76rem}.snn-test-types small{color:#91afb5;font-size:.61rem}.snn-test-types button.active small{color:#a8e9e3}.snn-test-index{align-items:center;background:#071b21;border:1px solid #315660;border-radius:8px;color:#63d8cd;display:flex;font-family:'Share Tech Mono',monospace;font-size:.7rem;height:32px;justify-content:center;width:32px}.snn-chain-note{align-items:center;border-top:1px solid #2b4e57;display:flex;gap:10px;padding-top:14px}.snn-chain-note .live-dot{background:#34d399;border-radius:50%;box-shadow:0 0 0 5px rgba(52,211,153,.12);height:8px;width:8px}.snn-chain-note strong{font-size:.68rem}.snn-chain-note p{color:#99bec4;font-family:'Share Tech Mono',monospace;font-size:.62rem;margin:2px 0 0}
+  .snn-test-content{display:grid}.snn-tabs{align-items:end;border-bottom:1px solid var(--line);display:flex;gap:4px;min-height:47px;padding:0 10px}.snn-tabs button{background:transparent;border:0;border-bottom:3px solid transparent;color:var(--muted);font:inherit;font-size:.72rem;font-weight:800;padding:13px 17px 11px}.snn-tabs button.active{border-color:var(--teal);color:var(--ink)}
+  .development-message{align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;display:flex;gap:18px;margin-top:18px;min-height:260px;padding:30px}.development-message>span{align-items:center;background:#e6fffb;border:1px solid #99f6e4;border-radius:50%;color:#0f766e;display:flex;font-family:'Share Tech Mono',monospace;font-size:1.2rem;height:68px;justify-content:center;width:68px}.development-message h2{margin:0}.development-message p{color:var(--muted);margin:5px 0 0}
+  .phile-live-panel{display:grid;gap:14px;padding-top:18px}.live-header{align-items:center;background:linear-gradient(135deg,#082127,#0e333a);border:1px solid #2a5660;border-radius:16px;color:#eaffff;display:flex;gap:20px;justify-content:space-between;padding:18px}.live-header h2{font-size:1.35rem;margin:3px 0}.live-header p{color:#a4c5ca;font-size:.71rem;margin:0}.live-header .eyebrow{color:#58dace}.live-header-actions{align-items:center;display:flex;gap:9px}.connection-pill,.open-phile-button{align-items:center;border-radius:999px;display:flex;font-size:.66rem;font-weight:800;gap:7px;padding:8px 11px;white-space:nowrap}.connection-pill{background:#1b3940;border:1px solid #41636a;color:#bdd4d8}.connection-pill i{background:#f59e0b;border-radius:50%;height:7px;width:7px}.connection-pill.live{background:#0d453f;border-color:#2aa99e;color:#c9fff9}.connection-pill.live i{animation:pulse 1.6s infinite;background:#34d399}.connection-pill.error{background:#4a2026;border-color:#9f4451;color:#ffd5da}.connection-pill.error i{background:#fb7185}.open-phile-button{background:#e8fffc;border:1px solid #83e8df;color:#075e59;text-decoration:none}.open-phile-button:hover{background:white}
+  .live-metrics{display:grid;gap:10px;grid-template-columns:repeat(4,minmax(0,1fr))}.live-metrics article{background:var(--panel);border:1px solid var(--line);border-radius:12px;display:grid;gap:2px;padding:12px}.live-metrics span{color:var(--muted);font-size:.59rem;font-weight:800;text-transform:uppercase}.live-metrics strong{font-family:'Share Tech Mono',monospace;font-size:1.05rem}.live-metrics small{color:var(--muted);font-size:.58rem}
+  .processing-pipeline{align-items:stretch;display:grid;gap:8px;grid-template-columns:minmax(0,1fr) 24px minmax(0,1.08fr) 24px minmax(0,1fr)}.pipeline-step{background:var(--panel);border:1px solid var(--line);border-radius:15px;display:grid;gap:14px;padding:14px;position:relative}.pipeline-step.active{border-color:color-mix(in srgb,var(--step-color) 55%,var(--line));box-shadow:0 8px 28px color-mix(in srgb,var(--step-color) 11%,transparent)}.pipeline-step.receiving{--step-color:#2563eb}.pipeline-step.transforming{--step-color:#7c3aed}.pipeline-step.measuring{--step-color:#0d9488}.pipeline-step>header{align-items:center;border-bottom:1px solid var(--line);display:grid;gap:9px;grid-template-columns:32px 1fr 8px;padding-bottom:11px}.step-number{align-items:center;background:color-mix(in srgb,var(--step-color) 11%,white);border-radius:9px;color:var(--step-color);display:flex;font-family:'Share Tech Mono',monospace;font-weight:800;height:32px;justify-content:center}.pipeline-step header small{color:var(--muted);font-size:.55rem;font-weight:850;letter-spacing:.04em;text-transform:uppercase}.pipeline-step h3{font-size:.78rem;margin:2px 0 0}.step-state{background:#cbd5e1;border-radius:50%;height:7px;width:7px}.pipeline-step.active .step-state{background:var(--step-color);box-shadow:0 0 0 4px color-mix(in srgb,var(--step-color) 12%,transparent)}.pipeline-arrow{align-items:center;color:#94a3b8;display:flex;font-size:1.2rem;justify-content:center}.pipeline-step dl{display:grid;gap:8px;margin:0}.pipeline-step dl div{display:grid;gap:2px}.pipeline-step dt{color:var(--muted);font-size:.55rem;font-weight:800;text-transform:uppercase}.pipeline-step dd{font-family:'Share Tech Mono',monospace;font-size:.68rem;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.marker-grid{display:grid;gap:5px;grid-template-columns:repeat(5,1fr)}.marker-grid div{background:var(--surface-soft);border:1px solid var(--line);border-radius:9px;display:grid;gap:2px;justify-items:center;padding:7px 3px}.marker-grid span{color:#6d28d9;font-family:'Share Tech Mono',monospace;font-size:.7rem;font-weight:900}.marker-grid strong{font-family:'Share Tech Mono',monospace;font-size:.73rem}.marker-grid small{color:var(--muted);font-size:.46rem;text-align:center}.series-status{background:#f8fafc;border-radius:8px;color:var(--muted);font-size:.59rem;line-height:1.45;margin:0;padding:8px}.score-result{align-items:center;display:grid;gap:12px;grid-template-columns:76px 1fr}.score-orb{align-items:center;background:conic-gradient(var(--teal) var(--score-angle,0deg),#e2e8f0 0);border-radius:50%;display:flex;height:74px;justify-content:center;position:relative;width:74px}.score-orb::before{background:var(--panel);border-radius:50%;content:'';inset:7px;position:absolute}.score-orb strong,.score-orb small{position:absolute;z-index:1}.score-orb strong{font-family:'Share Tech Mono',monospace;font-size:1rem;top:20px}.score-orb small{bottom:16px;color:var(--muted);font-size:.48rem}.score-result>div:last-child{display:grid;gap:3px}.score-result span{color:var(--muted);font-size:.57rem;font-weight:800;text-transform:uppercase}.score-result>div:last-child>strong{font-size:.74rem}.score-result p{color:var(--muted);font-size:.55rem;line-height:1.4;margin:0}.evidence-progress{background:#e2e8f0;border-radius:999px;height:6px;overflow:hidden}.evidence-progress span{background:linear-gradient(90deg,#0d9488,#34d399);display:block;height:100%;transition:width .3s;width:0}
+  .live-feed-card{background:var(--panel);border:1px solid var(--line);border-radius:15px;overflow:hidden}.live-feed-card>header{align-items:center;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;padding:13px 15px}.live-feed-card h3{font-size:.86rem;margin:2px 0 0}.live-feed-card>header>span{color:var(--muted);font-size:.6rem}.live-feed{display:grid;list-style:none;margin:0;max-height:260px;overflow:auto;padding:0}.live-feed li{align-items:center;border-bottom:1px solid var(--line);display:grid;font-family:'Share Tech Mono',monospace;font-size:.62rem;gap:10px;grid-template-columns:74px 104px minmax(120px,1fr) 75px 75px;padding:9px 15px}.live-feed li:last-child{border-bottom:0}.live-feed time{color:var(--muted)}.feed-action{color:#2563eb;font-weight:800}.feed-object{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.feed-stage{color:#64748b}.feed-score{color:#0f766e;font-weight:800;text-align:right}.live-feed .empty-feed{color:var(--muted);display:block;font-family:inherit;padding:22px;text-align:center}
+  @keyframes pulse{50%{box-shadow:0 0 0 5px rgba(52,211,153,.16)}}
+  @media(max-width:1100px){.processing-pipeline{grid-template-columns:1fr}.pipeline-arrow{height:18px;transform:rotate(90deg)}.live-metrics{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:760px){.snn-test-layout{grid-template-columns:1fr}.snn-test-menu{position:static}.snn-test-types{grid-template-columns:1fr}.live-header{align-items:flex-start;flex-direction:column}.live-header-actions{align-items:stretch;flex-wrap:wrap}.live-metrics{grid-template-columns:1fr 1fr}.live-feed li{grid-template-columns:65px 92px minmax(100px,1fr)}.feed-stage,.feed-score{display:none}}
+</style>

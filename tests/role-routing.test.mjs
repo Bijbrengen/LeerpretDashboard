@@ -46,6 +46,18 @@ assert.deepEqual(
   ['/?role=architect'],
   'An architect on Engine returns to architect Home.',
 );
+for (const role of ['architect', 'technologist']) {
+  assert.deepEqual(
+    runRoute({ pathname: '/snn-innovation-test', search: `?role=${role}`, storedRole: role }).redirects,
+    [],
+    `${role} may open the SNN innovation test environment.`,
+  );
+}
+assert.deepEqual(
+  runRoute({ pathname: '/snn-innovation-test', search: '?role=learner', storedRole: 'learner' }).redirects,
+  ['/?role=learner'],
+  'A learner cannot open the SNN innovation test monitor.',
+);
 for (const role of ['architect', 'technologist', 'user', 'learner', 'guest']) {
   assert.deepEqual(
     runRoute({ pathname: '/analytics', search: `?role=${role}`, storedRole: role, loggedIn: role !== 'guest' }).redirects,
