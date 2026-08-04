@@ -42,44 +42,44 @@ import Layout from '../layouts/Layout.astro';
       </section>
 
       <section data-test-panel="practice">
-        <nav class="snn-tabs" aria-label="Simulatietest-tabbladen">
-          <button class="active" type="button" aria-selected="true">Phile Live</button>
+        <nav class="snn-tabs game-tabs" id="open-game-tabs" aria-label="Historische Open Game-tabbladen">
+          <span class="tabs-loading">Open Game-data laden...</span>
         </nav>
 
-        <div class="phile-live-panel">
+        <div class="phile-live-panel historical-panel">
           <header class="live-header">
             <div>
-              <span class="eyebrow">Simulatietest · real-time monitor</span>
-              <h2>Phile Live</h2>
-              <p>Volg iedere actie door ontvangst, transformatie en Leerpret-meting.</p>
+              <span class="eyebrow">Simulatietest · eerder gespeelde data</span>
+              <h2 id="simulation-game-title">Open Game-resultaten</h2>
+              <p id="simulation-game-description">Kies een game om de historische actiereeks en Engine-uitkomst te bekijken.</p>
             </div>
             <div class="live-header-actions">
-              <span class="connection-pill waiting" id="phile-live-status" role="status" aria-live="polite"><i></i> Verbinden…</span>
-              <a class="open-phile-button" id="open-phile-test" href="#" target="_blank" rel="noopener">Open Phile ↗</a>
+              <span class="connection-pill historical" id="simulation-status" role="status" aria-live="polite"><i aria-hidden="true"></i> Historisch archief</span>
+              <a class="open-phile-button" id="open-phile-test" href="#" target="_blank" rel="noopener" hidden>Open Phile ↗</a>
             </div>
           </header>
 
-          <section class="live-metrics" aria-label="Status testketen">
-            <article><span>Ontvangen acties</span><strong id="live-action-count">0</strong><small>deze Engine-runtime</small></article>
-            <article><span>Transmissie</span><strong id="live-transport-latency">—</strong><small>Phile → Engine</small></article>
-            <article><span>Verwerking</span><strong id="live-processing-latency">—</strong><small>in de Engine</small></article>
-            <article><span>Dashboardlevering</span><strong id="live-last-signal">—</strong><small>Engine → Dashboard</small></article>
+          <section class="live-metrics" aria-label="Omvang historische brondata">
+            <article><span id="metric-label-1">Bronacties</span><strong id="simulation-source-actions">—</strong><small id="metric-detail-1">alle geregistreerde events</small></article>
+            <article><span id="metric-label-2">Actiereeksen</span><strong id="simulation-source-sequences">—</strong><small id="metric-detail-2">na splitsing op actiepauze</small></article>
+            <article><span id="metric-label-3">Deelnemers</span><strong id="simulation-source-people">—</strong><small id="metric-detail-3">pseudonieme broncodes</small></article>
+            <article><span id="metric-label-4">Engineverwerking</span><strong id="simulation-processing-time">—</strong><small id="metric-detail-4">representatieve reeks</small></article>
           </section>
 
           <section class="processing-pipeline" aria-label="Verwerkingsstappen">
-            <article class="pipeline-step receiving" data-live-step="1">
-              <header><span class="step-number">1</span><div><small>Actie-ontvangst</small><h3>Live uit Phile</h3></div><i class="step-state"></i></header>
+            <article class="pipeline-step receiving" data-simulation-step="1">
+              <header><span class="step-number">1</span><div><small>Actie-ontvangst</small><h3 id="simulation-step-one-title">Historische actiereeks geladen</h3></div><i class="step-state"></i></header>
               <dl>
-                <div><dt>Actie</dt><dd id="live-action-type">Wachten op actie…</dd></div>
-                <div><dt>Leerobject</dt><dd id="live-object-id">—</dd></div>
-                <div><dt>Objectrol</dt><dd id="live-object-role">—</dd></div>
-                <div><dt>Pseudonieme sessie</dt><dd id="live-session-id">—</dd></div>
+                <div><dt id="simulation-field-label-1">Game</dt><dd id="simulation-game">—</dd></div>
+                <div><dt id="simulation-field-label-2">Dataset</dt><dd id="simulation-dataset">—</dd></div>
+                <div><dt id="simulation-field-label-3">Periode</dt><dd id="simulation-period">—</dd></div>
+                <div><dt>Pseudonieme sessie</dt><dd id="simulation-session-id">—</dd></div>
               </dl>
             </article>
 
             <div class="pipeline-arrow" aria-hidden="true">→</div>
 
-            <article class="pipeline-step transforming" data-live-step="2">
+            <article class="pipeline-step transforming" data-simulation-step="2">
               <header><span class="step-number">2</span><div><small>Verwerking &amp; transformatie</small><h3>Actiereeks naar markers</h3></div><i class="step-state"></i></header>
               <div class="marker-grid" aria-label="Gedragsmarkers">
                 <div><span>T</span><strong data-marker="T">—</strong><small>Tijd</small></div>
@@ -88,25 +88,25 @@ import Layout from '../layouts/Layout.astro';
                 <div><span>R</span><strong data-marker="R">—</strong><small>Resilience</small></div>
                 <div><span>S</span><strong data-marker="S">—</strong><small>Succes</small></div>
               </div>
-              <p class="series-status" id="live-series-status">Nog geen actiereeks ontvangen.</p>
+              <p class="series-status" id="simulation-series-status">Historische actiereeks wordt geladen.</p>
             </article>
 
             <div class="pipeline-arrow" aria-hidden="true">→</div>
 
-            <article class="pipeline-step measuring" data-live-step="3">
+            <article class="pipeline-step measuring" data-simulation-step="3">
               <header><span class="step-number">3</span><div><small>Leerpret-meting</small><h3>Score na voldoende bewijs</h3></div><i class="step-state"></i></header>
               <div class="score-result">
-                <div class="score-orb" id="live-score-orb"><strong id="live-score">—</strong><small>Leerpret</small></div>
-                <div><span id="live-measurement-state">Markers verzamelen</span><strong id="live-archetype">Nog onbepaald</strong><p id="live-measurement-detail">De Engine wacht tot de actiereeks aan de geldigheidscriteria voldoet.</p></div>
+                <div class="score-orb" id="simulation-score-orb"><strong id="simulation-score">—</strong><small>Leerpret</small></div>
+                <div><span id="simulation-measurement-state">Wachten op markers</span><strong id="simulation-archetype">Nog onbepaald</strong><p id="simulation-measurement-detail">De Engine berekent pas na voldoende gedragsbewijs een meting.</p></div>
               </div>
-              <div class="evidence-progress"><span id="live-evidence-progress"></span></div>
+              <div class="evidence-progress"><span id="simulation-evidence-progress"></span></div>
             </article>
           </section>
 
           <section class="live-feed-card">
-            <header><div><span class="eyebrow">Engine-auditbuffer</span><h3>Live datastroom</h3></div><span id="live-feed-count">0 gebeurtenissen</span></header>
-            <ol class="live-feed" id="phile-live-feed" aria-live="polite">
-              <li class="empty-feed">Start Phile en voer een actie uit; de gebeurtenis verschijnt hier direct.</li>
+            <header><div><span class="eyebrow" id="simulation-feed-eyebrow">OpenGameData · Field Day Lab</span><h3 id="simulation-feed-title">Historische actiereeks</h3></div><span id="simulation-feed-count">0 acties</span></header>
+            <ol class="live-feed" id="simulation-action-feed" aria-live="polite">
+              <li class="empty-feed">Een game-actiereeks wordt geladen.</li>
             </ol>
           </section>
         </div>
@@ -130,6 +130,7 @@ import Layout from '../layouts/Layout.astro';
   .live-metrics{display:grid;gap:10px;grid-template-columns:repeat(4,minmax(0,1fr))}.live-metrics article{background:var(--panel);border:1px solid var(--line);border-radius:12px;display:grid;gap:2px;padding:12px}.live-metrics span{color:var(--muted);font-size:.59rem;font-weight:800;text-transform:uppercase}.live-metrics strong{font-family:'Share Tech Mono',monospace;font-size:1.05rem}.live-metrics small{color:var(--muted);font-size:.58rem}
   .processing-pipeline{align-items:stretch;display:grid;gap:8px;grid-template-columns:minmax(0,1fr) 24px minmax(0,1.08fr) 24px minmax(0,1fr)}.pipeline-step{background:var(--panel);border:1px solid var(--line);border-radius:15px;display:grid;gap:14px;padding:14px;position:relative}.pipeline-step.active{border-color:color-mix(in srgb,var(--step-color) 55%,var(--line));box-shadow:0 8px 28px color-mix(in srgb,var(--step-color) 11%,transparent)}.pipeline-step.receiving{--step-color:#2563eb}.pipeline-step.transforming{--step-color:#7c3aed}.pipeline-step.measuring{--step-color:#0d9488}.pipeline-step>header{align-items:center;border-bottom:1px solid var(--line);display:grid;gap:9px;grid-template-columns:32px 1fr 8px;padding-bottom:11px}.step-number{align-items:center;background:color-mix(in srgb,var(--step-color) 11%,white);border-radius:9px;color:var(--step-color);display:flex;font-family:'Share Tech Mono',monospace;font-weight:800;height:32px;justify-content:center}.pipeline-step header small{color:var(--muted);font-size:.55rem;font-weight:850;letter-spacing:.04em;text-transform:uppercase}.pipeline-step h3{font-size:.78rem;margin:2px 0 0}.step-state{background:#cbd5e1;border-radius:50%;height:7px;width:7px}.pipeline-step.active .step-state{background:var(--step-color);box-shadow:0 0 0 4px color-mix(in srgb,var(--step-color) 12%,transparent)}.pipeline-arrow{align-items:center;color:#94a3b8;display:flex;font-size:1.2rem;justify-content:center}.pipeline-step dl{display:grid;gap:8px;margin:0}.pipeline-step dl div{display:grid;gap:2px}.pipeline-step dt{color:var(--muted);font-size:.55rem;font-weight:800;text-transform:uppercase}.pipeline-step dd{font-family:'Share Tech Mono',monospace;font-size:.68rem;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.marker-grid{display:grid;gap:5px;grid-template-columns:repeat(5,1fr)}.marker-grid div{background:var(--surface-soft);border:1px solid var(--line);border-radius:9px;display:grid;gap:2px;justify-items:center;padding:7px 3px}.marker-grid span{color:#6d28d9;font-family:'Share Tech Mono',monospace;font-size:.7rem;font-weight:900}.marker-grid strong{font-family:'Share Tech Mono',monospace;font-size:.73rem}.marker-grid small{color:var(--muted);font-size:.46rem;text-align:center}.series-status{background:#f8fafc;border-radius:8px;color:var(--muted);font-size:.59rem;line-height:1.45;margin:0;padding:8px}.score-result{align-items:center;display:grid;gap:12px;grid-template-columns:76px 1fr}.score-orb{align-items:center;background:conic-gradient(var(--teal) var(--score-angle,0deg),#e2e8f0 0);border-radius:50%;display:flex;height:74px;justify-content:center;position:relative;width:74px}.score-orb::before{background:var(--panel);border-radius:50%;content:'';inset:7px;position:absolute}.score-orb strong,.score-orb small{position:absolute;z-index:1}.score-orb strong{font-family:'Share Tech Mono',monospace;font-size:1rem;top:20px}.score-orb small{bottom:16px;color:var(--muted);font-size:.48rem}.score-result>div:last-child{display:grid;gap:3px}.score-result span{color:var(--muted);font-size:.57rem;font-weight:800;text-transform:uppercase}.score-result>div:last-child>strong{font-size:.74rem}.score-result p{color:var(--muted);font-size:.55rem;line-height:1.4;margin:0}.evidence-progress{background:#e2e8f0;border-radius:999px;height:6px;overflow:hidden}.evidence-progress span{background:linear-gradient(90deg,#0d9488,#34d399);display:block;height:100%;transition:width .3s;width:0}
   .live-feed-card{background:var(--panel);border:1px solid var(--line);border-radius:15px;overflow:hidden}.live-feed-card>header{align-items:center;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;padding:13px 15px}.live-feed-card h3{font-size:.86rem;margin:2px 0 0}.live-feed-card>header>span{color:var(--muted);font-size:.6rem}.live-feed{display:grid;list-style:none;margin:0;max-height:260px;overflow:auto;padding:0}.live-feed li{align-items:center;border-bottom:1px solid var(--line);display:grid;font-family:'Share Tech Mono',monospace;font-size:.62rem;gap:10px;grid-template-columns:74px 104px minmax(120px,1fr) 75px 75px;padding:9px 15px}.live-feed li:last-child{border-bottom:0}.live-feed time{color:var(--muted)}.feed-action{color:#2563eb;font-weight:800}.feed-object{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.feed-stage{color:#64748b}.feed-score{color:#0f766e;font-weight:800;text-align:right}.live-feed .empty-feed{color:var(--muted);display:block;font-family:inherit;padding:22px;text-align:center}
+  .game-tabs{align-items:stretch;overflow-x:auto;padding-inline:10px;scrollbar-width:thin}.game-tabs button{flex:0 0 auto;max-width:220px;white-space:nowrap}.tabs-loading{align-self:center;color:var(--muted);font-size:.68rem;padding:14px}.connection-pill.historical{background:#173d46;border-color:#4b7780;color:#d8eff1}.connection-pill.historical i{background:#60a5fa}.open-phile-button[hidden]{display:none}.historical-panel .pipeline-step{min-width:0}.historical-panel .live-feed li{grid-template-columns:74px 104px minmax(120px,1fr) 96px}.feed-role{color:#64748b;text-align:right}
   @keyframes pulse{50%{box-shadow:0 0 0 5px rgba(52,211,153,.16)}}
   @media(max-width:1100px){.processing-pipeline{grid-template-columns:1fr}.pipeline-arrow{height:18px;transform:rotate(90deg)}.live-metrics{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:760px){.snn-test-layout{grid-template-columns:1fr}.snn-test-menu{position:static}.snn-test-types{grid-template-columns:1fr}.live-header{align-items:flex-start;flex-direction:column}.live-header-actions{align-items:stretch;flex-wrap:wrap}.live-metrics{grid-template-columns:1fr 1fr}.live-feed li{grid-template-columns:65px 92px minmax(100px,1fr)}.feed-stage,.feed-score{display:none}}

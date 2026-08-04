@@ -40,7 +40,7 @@ test.describe('SNN Innovatietest', () => {
         body: JSON.stringify({
           status: 'live', cursor: 1, active_sessions: 1, buffered_events: 1,
           events: [{
-            id: 1, recorded_at: '2026-08-03T08:00:00Z', processing_ms: 3.2,
+            id: 1, recorded_at: new Date().toISOString(), processing_ms: 3.2,
             source: { surface: 'Phile', leerbox_id: 'phile', session: 'phile-abc123' },
             step_1: { action_type: 'select_card', leerobject_id: 'phile.card.kant', object_role: 'other', transport_latency_ms: 18 },
             step_2: { action_count: 6, active_series_count: 6, markers: { T: .6, A: .15, V: .5, R: .2, S: 1 }, validity: { geldig: true, details: { variatie: 3 } } },
@@ -49,17 +49,51 @@ test.describe('SNN Innovatietest', () => {
         }),
       });
     });
+    await page.route('**/api/innovation-tests/open-game/history**', async (route) => {
+      const titles = [
+        'Wake: Tales from the Aqualab',
+        'Bloom: Fertilizer Economy',
+        'Jo Wilder and the Capitol Case',
+        'Lakeland',
+        'Magnet Hunt',
+        'Legend of the Lost Emerald',
+        'Thermo Lab',
+      ];
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: corsHeaders,
+        body: JSON.stringify({
+          status: 'historical', historical: true, game_count: 7,
+          games: titles.map((title, index) => ({
+            id: `game-${index + 1}`, title, dataset: `DATASET_${index + 1}`,
+            source: 'OpenGameData · Field Day Lab', historical: true,
+            session_id: `open-game-${index + 1}`, processing_ms: 3.2 + index,
+            source_statistics: { actions: 1000 + index, sequences: 20 + index, people: 10 + index, days: 3 },
+            step_1: { action_count: 6 + index, started_at: '2025-08-03T08:00:00Z', ended_at: '2025-08-03T08:06:00Z' },
+            step_2: { action_count: 6 + index, markers: { T: .6, A: .15, V: .5, R: .2, S: 1 }, validity: { geldig: true, details: { variatie: 3 } } },
+            step_3: { status: 'calculated', score: .64 + (index / 100), analytic_archetype: 'Verkenner', sufficient_markers: true },
+            feed: [{ action_at: '2025-08-03T08:06:00Z', action_type: 'select', leerobject_id: `object-${index + 1}`, object_role: 'other' }],
+          })),
+        }),
+      });
+    });
   });
 
-  test('shows test menu, development messages and live three-step pipeline', async ({ page }) => {
+  test('keeps Phile Live next to seven historical game tabs', async ({ page }) => {
     await page.goto('/snn-innovation-test?role=technologist');
     await expect(page.getByRole('heading', { name: 'Phile Live' })).toBeVisible();
     await expect(page.getByRole('button', { name: /Simulatietest/ })).toBeVisible();
-    await expect(page.locator('[data-live-step]')).toHaveCount(3);
-    await expect(page.locator('#live-action-type')).toHaveText('select_card');
+    await expect(page.locator('[data-open-game-id]')).toHaveCount(7);
+    await expect(page.getByRole('tab')).toHaveCount(8);
+    await expect(page.locator('[data-simulation-step]')).toHaveCount(3);
     await expect(page.locator('[data-marker="A"]')).toHaveText('0.150');
-    await expect(page.locator('#live-score')).toHaveText('0.640');
-    await expect(page.locator('#live-archetype')).toHaveText('Verkenner');
+    await expect(page.locator('#simulation-score')).toHaveText('0.640');
+    await expect(page.locator('#simulation-archetype')).toHaveText('Verkenner');
+    await page.getByRole('tab', { name: 'Lakeland' }).click();
+    await expect(page.getByRole('heading', { name: 'Lakeland' })).toBeVisible();
+    await expect(page.locator('#simulation-dataset')).toHaveText('DATASET_4');
+    await expect(page.locator('#simulation-score')).toHaveText('0.670');
 
     await page.getByRole('button', { name: /Validatietest/ }).click();
     await expect(page.locator('[data-test-panel="validation"] .development-message')).toContainText('Nog in ontwikkeling');
