@@ -49,6 +49,23 @@ test.describe('SNN Innovatietest', () => {
         }),
       });
     });
+    await page.route('**/api/innovation-tests/lom/live**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: corsHeaders,
+        body: JSON.stringify({
+          status: 'live', cursor: 1, active_sessions: 1, buffered_events: 1,
+          events: [{
+            id: 1, recorded_at: new Date().toISOString(), processing_ms: 2.4,
+            source: { surface: 'LOM', leerbox_id: 'learngame-operations-management', session: 'lom-abc123' },
+            step_1: { action_type: 'production_complete', leerobject_id: 'lom.production.assembly', object_role: 'success', transport_latency_ms: 14 },
+            step_2: { action_count: 7, active_series_count: 7, markers: { T: .7, A: .2, V: .6, R: .1, S: 1 }, validity: { geldig: true, details: { variatie: 4 } } },
+            step_3: { status: 'calculated', score: .71, analytic_archetype: 'Veroveraar', sufficient_markers: true },
+          }],
+        }),
+      });
+    });
     await page.route('**/api/innovation-tests/open-game/history**', async (route) => {
       const titles = [
         'Wake: Tales from the Aqualab',
@@ -80,16 +97,20 @@ test.describe('SNN Innovatietest', () => {
     });
   });
 
-  test('keeps Phile Live next to seven historical game tabs', async ({ page }) => {
+  test('shows LOM Live first, followed by Phile and seven historical games', async ({ page }) => {
     await page.goto('/snn-innovation-test?role=technologist');
-    await expect(page.getByRole('heading', { name: 'Phile Live' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'LOM Live' })).toBeVisible();
     await expect(page.getByRole('button', { name: /Simulatietest/ })).toBeVisible();
     await expect(page.locator('[data-open-game-id]')).toHaveCount(7);
-    await expect(page.getByRole('tab')).toHaveCount(8);
+    await expect(page.getByRole('tab')).toHaveCount(9);
+    await expect(page.getByRole('tab').first()).toHaveText('LOM Live');
     await expect(page.locator('[data-simulation-step]')).toHaveCount(3);
-    await expect(page.locator('[data-marker="A"]')).toHaveText('0.150');
+    await expect(page.locator('[data-marker="A"]')).toHaveText('0.200');
+    await expect(page.locator('#simulation-score')).toHaveText('0.710');
+    await expect(page.locator('#simulation-archetype')).toHaveText('Veroveraar');
+    await page.getByRole('tab', { name: 'Phile Live' }).click();
+    await expect(page.getByRole('heading', { name: 'Phile Live' })).toBeVisible();
     await expect(page.locator('#simulation-score')).toHaveText('0.640');
-    await expect(page.locator('#simulation-archetype')).toHaveText('Verkenner');
     await page.getByRole('tab', { name: 'Lakeland' }).click();
     await expect(page.getByRole('heading', { name: 'Lakeland' })).toBeVisible();
     await expect(page.locator('#simulation-dataset')).toHaveText('DATASET_4');

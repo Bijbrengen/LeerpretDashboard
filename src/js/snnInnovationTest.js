@@ -3,12 +3,29 @@ import { apiGet } from './api.js';
 const simulation = {
   games: [],
   selectedGameId: '',
-  selectedMode: 'live',
-  cursor: 0,
-  liveEvents: [],
+  selectedMode: 'lom-live',
+  live: {
+    lom: { cursor: 0, events: [] },
+    phile: { cursor: 0, events: [] },
+  },
   timer: 0,
   stopped: false,
 };
+
+const liveSources = Object.freeze([
+  {
+    id: 'lom', tabId: 'lom-live', title: 'LOM Live', surface: 'LOM',
+    endpoint: '/innovation-tests/lom/live', configKey: 'learngameOmUrl', fallbackUrl: 'http://127.0.0.1:47113/',
+  },
+  {
+    id: 'phile', tabId: 'phile-live', title: 'Phile Live', surface: 'Phile',
+    endpoint: '/innovation-tests/phile/live', configKey: 'phileUrl', fallbackUrl: 'http://127.0.0.1:47115/',
+  },
+]);
+
+const liveSource = (id) => liveSources.find((source) => source.id === id) || liveSources[0];
+const selectedLiveSource = () => liveSource(simulation.selectedMode.replace(/-live$/, ''));
+const selectedLiveState = () => simulation.live[selectedLiveSource().id];
 
 const byId = (id) => document.getElementById(id);
 
@@ -113,8 +130,8 @@ function renderGame(game) {
   simulation.selectedGameId = game.id;
   selectTab(game.id);
   document.querySelectorAll('[data-simulation-step]').forEach((step) => step.classList.add('active'));
-  const phileLink = byId('open-phile-test');
-  if (phileLink) phileLink.hidden = true;
+  const liveLink = byId('open-live-test');
+  if (liveLink) liveLink.hidden = true;
   setStatus('historical', 'Historisch archief');
   setMetricLabels([
     ['Bronacties', 'alle geregistreerde events'],
@@ -178,7 +195,9 @@ function renderLiveFeed() {
   const list = byId('simulation-action-feed');
   if (!list) return;
   list.replaceChildren();
-  const events = [...simulation.liveEvents].reverse().slice(0, 30);
+  const source = selectedLiveSource();
+  const liveState = selectedLiveState();
+  const events = [...liveState.events].reverse().slice(0, 30);
   events.forEach((event) => {
     const item = document.createElement('li');
     const cells = [
@@ -198,10 +217,10 @@ function renderLiveFeed() {
   if (!events.length) {
     const empty = document.createElement('li');
     empty.className = 'empty-feed';
-    empty.textContent = 'Start Phile en voer een actie uit; de gebeurtenis verschijnt hier direct.';
+    empty.textContent = `Start ${source.surface} en voer een actie uit; de gebeurtenis verschijnt hier direct.`;
     list.append(empty);
   }
-  setText('simulation-feed-count', `${simulation.liveEvents.length} gebeurtenis${simulation.liveEvents.length === 1 ? '' : 'sen'}`);
+  setText('simulation-feed-count', `${liveState.events.length} gebeurtenis${liveState.events.length === 1 ? '' : 'sen'}`);
 }
 
 function renderLiveEvent(event) {
@@ -214,7 +233,7 @@ function renderLiveEvent(event) {
   setText('simulation-dataset', received.leerobject_id);
   setText('simulation-period', received.object_role);
   setText('simulation-session-id', event.source?.session);
-  setText('simulation-source-actions', formatNumber(transformed.action_count || simulation.liveEvents.length));
+  setText('simulation-source-actions', formatNumber(transformed.action_count || selectedLiveState().events.length));
   setText('simulation-source-sequences', formatLatency(received.transport_latency_ms));
   setText('simulation-source-people', formatLatency(event.processing_ms));
   const dashboardLatency = Date.now() - new Date(event.recorded_at).getTime();
@@ -243,31 +262,37 @@ function renderLiveEvent(event) {
   renderLiveFeed();
 }
 
-function selectLive() {
-  simulation.selectedMode = 'live';
+function selectLive(sourceId = 'lom') {
+  const source = liveSource(sourceId);
+  const liveState = simulation.live[source.id];
+  simulation.selectedMode = source.tabId;
   simulation.selectedGameId = '';
-  selectTab('phile-live');
-  setText('simulation-game-title', 'Phile Live');
-  setText('simulation-game-description', 'Volg iedere Phile-actie live door ontvangst, transformatie en Leerpret-meting.');
+  selectTab(source.tabId);
+  setText('simulation-game-title', source.title);
+  setText('simulation-game-description', `Volg iedere ${source.surface}-actie live door ontvangst, transformatie en Leerpret-meting.`);
   setMetricLabels([
     ['Ontvangen acties', 'deze Engine-runtime'],
-    ['Transmissie', 'Phile → Engine'],
+    ['Transmissie', `${source.surface} → Engine`],
     ['Verwerking', 'in de Engine'],
     ['Dashboardlevering', 'Engine → Dashboard'],
   ]);
-  setText('simulation-step-one-title', 'Live uit Phile');
+  setText('simulation-step-one-title', `Live uit ${source.surface}`);
   setText('simulation-field-label-1', 'Actie');
   setText('simulation-field-label-2', 'Leerobject');
   setText('simulation-field-label-3', 'Objectrol');
   setText('simulation-feed-eyebrow', 'Engine-auditbuffer');
   setText('simulation-feed-title', 'Live datastroom');
-  const phileLink = byId('open-phile-test');
-  if (phileLink) phileLink.hidden = false;
-  if (simulation.liveEvents.length) {
+  const liveLink = byId('open-live-test');
+  if (liveLink) {
+    liveLink.hidden = false;
+    liveLink.href = window.LEERPRET_CONFIG?.[source.configKey] || source.fallbackUrl;
+    liveLink.textContent = `Open ${source.surface} ↗`;
+  }
+  if (liveState.events.length) {
     setStatus('live', 'Live verbonden');
-    renderLiveEvent(simulation.liveEvents.at(-1));
+    renderLiveEvent(liveState.events.at(-1));
   } else {
-    setStatus('live', 'Verbonden · wacht op Phile');
+    setStatus('live', `Verbonden · wacht op ${source.surface}`);
     setText('simulation-source-actions', '0');
     setText('simulation-source-sequences', '—');
     setText('simulation-source-people', '—');
@@ -282,41 +307,45 @@ function selectLive() {
 
 async function pollLive() {
   if (simulation.stopped) return;
-  try {
-    const payload = await apiGet(`/innovation-tests/phile/live?after=${simulation.cursor}&limit=50`);
-    simulation.cursor = Number(payload.cursor || simulation.cursor);
-    const incoming = Array.isArray(payload.events) ? payload.events : [];
-    if (incoming.length) {
-      simulation.liveEvents.push(...incoming);
-      simulation.liveEvents = simulation.liveEvents.slice(-100);
-      if (simulation.selectedMode === 'live') {
-        setStatus('live', 'Live verbonden');
-        renderLiveEvent(simulation.liveEvents.at(-1));
+  await Promise.all(liveSources.map(async (source) => {
+    const liveState = simulation.live[source.id];
+    try {
+      const payload = await apiGet(`${source.endpoint}?after=${liveState.cursor}&limit=50`);
+      liveState.cursor = Number(payload.cursor || liveState.cursor);
+      const incoming = Array.isArray(payload.events) ? payload.events : [];
+      if (incoming.length) {
+        liveState.events.push(...incoming);
+        liveState.events = liveState.events.slice(-100);
+        if (simulation.selectedMode === source.tabId) {
+          setStatus('live', 'Live verbonden');
+          renderLiveEvent(liveState.events.at(-1));
+        }
+      } else if (simulation.selectedMode === source.tabId) {
+        setStatus('live', liveState.events.length ? 'Live verbonden' : `Verbonden · wacht op ${source.surface}`);
       }
-    } else if (simulation.selectedMode === 'live') {
-      setStatus('live', simulation.liveEvents.length ? 'Live verbonden' : 'Verbonden · wacht op Phile');
+    } catch (error) {
+      if (simulation.selectedMode === source.tabId) {
+        setStatus('error', error?.status === 403 ? 'Geen toegang tot monitor' : 'Engineverbinding verbroken');
+      }
     }
-  } catch (error) {
-    if (simulation.selectedMode === 'live') {
-      setStatus('error', error?.status === 403 ? 'Geen toegang tot monitor' : 'Engineverbinding verbroken');
-    }
-  } finally {
-    simulation.timer = window.setTimeout(pollLive, 1000);
-  }
+  }));
+  simulation.timer = window.setTimeout(pollLive, 1000);
 }
 
 function renderTabs() {
   const tabs = byId('open-game-tabs');
   if (!tabs) return;
   tabs.replaceChildren();
-  const liveButton = document.createElement('button');
-  liveButton.type = 'button';
-  liveButton.dataset.monitorTab = 'phile-live';
-  liveButton.setAttribute('role', 'tab');
-  liveButton.setAttribute('aria-selected', String(simulation.selectedMode === 'live'));
-  liveButton.textContent = 'Phile Live';
-  liveButton.addEventListener('click', selectLive);
-  tabs.append(liveButton);
+  liveSources.forEach((source) => {
+    const liveButton = document.createElement('button');
+    liveButton.type = 'button';
+    liveButton.dataset.monitorTab = source.tabId;
+    liveButton.setAttribute('role', 'tab');
+    liveButton.setAttribute('aria-selected', String(simulation.selectedMode === source.tabId));
+    liveButton.textContent = source.title;
+    liveButton.addEventListener('click', () => selectLive(source.id));
+    tabs.append(liveButton);
+  });
   simulation.games.forEach((game) => {
     const button = document.createElement('button');
     button.type = 'button';
@@ -336,10 +365,10 @@ async function loadHistoricalGames() {
     simulation.games = Array.isArray(payload.games) ? payload.games : [];
     if (!simulation.games.length) throw new Error('Geen historische games gevonden');
     renderTabs();
-    selectLive();
+    selectLive('lom');
   } catch (error) {
     renderTabs();
-    selectLive();
+    selectLive('lom');
     console.warn('Historische Open Game-data niet beschikbaar', error);
   }
 }
@@ -359,11 +388,9 @@ function initialize() {
   document.querySelectorAll('[data-test-type]').forEach((button) => {
     button.addEventListener('click', () => selectTest(button.dataset.testType));
   });
-  const phileLink = byId('open-phile-test');
-  if (phileLink) phileLink.href = window.LEERPRET_CONFIG?.phileUrl || 'http://127.0.0.1:47115/';
   selectTest('practice');
   renderTabs();
-  selectLive();
+  selectLive('lom');
   loadHistoricalGames();
   pollLive();
 }
