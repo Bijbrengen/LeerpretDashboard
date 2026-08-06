@@ -2,23 +2,34 @@ import * as d3 from 'd3';
 import { activeBlockRole, loadBlockAccess } from './pageBlocks.js';
 
 const TYPE_STYLE = {
+  account: { label: 'Google-account', color: '#db2777', icon: 'G' },
   person: { label: 'Person-ID', color: '#e11d48', icon: 'P' },
+  attraction: { label: 'Leerattractie', color: '#65a30d', icon: 'T' },
   action: { label: 'Actie', color: '#7c3aed', icon: 'A' },
   learningbox: { label: 'Leerbox', color: '#059669', icon: 'L' },
   learningobject: { label: 'Leerobject', color: '#2563eb', icon: 'O' },
   resistance: { label: 'Weerstand', color: '#d97706', icon: 'W' },
   measurement: { label: 'Leerpretmeting', color: '#0891b2', icon: 'M' },
+  service: { label: 'Servicedata', color: '#ea580c', icon: 'S' },
+  static: { label: 'Vaste data', color: '#0d9488', icon: 'D' },
+  runtime: { label: 'Runtime data', color: '#64748b', icon: 'V' },
 };
 
 export const mockNodes = [
-  { id: 'person-1042-3', type: 'person', label: 'Person 1042 · sessie 3', data: { person_id: 'nfc-1042:3', account_id: null, session_index: 3, linked: false, released_at: null } },
-  { id: 'box-phile', type: 'learningbox', label: 'Phile', data: { leerbox_id: 'phile', status: 'pilot', version: '0.8.2', attraction_id: 'filosofiepark' } },
-  { id: 'object-raster', type: 'learningobject', label: 'Rasterbrein', data: { leerobject_id: 'rasterbrein', leerbox_id: 'phile', sequence: 3, marker_focus: ['V', 'R'] } },
-  { id: 'object-cards', type: 'learningobject', label: 'Kaartkeuze', data: { leerobject_id: 'kaartkeuze', leerbox_id: 'phile', sequence: 2, marker_focus: ['A', 'S'] } },
-  { id: 'resistance-grid', type: 'resistance', label: 'Geblokkeerde route', data: { resistance_id: 'route-block-7', leerobject_id: 'rasterbrein', severity: 0.72, resolved: false } },
-  { id: 'action-select', type: 'action', label: 'Selecteer kaart', data: { action_id: 'act-9f31', person_id: 'nfc-1042:3', leerbox_id: 'phile', leerobject_id: 'kaartkeuze', timestamp: '2026-07-15T08:41:12Z', duration_ms: 1840 } },
-  { id: 'action-retry', type: 'action', label: 'Probeer route opnieuw', data: { action_id: 'act-9f38', person_id: 'nfc-1042:3', leerbox_id: 'phile', leerobject_id: 'rasterbrein', resistance_id: 'route-block-7', timestamp: '2026-07-15T08:43:31Z', duration_ms: 6240 } },
-  { id: 'measurement-1', type: 'measurement', label: 'Leerpretmeting 9f40', data: { measurement_id: 'measure-9f40', person_id: 'nfc-1042:3', leerbox_id: 'phile', alpha_score: 0.73, leerpret_score: 0.78, calculated_at: '2026-07-15T08:44:02Z' } },
+  { id: 'account-1', type: 'account', label: 'Google-account (pseudoniem)', domains: ['personalized'], data: { google_account_id: 'google-a84e…', person_ids: ['nfc-1042:3'], raw_google_sub_stored: false } },
+  { id: 'person-1042-3', type: 'person', label: 'Tijdelijk Person-ID', domains: ['raw_actions', 'personalized'], data: { person_id: 'nfc-1042:3', google_account_link: 'afgeschermd', leerbox_id: 'phile', issuance: 3 } },
+  { id: 'attraction-1', type: 'attraction', label: 'Voorbeeld-leerattractie', domains: ['personalized'], data: { leerattractie_id: 'voorbeeld-attractie', google_account_ids: ['google-a84e…'], leerbox_count: 1, illustrative: true } },
+  { id: 'box-example', type: 'learningbox', label: 'Voorbeeld-leerbox', domains: ['personalized'], data: { leerbox_id: 'voorbeeld-leerbox', leerattractie_id: 'voorbeeld-attractie', illustrative: true } },
+  { id: 'box-phile', type: 'learningbox', label: 'Phile · digitale leerbox', domains: ['raw_actions', 'personalized', 'services'], data: { leerbox_id: 'phile', status: 'pilot', leerattractie_id: null, note: 'De feitelijke leerattractie is nog niet geregistreerd.' } },
+  { id: 'object-raster', type: 'learningobject', label: 'Rasterbrein', domains: ['raw_actions', 'personalized'], data: { leerobject_id: 'rasterbrein', globally_unique: true, leerbox_id: 'phile', description: '' } },
+  { id: 'object-cards', type: 'learningobject', label: 'Kaartkeuze', domains: ['raw_actions', 'personalized'], data: { leerobject_id: 'kaartkeuze', globally_unique: true, leerbox_id: 'phile', description: 'Keuze uit filosoofkaarten' } },
+  { id: 'resistance-grid', type: 'resistance', label: 'Geblokkeerde route', domains: ['raw_actions'], data: { resistance_id: 'route-block-7', leerobject_id: 'rasterbrein', derived_on_the_fly: true } },
+  { id: 'action-select', type: 'action', label: 'Selecteer kaart', domains: ['raw_actions'], data: { event_id: 'act-9f31', person_id: 'nfc-1042:3', leerbox_id: 'phile', leerobject_id: 'kaartkeuze', timestamp: '2026-07-15T08:41:12Z' } },
+  { id: 'action-retry', type: 'action', label: 'Probeer route opnieuw', domains: ['raw_actions'], data: { event_id: 'act-9f38', person_id: 'nfc-1042:3', leerbox_id: 'phile', leerobject_id: 'rasterbrein', timestamp: '2026-07-15T08:43:31Z', action_type: 'retry' } },
+  { id: 'measurement-1', type: 'measurement', label: 'Dynamische analytics', domains: ['raw_actions'], data: { persisted: false, calculation: 'on_the_fly', alpha_score: 0.73, leerpret_score: 0.78 } },
+  { id: 'service-phile', type: 'service', label: 'Phile spelstatus', domains: ['services'], data: { path: 'var/services/phile/phile/game_state.json', owns: ['voortgang', 'levels', 'spelinstellingen'], analytics_mixed_in: false } },
+  { id: 'static-data', type: 'static', label: 'data/ · versieerbaar', domains: ['static_dynamic'], data: { root: 'data/', git: true, content: ['configuratie', 'vaste servicedata', 'historische testdata', 'artikelen'] } },
+  { id: 'runtime-data', type: 'runtime', label: 'var/ · leegbaar', domains: ['static_dynamic'], data: { root: 'var/', git: false, auto_created: true, content: ['JSON-tabellen', 'service-status', 'sessies', 'previews'] } },
 ];
 
 export const mockEdges = [
@@ -33,32 +44,39 @@ export const mockEdges = [
   { id: 'e9', source: 'action-retry', target: 'measurement-1', label: 'draagt bij aan' },
   { id: 'e10', source: 'measurement-1', target: 'person-1042-3', label: 'berekend voor' },
   { id: 'e11', source: 'measurement-1', target: 'box-phile', label: 'meet binnen' },
+  { id: 'e12', source: 'account-1', target: 'person-1042-3', label: 'kan koppelen aan' },
+  { id: 'e13', source: 'account-1', target: 'attraction-1', label: 'heeft rechten op' },
+  { id: 'e14', source: 'attraction-1', target: 'box-example', label: 'bevat 1:n' },
+  { id: 'e15', source: 'service-phile', target: 'box-phile', label: 'status voor' },
+  { id: 'e16', source: 'static-data', target: 'box-phile', label: 'levert vaste basis' },
+  { id: 'e17', source: 'runtime-data', target: 'action-select', label: 'slaat dynamisch op' },
+  { id: 'e18', source: 'runtime-data', target: 'service-phile', label: 'isoleert per client' },
 ];
 
 export const schemaModels = [
-  { id: 'Person', type: 'person', fields: [{ name: 'id', type: 'string', key: 'PK' }, { name: 'account_id', type: 'string?', key: '' }, { name: 'session_index', type: 'integer', key: '' }, { name: 'released_at', type: 'datetime?', key: '' }] },
-  { id: 'Leerbox', type: 'learningbox', fields: [{ name: 'id', type: 'string', key: 'PK' }, { name: 'attraction_id', type: 'string', key: 'FK' }, { name: 'status', type: 'enum', key: '' }, { name: 'version', type: 'string', key: '' }] },
-  { id: 'Leerobject', type: 'learningobject', fields: [{ name: 'id', type: 'string', key: 'PK' }, { name: 'leerbox_id', type: 'string', key: 'FK' }, { name: 'sequence', type: 'integer', key: '' }, { name: 'marker_focus', type: 'string[]', key: '' }] },
-  { id: 'Actie', type: 'action', fields: [{ name: 'id', type: 'uuid', key: 'PK' }, { name: 'person_id', type: 'string', key: 'FK' }, { name: 'leerbox_id', type: 'string', key: 'FK' }, { name: 'leerobject_id', type: 'string', key: 'FK' }, { name: 'resistance_id', type: 'string?', key: 'FK' }, { name: 'timestamp', type: 'datetime', key: '' }, { name: 'duration_ms', type: 'integer', key: '' }] },
-  { id: 'Weerstand', type: 'resistance', fields: [{ name: 'id', type: 'string', key: 'PK' }, { name: 'leerobject_id', type: 'string', key: 'FK' }, { name: 'severity', type: 'decimal', key: '' }, { name: 'resolved', type: 'boolean', key: '' }] },
-  { id: 'LeerpretMeting', type: 'measurement', fields: [{ name: 'id', type: 'uuid', key: 'PK' }, { name: 'person_id', type: 'string', key: 'FK' }, { name: 'leerbox_id', type: 'string', key: 'FK' }, { name: 'alpha_score', type: 'decimal', key: '' }, { name: 'leerpret_score', type: 'decimal', key: '' }, { name: 'calculated_at', type: 'datetime', key: '' }] },
+  { id: 'Person', type: 'account', domains: ['personalized'], fields: [{ name: 'google_account_id', type: 'string', key: 'PK' }, { name: 'person_ids', type: 'PersonLink[]', key: '' }, { name: 'name', type: 'string?', key: '' }, { name: 'email', type: 'string?', key: '' }] },
+  { id: 'Leerattractie', type: 'attraction', domains: ['personalized'], fields: [{ name: 'leerattractie_id', type: 'string', key: 'PK' }, { name: 'google_account_ids', type: 'string[]', key: 'FK' }, { name: 'name', type: 'string', key: '' }] },
+  { id: 'Leerbox', type: 'learningbox', domains: ['personalized', 'services'], fields: [{ name: 'leerbox_id', type: 'string', key: 'PK' }, { name: 'leerattractie_id', type: 'string', key: 'FK' }, { name: 'name', type: 'string', key: '' }, { name: 'twin_type', type: 'enum', key: '' }] },
+  { id: 'Leerobject', type: 'learningobject', domains: ['personalized', 'raw_actions'], fields: [{ name: 'leerobject_id', type: 'string', key: 'PK' }, { name: 'leerbox_id', type: 'string', key: 'FK' }, { name: 'description', type: 'string', key: '' }] },
+  { id: 'LeerpretActie', type: 'action', domains: ['raw_actions'], fields: [{ name: 'event_id', type: 'uuid', key: 'PK' }, { name: 'person_id', type: 'string', key: 'IDX' }, { name: 'leerbox_id', type: 'string', key: 'FK' }, { name: 'leerobject_id', type: 'string', key: 'FK' }, { name: 'timestamp', type: 'datetime', key: '' }, { name: 'action_type', type: 'string?', key: '' }] },
+  { id: 'ServiceState', type: 'service', domains: ['services'], fields: [{ name: 'id', type: 'string', key: 'PK' }, { name: 'client_id', type: 'string', key: 'IDX' }, { name: 'leerbox_id', type: 'string', key: 'FK' }, { name: 'state', type: 'object', key: '' }] },
 ];
 
 export const schemaRelations = [
-  { source: ['Actie', 'person_id'], target: ['Person', 'id'], label: 'uitgevoerd door' },
-  { source: ['Actie', 'leerbox_id'], target: ['Leerbox', 'id'], label: 'binnen' },
-  { source: ['Actie', 'leerobject_id'], target: ['Leerobject', 'id'], label: 'activeert' },
-  { source: ['Actie', 'resistance_id'], target: ['Weerstand', 'id'], label: 'ontmoet' },
-  { source: ['Leerobject', 'leerbox_id'], target: ['Leerbox', 'id'], label: 'behoort tot' },
-  { source: ['Weerstand', 'leerobject_id'], target: ['Leerobject', 'id'], label: 'blokkeert' },
-  { source: ['LeerpretMeting', 'person_id'], target: ['Person', 'id'], label: 'meet voor' },
-  { source: ['LeerpretMeting', 'leerbox_id'], target: ['Leerbox', 'id'], label: 'meet in' },
+  { source: ['Leerattractie', 'google_account_ids'], target: ['Person', 'google_account_id'], label: 'rechten voor' },
+  { source: ['Leerbox', 'leerattractie_id'], target: ['Leerattractie', 'leerattractie_id'], label: 'behoort tot' },
+  { source: ['Leerobject', 'leerbox_id'], target: ['Leerbox', 'leerbox_id'], label: 'behoort tot' },
+  { source: ['LeerpretActie', 'leerbox_id'], target: ['Leerbox', 'leerbox_id'], label: 'binnen' },
+  { source: ['LeerpretActie', 'leerobject_id'], target: ['Leerobject', 'leerobject_id'], label: 'activeert' },
+  { source: ['ServiceState', 'leerbox_id'], target: ['Leerbox', 'leerbox_id'], label: 'status voor' },
 ];
 
 let activeView = 'network';
+let activeScope = 'all';
 let networkSimulation;
 let networkZoom;
 let erdZoom;
+let architectureSnapshot;
 
 export async function initializeDataStructureViewer() {
   const root = document.querySelector('[data-structure-viewer]');
@@ -76,10 +94,21 @@ export async function initializeDataStructureViewer() {
     return;
   }
 
+  try {
+    const { apiGet } = await import('./api.js');
+    architectureSnapshot = await apiGet('/data/architecture');
+    const tableCount = architectureSnapshot?.tables?.length || 0;
+    const label = document.querySelector('[data-snapshot-label]');
+    if (label) label.textContent = `${tableCount} live JSON-tabellen + demonstratieset`;
+  } catch (error) {
+    console.warn('Live data architecture snapshot unavailable; using the demonstratieset.', error);
+  }
+
   renderNetwork();
   renderErd();
   bindControls();
   updateView('network');
+  updateScope('all');
 }
 
 function applyBlockAccess(blocks) {
@@ -97,11 +126,60 @@ function applyBlockAccess(blocks) {
 
 function bindControls() {
   document.querySelectorAll('[data-structure-view]').forEach((button) => button.addEventListener('click', () => updateView(button.dataset.structureView)));
+  document.querySelectorAll('[data-structure-scope]').forEach((button) => button.addEventListener('click', () => updateScope(button.dataset.structureScope)));
   document.querySelector('[data-reset-view]')?.addEventListener('click', resetActiveView);
   document.querySelector('[data-close-metadata]')?.addEventListener('click', clearSelection);
   const search = document.querySelector('[data-node-search]');
   search?.addEventListener('input', () => searchNodes(search.value));
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape') clearSelection(); });
+}
+
+const SCOPE_COPY = {
+  all: ['Datastroom en verbindingen', 'Volg de volledige keten van account en tijdelijk Person-ID tot Acties, leercontext en servicedata.'],
+  raw_actions: ['Geanonimiseerde ruwe acties', 'De vier verplichte velden blijven zichtbaar; afgeleide analytics worden on-the-fly berekend.'],
+  personalized: ['Gepersonaliseerde betekenislaag', 'Bekijk hoe één gepseudonimiseerd Google-account meerdere tijdelijke Person-ID’s en rechten kan dragen.'],
+  services: ['Data per service en leerbox', 'Spelvoortgang, levels en clientinstellingen blijven gescheiden van algemene Learning Analytics.'],
+  static_dynamic: ['Statisch versus dynamisch', 'data/ blijft versieerbaar en minimaal; var/ is leegbaar, gitignored en wordt automatisch opgebouwd.'],
+};
+
+function updateScope(scope) {
+  activeScope = SCOPE_COPY[scope] ? scope : 'all';
+  document.querySelectorAll('[data-structure-scope]').forEach((button) => {
+    const active = button.dataset.structureScope === activeScope;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+  applyScopeVisibility();
+  const [title, description] = SCOPE_COPY[activeScope];
+  document.querySelector('[data-view-title]').textContent = activeView === 'erd' ? `${title} · schema` : title;
+  document.querySelector('[data-view-description]').textContent = description;
+  clearSelection();
+}
+
+function appliesToScope(item) {
+  return activeScope === 'all' || (item.domains || []).includes(activeScope);
+}
+
+function applyScopeVisibility() {
+  const visibleNodeIds = new Set(mockNodes.filter(appliesToScope).map((node) => node.id));
+  const visibleModels = new Set(schemaModels.filter(appliesToScope).map((model) => model.id));
+  d3.selectAll('.network-node').classed('scope-hidden', (node) => !visibleNodeIds.has(node.id));
+  d3.selectAll('.network-edges > g').classed('scope-hidden', (edge) => {
+    const source = typeof edge.source === 'object' ? edge.source.id : edge.source;
+    const target = typeof edge.target === 'object' ? edge.target.id : edge.target;
+    return !visibleNodeIds.has(source) || !visibleNodeIds.has(target);
+  });
+  d3.selectAll('.erd-model').classed('scope-hidden', (model) => !visibleModels.has(model.id));
+  d3.selectAll('.erd-relations > g').classed('scope-hidden', (relation) => !visibleModels.has(relation.source[0]) || !visibleModels.has(relation.target[0]));
+  const visibleEdges = mockEdges.filter((edge) => visibleNodeIds.has(edge.source) && visibleNodeIds.has(edge.target));
+  setText('[data-footer-nodes]', visibleNodeIds.size);
+  setText('[data-footer-edges]', visibleEdges.length);
+  setText('[data-footer-models]', visibleModels.size);
+}
+
+function setText(selector, value) {
+  const target = document.querySelector(selector);
+  if (target) target.textContent = String(value);
 }
 
 function updateView(view) {
@@ -117,11 +195,13 @@ function updateView(view) {
     const active = panel.dataset.structurePanel === activeView && panel.dataset.allowed !== 'false';
     panel.hidden = !active;
   });
-  document.querySelector('[data-view-title]').textContent = activeView === 'network' ? 'Datastroom en verbindingen' : 'Schema en veldrelaties';
+  const [title, description] = SCOPE_COPY[activeScope];
+  document.querySelector('[data-view-title]').textContent = activeView === 'network' ? title : `${title} · schema`;
   document.querySelector('[data-view-description]').textContent = activeView === 'network'
-    ? 'Volg actuele objecten van Person-ID via Acties naar de Leerbox en meting.'
-    : 'Bekijk modellen, primaire sleutels en verwijzingen tussen velden.';
+    ? description
+    : `${description} Bekijk primaire sleutels en verwijzingen tussen de JSON-tabellen.`;
   requestAnimationFrame(() => activeView === 'network' ? networkSimulation?.alpha(.25).restart() : null);
+  applyScopeVisibility();
   clearSelection();
 }
 
@@ -188,7 +268,14 @@ function renderErd() {
   const viewport = svg.append('g').attr('class', 'erd-viewport');
   erdZoom = d3.zoom().scaleExtent([.5, 2]).on('zoom', (event) => viewport.attr('transform', event.transform));
   svg.call(erdZoom).on('dblclick.zoom', null).on('click', (event) => { if (event.target === svg.node()) clearSelection(); });
-  const positions = { Person:[30,40], Leerbox:[395,28], Leerobject:[760,40], Actie:[30,350], LeerpretMeting:[395,390], Weerstand:[760,350] };
+  const positions = {
+    Person: [30, 36],
+    LeerpretActie: [395, 28],
+    Leerobject: [760, 36],
+    Leerattractie: [30, 390],
+    Leerbox: [395, 378],
+    ServiceState: [760, 390],
+  };
   const cardWidth = 250;
   const headerHeight = 42;
   const rowHeight = 27;

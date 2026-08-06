@@ -107,15 +107,26 @@ import DataStructureViewer from '../components/DataStructureViewer.astro';
             <span><strong>Schema / ERD</strong><small>Modellen en veldrelaties</small></span>
           </button>
         </nav>
+        <p class="structure-menu-label">Dataperspectief</p>
+        <nav class="structure-scope-menu" aria-label="Dataperspectief">
+          <button type="button" class="active" data-structure-scope="all" aria-pressed="true"><i></i><span><strong>Alles samen</strong><small>Volledige keten</small></span></button>
+          <button type="button" data-structure-scope="raw_actions" aria-pressed="false"><i></i><span><strong>Ruwe acties</strong><small>Deelbaar en anoniem</small></span></button>
+          <button type="button" data-structure-scope="personalized" aria-pressed="false"><i></i><span><strong>Gepersonaliseerd</strong><small>Accounts en betekenis</small></span></button>
+          <button type="button" data-structure-scope="services" aria-pressed="false"><i></i><span><strong>Per service</strong><small>Clientstatus apart</small></span></button>
+          <button type="button" data-structure-scope="static_dynamic" aria-pressed="false"><i></i><span><strong>Statisch / dynamisch</strong><small><code>data/</code> tegenover <code>var/</code></small></span></button>
+        </nav>
         <section class="structure-legend" data-structure-legend aria-label="Legenda">
           <p class="structure-menu-label">Entiteiten</p>
           <ul>
             <li><i class="person"></i><span>Person-ID</span><strong>1</strong></li>
+            <li><i class="account"></i><span>Google-account</span><strong>1</strong></li>
+            <li><i class="attraction"></i><span>Leerattractie</span><strong>1</strong></li>
             <li><i class="action"></i><span>Acties</span><strong>2</strong></li>
             <li><i class="learningbox"></i><span>Leerbox</span><strong>1</strong></li>
             <li><i class="learningobject"></i><span>Leerobjecten</span><strong>2</strong></li>
             <li><i class="resistance"></i><span>Weerstand</span><strong>1</strong></li>
             <li><i class="measurement"></i><span>Leerpretmeting</span><strong>1</strong></li>
+            <li><i class="service"></i><span>Servicedata</span><strong>1</strong></li>
           </ul>
         </section>
         <div class="structure-help">
@@ -893,13 +904,15 @@ import DataStructureViewer from '../components/DataStructureViewer.astro';
   }
 
   .analytics-view-menu,
-  .structure-view-menu {
+  .structure-view-menu,
+  .structure-scope-menu {
     display: grid;
     gap: 6px;
   }
 
   .analytics-view-menu button,
-  .structure-view-menu button {
+  .structure-view-menu button,
+  .structure-scope-menu button {
     align-items: center;
     background: #10262d;
     border: 1px solid #294b54;
@@ -915,28 +928,47 @@ import DataStructureViewer from '../components/DataStructureViewer.astro';
   }
 
   .analytics-view-menu button.active,
-  .structure-view-menu button.active {
+  .structure-view-menu button.active,
+  .structure-scope-menu button.active {
     background: #10343a;
     border-color: var(--teal);
     box-shadow: inset 4px 0 var(--teal);
   }
 
   .analytics-view-menu button > span:last-child,
-  .structure-view-menu button > span:last-child {
+  .structure-view-menu button > span:last-child,
+  .structure-scope-menu button > span {
     display: grid;
     gap: 2px;
   }
 
   .analytics-view-menu strong,
-  .structure-view-menu strong {
+  .structure-view-menu strong,
+  .structure-scope-menu strong {
     font-size: .75rem;
   }
 
   .analytics-view-menu small,
-  .structure-view-menu small {
+  .structure-view-menu small,
+  .structure-scope-menu small {
     color: var(--muted);
     font-size: .62rem;
   }
+
+  .structure-scope-menu button > i {
+    background: #527782;
+    border: 3px solid #10262d;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px #527782;
+    height: 12px;
+    margin-left: 8px;
+    width: 12px;
+  }
+  .structure-scope-menu button:nth-child(2) > i { background:#7c3aed; box-shadow:0 0 0 1px #7c3aed; }
+  .structure-scope-menu button:nth-child(3) > i { background:#e11d48; box-shadow:0 0 0 1px #e11d48; }
+  .structure-scope-menu button:nth-child(4) > i { background:#d97706; box-shadow:0 0 0 1px #d97706; }
+  .structure-scope-menu button:nth-child(5) > i { background:#0891b2; box-shadow:0 0 0 1px #0891b2; }
+  .structure-scope-menu code { font-size:.58rem; }
 
   .analytics-menu-icon,
   .view-icon {
