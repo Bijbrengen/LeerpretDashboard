@@ -7,7 +7,7 @@
     "localPhileUrl": "http://127.0.0.1:47115/",
     "productionApiBase": "https://api.leerpretpark.nl/api",
     "productionDashboardUrl": "https://bijbrengen.github.io/LeerpretDashboard/",
-    "productionEditorUrl": "https://bijbrengen.github.io/LeerboxEditor/",
+    "productionEditorUrl": "https://bijbrengen.github.io/Leerboxeditor/",
     "productionLearngameOmUrl": "https://bijbrengen.github.io/Learngame-Operations-Management/",
     "productionPhileUrl": "https://bijbrengen.github.io/Phile/"
   });

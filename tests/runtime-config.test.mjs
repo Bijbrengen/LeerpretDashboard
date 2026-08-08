@@ -13,6 +13,7 @@ function configFor(hostname) {
 
 assert.equal(configFor('127.0.0.1').apiBase, 'http://127.0.0.1:47111/api');
 assert.equal(configFor('bijbrengen.github.io').apiBase, 'https://api.leerpretpark.nl/api');
+assert.equal(configFor('bijbrengen.github.io').editorUrl, 'https://bijbrengen.github.io/Leerboxeditor/');
 
 const apiSource = fs.readFileSync(new URL('../src/js/api.js', import.meta.url), 'utf8');
 assert(apiSource.includes('.trycloudflare.com'), 'De client moet oude opgeslagen tunneladressen opruimen.');
