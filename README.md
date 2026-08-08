@@ -25,8 +25,10 @@ app.
 
 Kopieer `.env.example` naar `.env` en pas bij migratie alleen de waarden daar aan.
 `scripts/generate_runtime_config.py` vertaalt de relevante waarden naar
-`public/runtime-config.js`, zodat de statische browsercode geen hardgecodeerde
-serviceadressen nodig heeft.
+`public/runtime-config.js`. Lokale adressen komen uit `LEERPRET_API_URL` en de
+overige lokale URL-variabelen; de gepubliceerde versie gebruikt afzonderlijke
+`*_PRODUCTION_*`-waarden. Daardoor kan een lokale generatie nooit ongemerkt een
+localhostadres of tijdelijke tunnel naar GitHub Pages publiceren.
 
 De belangrijkste instelling is:
 

@@ -13,11 +13,12 @@
     "test:roles": "node tests/role-routing.test.mjs",
     "test:symbols": "node tests/source-symbols.test.mjs",
     "test:data-structure": "node tests/data-structure.test.mjs",
+    "test:runtime-config": "node tests/runtime-config.test.mjs",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:report": "playwright show-report",
-    "test": "npm run test:roles && npm run test:symbols && npm run test:data-structure",
+    "test": "npm run test:roles && npm run test:symbols && npm run test:data-structure && npm run test:runtime-config",
     "test:all": "npm run test && npm run test:e2e"
   },
   "dependencies": {

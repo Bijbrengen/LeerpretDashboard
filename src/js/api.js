@@ -1,4 +1,18 @@
 // Shared API and state manager for Leerpret Engine Dashboard
+const API_STORAGE_KEYS = ["api_base", "leerpret.apiBase"];
+
+function isTemporaryTunnel(value) {
+  try {
+    return new URL(String(value || "")).hostname.endsWith(".trycloudflare.com");
+  } catch {
+    return false;
+  }
+}
+
+for (const key of API_STORAGE_KEYS) {
+  if (isTemporaryTunnel(localStorage.getItem(key))) localStorage.removeItem(key);
+}
+
 export const state = {
   apiBase: window.LEERPRET_CONFIG.apiBase,
   editorBase: window.LEERPRET_CONFIG.editorUrl,
@@ -48,7 +62,7 @@ export function initSettings() {
     const cleanUrl = new URL(window.location.href);
     cleanUrl.searchParams.delete("api");
     window.history.replaceState({}, "", cleanUrl);
-  } else if (savedApi) {
+  } else if (savedApi && !isTemporaryTunnel(savedApi)) {
     state.apiBase = normaliseer(savedApi);
   }
   if (queryEditor) {

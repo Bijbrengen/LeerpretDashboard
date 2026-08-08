@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import json
 from pathlib import Path
 
 
@@ -27,26 +28,32 @@ def setting(name: str, defaults: dict[str, str], local: dict[str, str]) -> str:
 defaults = dotenv(ROOT / ".env.example")
 local = dotenv(ROOT / ".env")
 
-api_url = setting("LEERPRET_API_URL", defaults, local) or "http://127.0.0.1:47111/api"
-dashboard_url = setting("LEERPRET_DASHBOARD_URL", defaults, local) or "http://127.0.0.1:47112/"
-editor_url = setting("LEERBOX_EDITOR_URL", defaults, local) or "http://127.0.0.1:47114/"
-learngame_om_url = setting("LEARNGAME_OM_URL", defaults, local) or "http://127.0.0.1:47113/"
-phile_url = setting("PHILE_URL", defaults, local) or "http://127.0.0.1:47115/"
-tunnel_url = os.getenv("LEERPRET_TUNNEL_URL") or "https://intent-carries-travelers-media.trycloudflare.com/api"
+config = {
+    "localApiBase": setting("LEERPRET_API_URL", defaults, local),
+    "localDashboardUrl": setting("LEERPRET_DASHBOARD_URL", defaults, local),
+    "localEditorUrl": setting("LEERBOX_EDITOR_URL", defaults, local),
+    "localLearngameOmUrl": setting("LEARNGAME_OM_URL", defaults, local),
+    "localPhileUrl": setting("PHILE_URL", defaults, local),
+    "productionApiBase": setting("LEERPRET_PRODUCTION_API_URL", defaults, local),
+    "productionDashboardUrl": setting("LEERPRET_PRODUCTION_DASHBOARD_URL", defaults, local),
+    "productionEditorUrl": setting("LEERBOX_EDITOR_PRODUCTION_URL", defaults, local),
+    "productionLearngameOmUrl": setting("LEARNGAME_OM_PRODUCTION_URL", defaults, local),
+    "productionPhileUrl": setting("PHILE_PRODUCTION_URL", defaults, local),
+}
+serialized = json.dumps(config, ensure_ascii=False, indent=2).replace("\n", "\n  ")
 
 payload = f"""(function() {{
+  var endpoints = Object.freeze({serialized});
   var isLocal = typeof window !== "undefined" && (
     window.location.hostname === "127.0.0.1" ||
     window.location.hostname === "localhost"
   );
-  var tunnelUrl = "{tunnel_url}";
-
   window.LEERPRET_CONFIG = Object.freeze({{
-    "apiBase": isLocal ? "{api_url}" : tunnelUrl,
-    "dashboardUrl": isLocal ? "{dashboard_url}" : "https://bijbrengen.github.io/LeerpretDashboard/",
-    "editorUrl": isLocal ? "{editor_url}" : "https://bijbrengen.github.io/LeerboxEditor/",
-    "learngameOmUrl": isLocal ? "{learngame_om_url}" : "https://bijbrengen.github.io/Learngame-Operations-Management/",
-    "phileUrl": isLocal ? "{phile_url}" : "https://bijbrengen.github.io/Phile/"
+    apiBase: isLocal ? endpoints.localApiBase : endpoints.productionApiBase,
+    dashboardUrl: isLocal ? endpoints.localDashboardUrl : endpoints.productionDashboardUrl,
+    editorUrl: isLocal ? endpoints.localEditorUrl : endpoints.productionEditorUrl,
+    learngameOmUrl: isLocal ? endpoints.localLearngameOmUrl : endpoints.productionLearngameOmUrl,
+    phileUrl: isLocal ? endpoints.localPhileUrl : endpoints.productionPhileUrl
   }});
 }})();
 """
