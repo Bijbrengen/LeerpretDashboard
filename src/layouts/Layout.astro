@@ -2172,30 +2172,31 @@ const isActive = (path) => {
   :root {
     --font-heading: 'Rajdhani', 'Arial Narrow', sans-serif;
     --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
-    --bg: #071014;
-    --panel: #0b171d;
-    --surface-soft: #102830;
-    --ink: #eaf8f7;
-    --muted: #8ca4aa;
-    --line: #29434b;
-    --green: #49d9bf;
-    --green-light: #0e2f2d;
-    --green-border: #28aa9e;
-    --blue: #59bce8;
-    --coral: #ff7d62;
-    --plum: #9f83c9;
-    --amber: #e6ad43;
-    --violet: #8d83df;
-    --teal: #32ddd2;
+    --bg: #171018;
+    --panel: #251a24;
+    --surface-soft: #30212e;
+    --ink: #f7f4ee;
+    --muted: #cdbfca;
+    --line: #684564;
+    --green: #7a8b82;
+    --green-light: #252d29;
+    --green-border: #5a6f63;
+    --blue: #5281a7;
+    --coral: #e97a5f;
+    --plum: #684564;
+    --amber: #d2b052;
+    --violet: #7e627a;
+    --teal: #684564;
   }
 
   body {
-    background-color: #071014;
+    background-color: var(--bg);
     background-image:
-      linear-gradient(rgba(50, 221, 210, .025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(50, 221, 210, .025) 1px, transparent 1px),
-      radial-gradient(circle at 50% -20%, rgba(50, 221, 210, .13), transparent 48%);
-    background-size: 32px 32px, 32px 32px, auto;
+      linear-gradient(rgba(104, 69, 100, .08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(104, 69, 100, .08) 1px, transparent 1px),
+      radial-gradient(circle at 15% -15%, rgba(104, 69, 100, .48), transparent 42%),
+      radial-gradient(circle at 90% 10%, rgba(233, 122, 95, .12), transparent 34%);
+    background-size: 32px 32px, 32px 32px, auto, auto;
   }
 
   body::before {
