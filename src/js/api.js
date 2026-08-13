@@ -118,19 +118,14 @@ let sdkClientPromise;
 async function sdkClient() {
   if (!sdkClientPromise) {
     sdkClientPromise = (async () => {
-      const manifestResponse = await fetch(`${state.apiBase}/sdk/manifest.json`, { credentials: "include" });
-      if (!manifestResponse.ok) throw new Error("LeerpretSDK-manifest kon niet worden geladen.");
-      const manifest = await manifestResponse.json();
-      const component = manifest.components["api-client"];
       await new Promise((resolve, reject) => {
         const script = document.createElement("script");
-        script.src = `${state.apiBase}/sdk/api-client/client.js?v=${encodeURIComponent(manifest.version)}`;
-        script.integrity = component.integrity["client.js"];
-        script.crossOrigin = "anonymous";
+        script.src = `${state.apiBase}/sdk/sdk-loader/loader.js`;
         script.onload = resolve;
-        script.onerror = () => reject(new Error("LeerpretSDK kon niet worden geladen."));
+        script.onerror = () => reject(new Error("LeerpretSDK-loader kon niet worden geladen."));
         document.head.appendChild(script);
       });
+      await window.LeerpretSDK.Loader.create({ base: state.apiBase }).load("api-client");
       return window.LeerpretSDK.create({
         apiBase: state.apiBase,
         clientId: "dashboard",
