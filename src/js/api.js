@@ -120,7 +120,7 @@ async function sdkClient() {
     sdkClientPromise = (async () => {
       await new Promise((resolve, reject) => {
         const script = document.createElement("script");
-        script.src = `${state.apiBase}/sdk/sdk-loader/loader.js`;
+        script.src = `${state.apiBase}/sdk/sdk-loader/loader.js?bootstrap=${Date.now()}`;
         script.onload = resolve;
         script.onerror = () => reject(new Error("LeerpretSDK-loader kon niet worden geladen."));
         document.head.appendChild(script);
