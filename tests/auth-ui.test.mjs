@@ -34,4 +34,6 @@ test('Google-login bewaart een tabgebonden sessie en stuurt die naar de Engine',
   assert.match(api, /headers\["X-Leerpret-Session"\] = browserSession/);
   assert.match(api, /sessionStorage\.removeItem\(BROWSER_SESSION_KEY\)/);
   assert.match(api, /headers: authHeaders\(\)/);
+  assert.match(api, /client\.json\("\/auth\/session"/);
+  assert.doesNotMatch(api, /client\.request\("\/auth\/session"/);
 });

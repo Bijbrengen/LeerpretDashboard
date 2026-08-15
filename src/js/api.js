@@ -243,7 +243,7 @@ export async function establishSession() {
   try {
     const client = await sdkClient();
     try {
-      const getSession = await client.request("/auth/session", {
+      const getSession = await client.json("/auth/session", {
         method: "GET",
         headers: authHeaders(),
       });
