@@ -1,5 +1,6 @@
 // Shared API and state manager for Leerpret Engine Dashboard
 const API_STORAGE_KEYS = ["api_base", "leerpret.apiBase"];
+const BROWSER_SESSION_KEY = "leerpret.browserSession";
 
 function isTemporaryTunnel(value) {
   try {
@@ -103,12 +104,15 @@ export function logoutSession() {
   localStorage.setItem("leerpret.apiKey", "");
   localStorage.setItem("active_role", "guest");
   localStorage.setItem("leerpret.poc.role", "guest");
+  sessionStorage.removeItem(BROWSER_SESSION_KEY);
 }
 
 export function authHeaders(extra = {}) {
   const headers = { ...extra };
+  const browserSession = sessionStorage.getItem(BROWSER_SESSION_KEY) || "";
   if (state.organization) headers["X-Organization"] = state.organization;
   if (state.apiKey) headers["X-API-Key"] = state.apiKey;
+  if (browserSession) headers["X-Leerpret-Session"] = browserSession;
   headers["X-Leerpret-Role"] = localStorage.getItem("active_role") || localStorage.getItem("leerpret.poc.role") || state.activeRole || "guest";
   return headers;
 }
@@ -239,7 +243,10 @@ export async function establishSession() {
   try {
     const client = await sdkClient();
     try {
-      const getSession = await client.request("/auth/session", { method: "GET" });
+      const getSession = await client.request("/auth/session", {
+        method: "GET",
+        headers: authHeaders(),
+      });
       if (getSession && getSession.authenticated) {
         state.authorized = true;
         if (getSession.user) {

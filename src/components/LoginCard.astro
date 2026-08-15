@@ -270,6 +270,10 @@
       redirect_uri: redirectUri,
       share_profile: shareProfile
     }, { 'X-Requested-With': 'XmlHttpRequest' });
+    if (!result?.session_token) {
+      throw new Error('De Engine heeft geen browsersessie teruggegeven.');
+    }
+    sessionStorage.setItem('leerpret.browserSession', result.session_token);
     if (shareProfile) await apiPost('/auth/access-request', {});
     
     localStorage.removeItem('leerpret.loggedOut');
