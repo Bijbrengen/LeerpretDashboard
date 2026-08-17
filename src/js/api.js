@@ -155,6 +155,12 @@ export async function apiGet(path) {
   return response.json();
 }
 
+export async function apiBlob(path) {
+  const response = await sdkRequest(path);
+  if (!response.ok) throw await apiError(response);
+  return response.blob();
+}
+
 export async function apiPost(path, body, extraHeaders = {}) {
   const payload = path === "/engine/evaluate" ? withEngineRefinements(body) : body;
   const response = await sdkRequest(path, {

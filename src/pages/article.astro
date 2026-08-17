@@ -222,7 +222,7 @@ import Layout from '../layouts/Layout.astro';
   </div>
 
   <script>
-    import { state, apiGet, apiPost, apiPut, initSettings, apiRootUrl, editorRootUrl, escapeHtml, renderMath } from '../js/api.js';
+    import { state, apiBlob, apiGet, apiPost, apiPut, initSettings, apiRootUrl, editorRootUrl, escapeHtml, renderMath } from '../js/api.js';
     import { initControlLineBlock } from '../js/controlLineBlock.js';
     import { initCodeOverviewBlock } from '../js/codeOverviewBlock.js';
 
@@ -1148,25 +1148,47 @@ import Layout from '../layouts/Layout.astro';
     }
 
     // PDF Actions
-    function articlePdfUrl(mode) {
-      const url = new URL(`${state.apiBase}/help/articles/${currentArticleId}/pdf`);
+    function articlePdfPath(mode, articleId = currentArticleId) {
+      const url = new URL(`${state.apiBase}/help/articles/${encodeURIComponent(articleId)}/pdf`);
       url.searchParams.set(mode, '1');
       url.searchParams.set('role', currentRole);
-      return url.toString();
+      return `${url.pathname}${url.search}`.replace(/^\/api/, '');
     }
 
     /* PDF en TeX hebben een eigen tabblad en staan daar altijd klaar. Er valt dus
        niets meer te tonen of te verbergen; alleen het ophalen gebeurt op het moment
        dat het tabblad wordt gekozen, zodat de pagina niet onnodig laadt. */
     let pdfGeladenVoor = null;
+    let pdfBlobUrl = null;
+    let pdfLoadVersion = 0;
     let texGeladenVoor = null;
 
-    function vulPdfPaneel({ opnieuw = false } = {}) {
+    function stelPdfActiesBeschikbaar(beschikbaar) {
+      document.getElementById('btn-open-pdf')?.toggleAttribute('disabled', !beschikbaar);
+      document.getElementById('btn-download-pdf')?.toggleAttribute('disabled', !beschikbaar);
+    }
+
+    async function vulPdfPaneel({ opnieuw = false } = {}) {
       const container = document.getElementById('pdf-iframe-container');
       if (!container) return;
-      if (!opnieuw && pdfGeladenVoor === currentArticleId && container.querySelector('iframe')) return;
-      pdfGeladenVoor = currentArticleId;
-      container.innerHTML = `<iframe src="${articlePdfUrl('view')}" title="Artikel PDF" class="pdf-iframe"></iframe>`;
+      if (!opnieuw && pdfGeladenVoor === currentArticleId && pdfBlobUrl && container.querySelector('iframe')) return;
+      const articleId = currentArticleId;
+      const loadVersion = ++pdfLoadVersion;
+      stelPdfActiesBeschikbaar(false);
+      container.textContent = 'PDF laden…';
+      try {
+        const pdf = await apiBlob(articlePdfPath('view', articleId));
+        if (loadVersion !== pdfLoadVersion || articleId !== currentArticleId) return;
+        if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+        pdfBlobUrl = URL.createObjectURL(pdf);
+        pdfGeladenVoor = articleId;
+        container.innerHTML = `<iframe src="${pdfBlobUrl}" title="Artikel PDF" class="pdf-iframe"></iframe>`;
+        stelPdfActiesBeschikbaar(true);
+      } catch (error) {
+        if (loadVersion !== pdfLoadVersion) return;
+        pdfGeladenVoor = null;
+        container.textContent = error?.message || 'De artikel-PDF kon niet worden geladen.';
+      }
     }
 
     async function vulTexPaneel({ opnieuw = false } = {}) {
@@ -1233,13 +1255,18 @@ import Layout from '../layouts/Layout.astro';
     }
 
     function handleOpenPdf() {
-      const url = articlePdfUrl('view');
-      window.open(url, '_blank', 'noopener');
+      if (pdfBlobUrl && pdfGeladenVoor === currentArticleId) {
+        window.open(pdfBlobUrl, '_blank', 'noopener');
+      }
     }
 
     function handleDownloadPdf() {
-      const url = articlePdfUrl('download');
-      window.location.href = url;
+      if (!pdfBlobUrl || pdfGeladenVoor !== currentArticleId) return;
+      const step = loadedSteps.find((item) => item.id === currentArticleId);
+      const link = document.createElement('a');
+      link.href = pdfBlobUrl;
+      link.download = step?.pdf?.filename || `${currentArticleId}.pdf`;
+      link.click();
     }
 
     /* Niet elke rol heeft alle tabbladen nodig. De Leerpretarchitect werkt aan de

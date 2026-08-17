@@ -55,7 +55,8 @@ import Layout from '../layouts/Layout.astro';
   </div>
 
   <script>
-    import { apiGet, apiPost, apiRootUrl, escapeHtml, initSettings } from '../js/api.js';
+    import { apiGet, apiPost, apiRootUrl, escapeHtml, initSettings, state } from '../js/api.js';
+    import { previewUrlForTwin } from '../js/previewUrl.js';
 
     const parameters = new URLSearchParams(window.location.search);
     let role = parameters.get('role') || localStorage.getItem('active_role') || localStorage.getItem('leerpret.poc.role') || 'guest';
@@ -269,15 +270,16 @@ import Layout from '../layouts/Layout.astro';
       activeCapture = twin;
       previewEvents = [];
       const generated = generatedPreviewFor(twin);
-      let url;
       if (generated) {
         activeCapture = generated.capture;
-        url = new URL(generated.preview_url, apiRootUrl());
-      } else {
-        const slug = String(twin.id || '').replace(/^leerbox-/, '');
-        url = new URL(`${apiRootUrl()}/tools/leerbox/${encodeURIComponent(slug)}/`);
       }
-      url.searchParams.set('role', role);
+      const url = previewUrlForTwin(twin, {
+        generatedPreview: generated,
+        config: window.LEERPRET_CONFIG,
+        apiRoot: apiRootUrl(),
+        apiBase: state.apiBase,
+        role,
+      });
       document.getElementById('preview-title').textContent = twin.title || twin.id;
       document.getElementById('preview-device-address').textContent = twin.title || twin.id;
       document.getElementById('preview-standalone-link').href = url.toString();
