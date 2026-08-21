@@ -45,3 +45,11 @@ test('Google-login bewaart een tabgebonden sessie en stuurt die naar de Engine',
   assert.match(api, /client\.json\("\/auth\/session"/);
   assert.doesNotMatch(api, /client\.request\("\/auth\/session"/);
 });
+
+test('Google-callback verwijdert de eenmalige code voor de tokenuitwisseling', () => {
+  const loginCard = readFileSync(new URL('../src/components/LoginCard.astro', import.meta.url), 'utf8');
+
+  assert.match(loginCard, /\['code', 'state', 'scope', 'authuser', 'prompt', 'hd'\]/);
+  assert.match(loginCard, /window\.history\.replaceState\(\{\}, '', cleanUrl\)/);
+  assert.match(loginCard, /if \(loginBtn\) loginBtn\.disabled = false/);
+});
