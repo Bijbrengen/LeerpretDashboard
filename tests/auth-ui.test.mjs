@@ -26,6 +26,14 @@ test('statusbalk, rolmenu en authknoppen gebruiken hetzelfde sessieresultaat', (
   assert.match(layout, /if \(!state\.authorized\)/);
 });
 
+test('governancelinks respecteren de Astro-basisprefix op GitHub Pages', () => {
+  const layout = readFileSync(new URL('../src/layouts/Layout.astro', import.meta.url), 'utf8');
+
+  assert.match(layout, /href={`\$\{base\}\/settings\?block=access_management`}/);
+  assert.match(layout, /href={`\$\{base\}\/privacy`}/);
+  assert.doesNotMatch(layout, /href="\/(?:settings|privacy)/);
+});
+
 test('Google-login bewaart een tabgebonden sessie en stuurt die naar de Engine', () => {
   const loginCard = readFileSync(new URL('../src/components/LoginCard.astro', import.meta.url), 'utf8');
   const api = readFileSync(new URL('../src/js/api.js', import.meta.url), 'utf8');

@@ -211,8 +211,8 @@ const isActive = (path) => {
             <button id="auth-login" class="btn-sm" type="button" data-i18n="auth.login">Login</button>
             <button id="auth-logout" class="btn-sm" type="button" data-i18n="auth.logout">Logout</button>
           </div>
-          <a class="settings-access-link" href="/settings?block=access_management" data-i18n="settings.access">Toegang</a>
-          <a class="settings-access-link privacy-access-link" href="/privacy" data-i18n="settings.privacy">Privacy &amp; data</a>
+          <a class="settings-access-link" href={`${base}/settings?block=access_management`} data-i18n="settings.access">Toegang</a>
+          <a class="settings-access-link privacy-access-link" href={`${base}/privacy`} data-i18n="settings.privacy">Privacy &amp; data</a>
           <details class="engine-refinement-panel" id="engine-refinement-panel" hidden>
             <summary>Engine-verfijningen</summary>
             <label class="engine-refinement-toggle" for="activity-threshold-enabled">
