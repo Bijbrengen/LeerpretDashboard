@@ -58,6 +58,7 @@ test.describe('SNN Innovatietest', () => {
           status: 'live', cursor: 1, active_sessions: 1, buffered_events: 1,
           events: [{
             id: 1, recorded_at: new Date().toISOString(), processing_ms: 2.4,
+            person_id: 'lom-player-1',
             source: { surface: 'LOM', leerbox_id: 'learngame-operations-management', session: 'lom-abc123' },
             step_1: { action_type: 'production_complete', leerobject_id: 'lom.production.assembly', object_role: 'success', transport_latency_ms: 14 },
             step_2: { action_count: 7, active_series_count: 7, markers: { T: .7, A: .2, V: .6, R: .1, S: 1 }, validity: { geldig: true, details: { variatie: 4 } } },

@@ -31,6 +31,7 @@ const appUrl = process.env.PLAYWRIGHT_TEST_URL || 'http://127.0.0.1:47119/';
 const endpoint = new URL(appUrl);
 const port = endpoint.port || '47119';
 const hostname = endpoint.hostname || '127.0.0.1';
+const localServer = ['127.0.0.1', 'localhost', '::1'].includes(hostname);
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -68,11 +69,11 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
+  webServer: localServer ? {
     command: `python scripts/serve_dashboard.py ${port} --bind ${hostname}`,
     cwd: __dirname,
     url: appUrl,
     reuseExistingServer: false,
     timeout: 30_000,
-  },
+  } : undefined,
 });

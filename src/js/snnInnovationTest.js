@@ -5,8 +5,8 @@ const simulation = {
   selectedGameId: '',
   selectedMode: 'lom-live',
   live: {
-    lom: { cursor: 0, events: [] },
-    phile: { cursor: 0, events: [] },
+    lom: createLiveState(),
+    phile: createLiveState(),
   },
   timer: 0,
   stopped: false,
@@ -15,7 +15,7 @@ const simulation = {
 const liveSources = Object.freeze([
   {
     id: 'lom', tabId: 'lom-live', title: 'LOM Live', surface: 'LOM',
-    endpoint: '/innovation-tests/lom/live', configKey: 'learngameOmUrl', fallbackUrl: 'http://127.0.0.1:47113/',
+    endpoint: '/innovation-tests/lom/live', configKey: 'learngameOmUrl', fallbackUrl: 'http://127.0.0.1:47113/', personScoped: true,
   },
   {
     id: 'phile', tabId: 'phile-live', title: 'Phile Live', surface: 'Phile',
@@ -28,6 +28,19 @@ const selectedLiveSource = () => liveSource(simulation.selectedMode.replace(/-li
 const selectedLiveState = () => simulation.live[selectedLiveSource().id];
 
 const byId = (id) => document.getElementById(id);
+
+function createLiveState() {
+  return {
+    cursor: 0,
+    events: [],
+    people: new Map(),
+    selectedPersonKey: '',
+    selectionTouched: false,
+    seenEventKeys: new Set(),
+    seenEventOrder: [],
+    contractErrorCount: 0,
+  };
+}
 
 function setText(id, value) {
   const element = byId(id);
@@ -94,6 +107,210 @@ function evidenceProgress(validity = {}) {
   return Math.max(0, Math.min(100, Math.round(Math.min(...ratios) * 100)));
 }
 
+function participantRefForEvent(event) {
+  const candidates = [event?.participant_ref, event?.source?.participant_ref, event?.person_id, event?.source?.person_id];
+  for (const candidate of candidates) {
+    if (typeof candidate !== 'string' && typeof candidate !== 'number') continue;
+    const normalized = String(candidate).trim();
+    if (normalized) return normalized;
+  }
+  return '';
+}
+
+function sessionIdForEvent(event) {
+  const candidates = [event?.session_id, event?.source?.session_id, event?.source?.session];
+  for (const candidate of candidates) {
+    if (typeof candidate !== 'string' && typeof candidate !== 'number') continue;
+    const normalized = String(candidate).trim();
+    if (normalized) return normalized;
+  }
+  return '';
+}
+
+function personKeyForEvent(event) {
+  const participantRef = participantRefForEvent(event);
+  const sessionId = sessionIdForEvent(event);
+  return participantRef && sessionId ? JSON.stringify([sessionId, participantRef]) : '';
+}
+
+function eventKey(source, event) {
+  if (event?.id !== undefined && event?.id !== null && String(event.id) !== '') {
+    return `${source.id}:person:${personKeyForEvent(event) || 'missing'}:id:${String(event.id)}`;
+  }
+  return [
+    source.id,
+    'event',
+    participantRefForEvent(event),
+    sessionIdForEvent(event),
+    event?.recorded_at || '',
+    event?.step_1?.action_type || '',
+    event?.step_1?.leerobject_id || '',
+  ].join(':');
+}
+
+function compareLiveEvents(first, second) {
+  const firstId = Number(first?.id);
+  const secondId = Number(second?.id);
+  if (Number.isFinite(firstId) && Number.isFinite(secondId) && firstId !== secondId) return firstId - secondId;
+  const firstTime = new Date(first?.recorded_at || 0).getTime();
+  const secondTime = new Date(second?.recorded_at || 0).getTime();
+  if (Number.isFinite(firstTime) && Number.isFinite(secondTime) && firstTime !== secondTime) return firstTime - secondTime;
+  return String(first?.id ?? '').localeCompare(String(second?.id ?? ''), 'nl', { numeric: true });
+}
+
+function rememberEvent(liveState, key) {
+  if (liveState.seenEventKeys.has(key)) return false;
+  liveState.seenEventKeys.add(key);
+  liveState.seenEventOrder.push(key);
+  if (liveState.seenEventOrder.length > 5000) {
+    const expired = liveState.seenEventOrder.splice(0, liveState.seenEventOrder.length - 5000);
+    expired.forEach((oldKey) => liveState.seenEventKeys.delete(oldKey));
+  }
+  return true;
+}
+
+function resetLiveFeedAfterRestart(liveState) {
+  liveState.cursor = 0;
+  liveState.events = [];
+  liveState.people.clear();
+  liveState.selectedPersonKey = '';
+  liveState.selectionTouched = false;
+  liveState.seenEventKeys.clear();
+  liveState.seenEventOrder = [];
+  liveState.contractErrorCount = 0;
+}
+
+function ingestLiveEvents(source, incoming) {
+  const liveState = simulation.live[source.id];
+  let accepted = 0;
+  incoming.forEach((event) => {
+    if (!rememberEvent(liveState, eventKey(source, event))) return;
+    if (source.personScoped) {
+      const participantRef = participantRefForEvent(event);
+      const sessionId = sessionIdForEvent(event);
+      const personKey = personKeyForEvent(event);
+      if (!personKey) {
+        liveState.contractErrorCount += 1;
+        return;
+      }
+      if (!liveState.people.has(personKey)) liveState.people.set(personKey, { key: personKey, participantRef, sessionId, events: [] });
+      const person = liveState.people.get(personKey);
+      person.events.push(event);
+      person.events.sort(compareLiveEvents);
+      person.events = person.events.slice(-100);
+    }
+    liveState.events.push(event);
+    liveState.events.sort(compareLiveEvents);
+    liveState.events = liveState.events.slice(-100);
+    accepted += 1;
+  });
+  if (source.personScoped && !liveState.selectedPersonKey && liveState.people.size) {
+    liveState.selectedPersonKey = [...liveState.people.values()]
+      .sort((first, second) => first.participantRef.localeCompare(second.participantRef, 'nl', { numeric: true }) || first.sessionId.localeCompare(second.sessionId, 'nl', { numeric: true }))[0].key;
+  }
+  return accepted;
+}
+
+function selectedPerson(source) {
+  if (!source.personScoped) return null;
+  const liveState = simulation.live[source.id];
+  return liveState.people.get(liveState.selectedPersonKey) || null;
+}
+
+function renderContractError(source) {
+  const notice = byId('simulation-contract-error');
+  if (!notice) return;
+  const count = source.personScoped ? simulation.live[source.id].contractErrorCount : 0;
+  notice.hidden = count === 0;
+  notice.textContent = count
+    ? `Contractfout: ${count} ${count === 1 ? 'LOM-event is' : 'LOM-events zijn'} zonder geldige participant_ref/person_id of gamesessie genegeerd. Deze ${count === 1 ? 'actie is' : 'acties zijn'} niet met een andere speler gemengd.`
+    : '';
+}
+
+function renderPersonSelector(source) {
+  const control = byId('live-person-control');
+  const select = byId('live-person-select');
+  const status = byId('live-person-selection-status');
+  if (!control || !select || !status) return;
+  const visible = Boolean(source.personScoped && simulation.selectedMode === source.tabId);
+  control.hidden = !visible;
+  if (!visible) return;
+
+  const liveState = simulation.live[source.id];
+  const people = [...liveState.people.values()]
+    .sort((first, second) => first.participantRef.localeCompare(second.participantRef, 'nl', { numeric: true }) || first.sessionId.localeCompare(second.sessionId, 'nl', { numeric: true }));
+  if (!people.length) {
+    if (select.dataset.peopleSignature !== '') {
+      const option = document.createElement('option');
+      option.value = '';
+      option.textContent = 'Wachten op Persoon-ID…';
+      select.replaceChildren(option);
+      select.dataset.peopleSignature = '';
+    }
+    select.disabled = true;
+    status.textContent = liveState.contractErrorCount
+      ? 'Geen bruikbare persoon ontvangen; controleer het LOM-eventcontract.'
+      : 'Nog geen geldige LOM-actiereeks ontvangen.';
+    return;
+  }
+  const peopleSignature = people.map((person) => person.key).join('\n');
+  if (select.dataset.peopleSignature !== peopleSignature) {
+    const options = people.map((person) => {
+      const option = document.createElement('option');
+      option.value = person.key;
+      option.textContent = `Persoon-ID ${person.participantRef} · sessie ${person.sessionId}`;
+      return option;
+    });
+    select.replaceChildren(...options);
+    select.dataset.peopleSignature = peopleSignature;
+  }
+  select.disabled = false;
+  select.value = liveState.selectedPersonKey;
+  const selected = selectedPerson(source);
+  status.textContent = `${people.length} ${people.length === 1 ? 'persoon/sessie' : 'personen/sessies'} in de live actiereeks · ${liveState.selectionTouched ? 'handmatig ' : ''}geselecteerd: ${selected?.participantRef || '—'}`;
+}
+
+function setMeasurementPerson(label, contractMissing = false) {
+  const context = byId('simulation-measurement-person');
+  if (!context) return;
+  context.textContent = label;
+  context.classList.toggle('contract-missing', contractMissing);
+}
+
+function resetLiveMeasurement(source) {
+  document.querySelectorAll('[data-simulation-step]').forEach((step) => step.classList.remove('active'));
+  setText('simulation-source-actions', '0');
+  setText('simulation-source-sequences', '—');
+  setText('simulation-source-people', '—');
+  setText('simulation-processing-time', '—');
+  setText('simulation-game', 'Wachten op actie…');
+  setText('simulation-dataset', '—');
+  setText('simulation-period', '—');
+  setText('simulation-session-id', '—');
+  ['T', 'A', 'V', 'R', 'S'].forEach((marker) => {
+    const target = document.querySelector(`[data-marker="${marker}"]`);
+    if (target) target.textContent = '—';
+  });
+  setText('simulation-series-status', source.personScoped && simulation.live[source.id].contractErrorCount
+    ? 'Geen geldige persoonsgebonden actiereeks beschikbaar.'
+    : 'Live actiereeks wordt geladen.');
+  setText('simulation-score', '—');
+  setText('simulation-measurement-state', 'Wachten op markers');
+  setText('simulation-archetype', 'Nog onbepaald');
+  setText('simulation-measurement-detail', 'De Engine berekent pas na voldoende persoonsgebonden gedragsbewijs een meting.');
+  setMeasurementPerson(
+    source.personScoped && simulation.live[source.id].contractErrorCount
+      ? 'Geen meting: ontvangen LOM-event mist een geldige Persoon-ID of gamesessie.'
+      : source.personScoped ? 'Nog geen Persoon-ID geselecteerd.' : `Meting voor de laatst ontvangen ${source.surface}-reeks.`,
+    Boolean(source.personScoped && simulation.live[source.id].contractErrorCount),
+  );
+  const progressBar = byId('simulation-evidence-progress');
+  if (progressBar) progressBar.style.width = '0%';
+  const orb = byId('simulation-score-orb');
+  if (orb) orb.style.setProperty('--score-angle', '0deg');
+  renderLiveFeed();
+}
+
 function renderFeed(game) {
   const list = byId('simulation-action-feed');
   if (!list) return;
@@ -132,6 +349,11 @@ function renderGame(game) {
   document.querySelectorAll('[data-simulation-step]').forEach((step) => step.classList.add('active'));
   const liveLink = byId('open-live-test');
   if (liveLink) liveLink.hidden = true;
+  const personControl = byId('live-person-control');
+  if (personControl) personControl.hidden = true;
+  const contractNotice = byId('simulation-contract-error');
+  if (contractNotice) contractNotice.hidden = true;
+  setMeasurementPerson('Meting voor de representatieve historische actiereeks.');
   setStatus('historical', 'Historisch archief');
   setMetricLabels([
     ['Bronacties', 'alle geregistreerde events'],
@@ -197,7 +419,9 @@ function renderLiveFeed() {
   list.replaceChildren();
   const source = selectedLiveSource();
   const liveState = selectedLiveState();
-  const events = [...liveState.events].reverse().slice(0, 30);
+  const person = selectedPerson(source);
+  const scopedEvents = source.personScoped ? (person?.events || []) : liveState.events;
+  const events = [...scopedEvents].sort(compareLiveEvents).reverse().slice(0, 30);
   events.forEach((event) => {
     const item = document.createElement('li');
     const cells = [
@@ -217,23 +441,33 @@ function renderLiveFeed() {
   if (!events.length) {
     const empty = document.createElement('li');
     empty.className = 'empty-feed';
-    empty.textContent = `Start ${source.surface} en voer een actie uit; de gebeurtenis verschijnt hier direct.`;
+    empty.textContent = source.personScoped && liveState.contractErrorCount
+      ? 'Ontvangen LOM-events zonder geldige Persoon-ID of gamesessie zijn geweigerd; er is geen persoonsfeed samengesteld.'
+      : `Start ${source.surface} en voer een actie uit; de gebeurtenis verschijnt hier direct.`;
     list.append(empty);
   }
-  setText('simulation-feed-count', `${liveState.events.length} gebeurtenis${liveState.events.length === 1 ? '' : 'sen'}`);
+  const personSuffix = source.personScoped && person ? ` · Persoon-ID ${person.participantRef}` : '';
+  setText('simulation-feed-count', `${scopedEvents.length} gebeurtenis${scopedEvents.length === 1 ? '' : 'sen'}${personSuffix}`);
 }
 
-function renderLiveEvent(event) {
+function renderLiveEvent(event, source = selectedLiveSource()) {
   if (!event) return;
   const received = event.step_1 || {};
   const transformed = event.step_2 || {};
   const measurement = event.step_3 || {};
+  const participantRef = participantRefForEvent(event);
+  const sessionId = sessionIdForEvent(event);
+  setMeasurementPerson(source.personScoped
+    ? `Meting voor Persoon-ID: ${participantRef} · sessie: ${sessionId}`
+    : `Meting voor de laatst ontvangen ${source.surface}-reeks.`);
   document.querySelectorAll('[data-simulation-step]').forEach((step) => step.classList.add('active'));
   setText('simulation-game', received.action_type);
   setText('simulation-dataset', received.leerobject_id);
   setText('simulation-period', received.object_role);
-  setText('simulation-session-id', event.source?.session);
-  setText('simulation-source-actions', formatNumber(transformed.action_count || selectedLiveState().events.length));
+  setText('simulation-session-id', sessionId);
+  const visibleEventCount = source.personScoped ? (selectedPerson(source)?.events.length || 0) : selectedLiveState().events.length;
+  const actionCount = Number(transformed.action_count);
+  setText('simulation-source-actions', formatNumber(Number.isFinite(actionCount) ? actionCount : visibleEventCount));
   setText('simulation-source-sequences', formatLatency(received.transport_latency_ms));
   setText('simulation-source-people', formatLatency(event.processing_ms));
   const dashboardLatency = Date.now() - new Date(event.recorded_at).getTime();
@@ -262,6 +496,27 @@ function renderLiveEvent(event) {
   renderLiveFeed();
 }
 
+function renderSelectedLive(source) {
+  renderPersonSelector(source);
+  renderContractError(source);
+  const liveState = simulation.live[source.id];
+  const event = source.personScoped
+    ? selectedPerson(source)?.events.at(-1)
+    : liveState.events.at(-1);
+  if (event) renderLiveEvent(event, source);
+  else resetLiveMeasurement(source);
+}
+
+function selectPerson(personKey) {
+  const source = selectedLiveSource();
+  if (!source.personScoped) return;
+  const liveState = simulation.live[source.id];
+  if (!liveState.people.has(personKey)) return;
+  liveState.selectedPersonKey = personKey;
+  liveState.selectionTouched = true;
+  renderSelectedLive(source);
+}
+
 function selectLive(sourceId = 'lom') {
   const source = liveSource(sourceId);
   const liveState = simulation.live[source.id];
@@ -288,20 +543,15 @@ function selectLive(sourceId = 'lom') {
     liveLink.href = window.LEERPRET_CONFIG?.[source.configKey] || source.fallbackUrl;
     liveLink.textContent = `Open ${source.surface} ↗`;
   }
-  if (liveState.events.length) {
-    setStatus('live', 'Live verbonden');
-    renderLiveEvent(liveState.events.at(-1));
+  renderPersonSelector(source);
+  renderContractError(source);
+  const latestEvent = source.personScoped ? selectedPerson(source)?.events.at(-1) : liveState.events.at(-1);
+  if (latestEvent) {
+    setStatus(liveState.contractErrorCount ? 'warning' : 'live', liveState.contractErrorCount ? 'Live · contractfout' : 'Live verbonden');
+    renderLiveEvent(latestEvent, source);
   } else {
-    setStatus('live', `Verbonden · wacht op ${source.surface}`);
-    setText('simulation-source-actions', '0');
-    setText('simulation-source-sequences', '—');
-    setText('simulation-source-people', '—');
-    setText('simulation-processing-time', '—');
-    setText('simulation-game', 'Wachten op actie…');
-    setText('simulation-dataset', '—');
-    setText('simulation-period', '—');
-    setText('simulation-session-id', '—');
-    renderLiveFeed();
+    setStatus(liveState.contractErrorCount ? 'warning' : 'live', liveState.contractErrorCount ? 'Contractfout in LOM-event' : `Verbonden · wacht op ${source.surface}`);
+    resetLiveMeasurement(source);
   }
 }
 
@@ -311,17 +561,23 @@ async function pollLive() {
     const liveState = simulation.live[source.id];
     try {
       const payload = await apiGet(`${source.endpoint}?after=${liveState.cursor}&limit=50`);
-      liveState.cursor = Number(payload.cursor || liveState.cursor);
+      const responseCursor = Number(payload.cursor);
+      const gapReason = String(payload?.cursor_gap?.reason || '');
+      const feedRestarted = Boolean(payload?.gap_detected && gapReason.startsWith('cursor_ahead'));
+      if (feedRestarted) resetLiveFeedAfterRestart(liveState);
+      if (Number.isFinite(responseCursor)) {
+        liveState.cursor = feedRestarted ? Math.max(0, responseCursor) : Math.max(liveState.cursor, responseCursor);
+      }
       const incoming = Array.isArray(payload.events) ? payload.events : [];
-      if (incoming.length) {
-        liveState.events.push(...incoming);
-        liveState.events = liveState.events.slice(-100);
-        if (simulation.selectedMode === source.tabId) {
-          setStatus('live', 'Live verbonden');
-          renderLiveEvent(liveState.events.at(-1));
-        }
+      const accepted = ingestLiveEvents(source, incoming);
+      if (simulation.selectedMode === source.tabId && (incoming.length || accepted)) {
+        setStatus(liveState.contractErrorCount ? 'warning' : 'live', liveState.contractErrorCount ? 'Live · contractfout' : 'Live verbonden');
+        renderSelectedLive(source);
       } else if (simulation.selectedMode === source.tabId) {
-        setStatus('live', liveState.events.length ? 'Live verbonden' : `Verbonden · wacht op ${source.surface}`);
+        const hasEvents = source.personScoped ? liveState.people.size > 0 : liveState.events.length > 0;
+        setStatus(liveState.contractErrorCount ? 'warning' : 'live', liveState.contractErrorCount
+          ? 'Live · contractfout'
+          : hasEvents ? 'Live verbonden' : `Verbonden · wacht op ${source.surface}`);
       }
     } catch (error) {
       if (simulation.selectedMode === source.tabId) {
@@ -388,6 +644,7 @@ function initialize() {
   document.querySelectorAll('[data-test-type]').forEach((button) => {
     button.addEventListener('click', () => selectTest(button.dataset.testType));
   });
+  byId('live-person-select')?.addEventListener('change', (event) => selectPerson(event.currentTarget.value));
   selectTest('practice');
   renderTabs();
   selectLive('lom');
