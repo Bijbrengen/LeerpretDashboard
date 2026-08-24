@@ -135,7 +135,12 @@ async function sdkClient() {
         clientId: "dashboard",
         loginUrl: "/login",
       });
-    })();
+    })().catch((error) => {
+      // Een tijdelijke script-/netwerkfout mag de SDK niet voor de rest van de
+      // paginaduur blokkeren. Een volgende handmatige poging start schoon.
+      sdkClientPromise = null;
+      throw error;
+    });
   }
   return sdkClientPromise;
 }

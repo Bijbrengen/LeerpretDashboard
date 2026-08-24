@@ -255,6 +255,12 @@
     }
   }
 
+  function clearGoogleCallbackParameters() {
+    const cleanUrl = new URL(window.location.href);
+    ['code', 'state', 'scope', 'authuser', 'prompt', 'hd', 'iss'].forEach((name) => cleanUrl.searchParams.delete(name));
+    window.history.replaceState({}, '', cleanUrl);
+  }
+
   async function completeGoogleLogin() {
     const parameters = new URLSearchParams(window.location.search);
     const code = parameters.get('code');
@@ -265,18 +271,22 @@
     }
     const shareProfile = sessionStorage.getItem('leerpret.oauth.shareProfile') === 'true';
     const redirectUri = `${window.location.origin}${window.location.pathname}`;
-    // Een autorisatiecode mag maar een keer worden ingewisseld. Haal hem voor
-    // het netwerkverzoek uit de adresbalk, zodat refresh/back niet stilzwijgend
-    // dezelfde (dan verlopen) code nogmaals verstuurt.
-    const cleanUrl = new URL(window.location.href);
-    ['code', 'state', 'scope', 'authuser', 'prompt', 'hd'].forEach((name) => cleanUrl.searchParams.delete(name));
-    window.history.replaceState({}, '', cleanUrl);
     if (loginBtn) loginBtn.disabled = true;
-    const result = await apiPost('/auth/google-code', {
-      code,
-      redirect_uri: redirectUri,
-      share_profile: shareProfile
-    }, { 'X-Requested-With': 'XmlHttpRequest' });
+    let result;
+    try {
+      result = await apiPost('/auth/google-code', {
+        code,
+        redirect_uri: redirectUri,
+        share_profile: shareProfile
+      }, { 'X-Requested-With': 'XmlHttpRequest' });
+    } catch (error) {
+      // Alleen een antwoord van de Engine bewijst dat Google de code definitief
+      // heeft verwerkt of geweigerd. Bij een loader-/netwerkfout blijft de code
+      // staan, zodat verversen veilig opnieuw kan proberen.
+      if (error && typeof error === 'object' && error.status === 401) clearGoogleCallbackParameters();
+      throw error;
+    }
+    clearGoogleCallbackParameters();
     if (!result?.session_token) {
       throw new Error('De Engine heeft geen browsersessie teruggegeven.');
     }
