@@ -270,7 +270,11 @@
       throw new Error('De Google-aanmelding kon niet veilig worden bevestigd.');
     }
     const shareProfile = sessionStorage.getItem('leerpret.oauth.shareProfile') === 'true';
-    const redirectUri = `${window.location.origin}${window.location.pathname}`;
+    const redirectUri = sessionStorage.getItem('leerpret.oauth.redirectUri')
+      || `${window.location.origin}${window.location.pathname}`;
+    if (new URL(redirectUri).origin !== window.location.origin) {
+      throw new Error('De terugkeer-URL van de Google-aanmelding is ongeldig.');
+    }
     if (loginBtn) loginBtn.disabled = true;
     let result;
     try {
@@ -304,6 +308,7 @@
     const returnTarget = safeReturnTarget(sessionStorage.getItem('leerpret.oauth.return'));
     sessionStorage.removeItem('leerpret.oauth.state');
     sessionStorage.removeItem('leerpret.oauth.shareProfile');
+    sessionStorage.removeItem('leerpret.oauth.redirectUri');
     sessionStorage.removeItem('leerpret.oauth.return');
     window.location.href = returnTarget;
     return true;
@@ -355,6 +360,7 @@
           const redirectUri = `${window.location.origin}${window.location.pathname}`;
           sessionStorage.setItem('leerpret.oauth.state', oauthState);
           sessionStorage.setItem('leerpret.oauth.shareProfile', String(shareProfile));
+          sessionStorage.setItem('leerpret.oauth.redirectUri', redirectUri);
           sessionStorage.setItem('leerpret.oauth.return', returnTarget);
           const authorization = new URL('https://accounts.google.com/o/oauth2/v2/auth');
           authorization.searchParams.set('client_id', googleConfig.client_id);

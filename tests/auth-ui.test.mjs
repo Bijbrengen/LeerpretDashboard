@@ -57,3 +57,14 @@ test('Google-callback bewaart de code bij een loaderfout en wist hem na uitwisse
   assert.match(loginCard, /if \(loginBtn\) loginBtn\.disabled = false/);
   assert.match(api, /sdkClientPromise = null;\s*throw error;/);
 });
+
+test('Google-callback gebruikt exact de aangevraagde redirect en wordt niet herhaald', () => {
+  const loginCard = readFileSync(new URL('../src/components/LoginCard.astro', import.meta.url), 'utf8');
+  const api = readFileSync(new URL('../src/js/api.js', import.meta.url), 'utf8');
+
+  assert.match(loginCard, /sessionStorage\.setItem\('leerpret\.oauth\.redirectUri', redirectUri\)/);
+  assert.match(loginCard, /sessionStorage\.getItem\('leerpret\.oauth\.redirectUri'\)/);
+  assert.match(loginCard, /sessionStorage\.removeItem\('leerpret\.oauth\.redirectUri'\)/);
+  assert.match(api, /isOneTimeGoogleCode/);
+  assert.match(api, /retry401: !isOneTimeGoogleCode/);
+});

@@ -168,8 +168,10 @@ export async function apiBlob(path) {
 
 export async function apiPost(path, body, extraHeaders = {}) {
   const payload = path === "/engine/evaluate" ? withEngineRefinements(body) : body;
+  const isOneTimeGoogleCode = path === "/auth/google-code" || path === "/auth/leerbox/google-code";
   const response = await sdkRequest(path, {
     method: "POST",
+    retry401: !isOneTimeGoogleCode,
     headers: authHeaders({ "Content-Type": "application/json", ...extraHeaders }),
     body: JSON.stringify(payload),
   });
