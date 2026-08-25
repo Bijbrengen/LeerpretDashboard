@@ -1,4 +1,4 @@
-import { apiGet } from './api.js';
+import { apiGet, apiRootUrl } from './api.js';
 
 const simulation = {
   games: [],
@@ -14,11 +14,11 @@ const simulation = {
 
 const liveSources = Object.freeze([
   {
-    id: 'lom', tabId: 'lom-live', title: 'LOM Live', surface: 'LOM',
+    id: 'lom', tabId: 'lom-live', title: 'LOM', surface: 'LOM',
     endpoint: '/innovation-tests/lom/live', configKey: 'learngameOmUrl', fallbackUrl: 'http://127.0.0.1:47113/', personScoped: true,
   },
   {
-    id: 'phile', tabId: 'phile-live', title: 'Phile Live', surface: 'Phile',
+    id: 'phile', tabId: 'phile-live', title: 'Phile', surface: 'Phile',
     endpoint: '/innovation-tests/phile/live', configKey: 'phileUrl', fallbackUrl: 'http://127.0.0.1:47115/',
   },
 ]);
@@ -293,7 +293,7 @@ function resetLiveMeasurement(source) {
   });
   setText('simulation-series-status', source.personScoped && simulation.live[source.id].contractErrorCount
     ? 'Geen geldige persoonsgebonden actiereeks beschikbaar.'
-    : 'Live actiereeks wordt geladen.');
+    : 'Actiereeks wordt geladen.');
   setText('simulation-score', '—');
   setText('simulation-measurement-state', 'Wachten op markers');
   setText('simulation-archetype', 'Nog onbepaald');
@@ -486,7 +486,7 @@ function renderLiveEvent(event, source = selectedLiveSource()) {
   if (progressBar) progressBar.style.width = `${progress}%`;
   const calculated = measurement.status === 'calculated' && Number.isFinite(Number(measurement.score));
   setText('simulation-score', calculated ? Number(measurement.score).toFixed(3) : '—');
-  setText('simulation-measurement-state', calculated ? 'Live meting berekend' : `Markers verzamelen · ${progress}%`);
+  setText('simulation-measurement-state', calculated ? 'Meting berekend' : `Markers verzamelen · ${progress}%`);
   setText('simulation-archetype', calculated ? measurement.analytic_archetype : 'Nog onbepaald');
   setText('simulation-measurement-detail', calculated
     ? 'De geldige live actiereeks is door de Leerpretformule verwerkt.'
@@ -531,12 +531,12 @@ function selectLive(sourceId = 'lom') {
     ['Verwerking', 'in de Engine'],
     ['Dashboardlevering', 'Engine → Dashboard'],
   ]);
-  setText('simulation-step-one-title', `Live uit ${source.surface}`);
+  setText('simulation-step-one-title', `Uit ${source.surface}`);
   setText('simulation-field-label-1', 'Actie');
   setText('simulation-field-label-2', 'Leerobject');
   setText('simulation-field-label-3', 'Objectrol');
   setText('simulation-feed-eyebrow', 'Engine-auditbuffer');
-  setText('simulation-feed-title', 'Live datastroom');
+  setText('simulation-feed-title', 'Datastroom');
   const liveLink = byId('open-live-test');
   if (liveLink) {
     liveLink.hidden = false;
@@ -547,7 +547,7 @@ function selectLive(sourceId = 'lom') {
   renderContractError(source);
   const latestEvent = source.personScoped ? selectedPerson(source)?.events.at(-1) : liveState.events.at(-1);
   if (latestEvent) {
-    setStatus(liveState.contractErrorCount ? 'warning' : 'live', liveState.contractErrorCount ? 'Live · contractfout' : 'Live verbonden');
+    setStatus(liveState.contractErrorCount ? 'warning' : 'live', liveState.contractErrorCount ? 'Contractfout' : 'Verbonden');
     renderLiveEvent(latestEvent, source);
   } else {
     setStatus(liveState.contractErrorCount ? 'warning' : 'live', liveState.contractErrorCount ? 'Contractfout in LOM-event' : `Verbonden · wacht op ${source.surface}`);
@@ -571,13 +571,13 @@ async function pollLive() {
       const incoming = Array.isArray(payload.events) ? payload.events : [];
       const accepted = ingestLiveEvents(source, incoming);
       if (simulation.selectedMode === source.tabId && (incoming.length || accepted)) {
-        setStatus(liveState.contractErrorCount ? 'warning' : 'live', liveState.contractErrorCount ? 'Live · contractfout' : 'Live verbonden');
+        setStatus(liveState.contractErrorCount ? 'warning' : 'live', liveState.contractErrorCount ? 'Contractfout' : 'Verbonden');
         renderSelectedLive(source);
       } else if (simulation.selectedMode === source.tabId) {
         const hasEvents = source.personScoped ? liveState.people.size > 0 : liveState.events.length > 0;
         setStatus(liveState.contractErrorCount ? 'warning' : 'live', liveState.contractErrorCount
-          ? 'Live · contractfout'
-          : hasEvents ? 'Live verbonden' : `Verbonden · wacht op ${source.surface}`);
+          ? 'Contractfout'
+          : hasEvents ? 'Verbonden' : `Verbonden · wacht op ${source.surface}`);
       }
     } catch (error) {
       if (simulation.selectedMode === source.tabId) {
@@ -640,11 +640,44 @@ function selectTest(type) {
   });
 }
 
+const REPORT_FILES = Object.freeze({
+  onderzoeksrapport: 'Onderzoeksrapport Leerpret-engine.pdf',
+  'leerpret-getest': 'Leerpret getest.pdf',
+});
+
+function selectReportTab(group, tab) {
+  const nav = document.querySelector(`[data-report-tabs="${group}"]`);
+  const panel = nav?.closest('[data-test-panel]');
+  if (!nav || !panel) return;
+  nav.querySelectorAll('[data-report-tab]').forEach((button) => {
+    button.classList.toggle('active', button.dataset.reportTab === tab);
+  });
+  panel.querySelectorAll('[data-report-content]').forEach((body) => {
+    body.hidden = body.dataset.reportContent !== tab;
+  });
+}
+
+function initReportPanels() {
+  document.querySelectorAll('[data-report-tabs]').forEach((nav) => {
+    const group = nav.dataset.reportTabs;
+    nav.querySelectorAll('[data-report-tab]').forEach((button) => {
+      button.addEventListener('click', () => selectReportTab(group, button.dataset.reportTab));
+    });
+  });
+  const root = apiRootUrl();
+  document.querySelectorAll('[data-report-download]').forEach((link) => {
+    const file = REPORT_FILES[link.dataset.reportDownload];
+    if (!file) return;
+    link.href = `${root}/api/innovation-tests/reports/${encodeURIComponent(file)}`;
+  });
+}
+
 function initialize() {
   document.querySelectorAll('[data-test-type]').forEach((button) => {
     button.addEventListener('click', () => selectTest(button.dataset.testType));
   });
   byId('live-person-select')?.addEventListener('change', (event) => selectPerson(event.currentTarget.value));
+  initReportPanels();
   selectTest('practice');
   renderTabs();
   selectLive('lom');

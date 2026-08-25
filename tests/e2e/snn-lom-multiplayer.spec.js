@@ -144,11 +144,11 @@ async function installEngineStub(page, lomResponder) {
 
 async function openLomMonitor(page) {
   await page.goto('./snn-innovation-test/?role=technologist');
-  await expect(page.getByRole('heading', { name: 'LOM Live' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'LOM', exact: true })).toBeVisible();
   await expect(page.getByLabel('Persoon-ID uit actiereeks')).toBeEnabled();
 }
 
-test.describe('SNN LOM Live multiplayer-regressie', () => {
+test.describe('SNN LOM multiplayer-regressie', () => {
   test('groepeert drie interleaved spelers, dedupliceert replay en isoleert gamesessies', async ({ page }) => {
     const unsafeRef = 'speler-<img src=x onerror="window.__lomInjected=true">';
     await installEngineStub(page, async ({ after }) => {

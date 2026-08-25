@@ -2,7 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="SNN Innovatietest" description="Dedicated simulatietest voor de live koppeling LOM en Phile → LeerpretEngine → Dashboard.">
+<Layout title="SNN Innovatietest" description="Simulatietest op eerder vastgelegde data uit LOM en Phile → LeerpretEngine → Dashboard.">
   <div class="snn-test-layout">
     <aside class="snn-test-menu" aria-label="SNN-testsoorten">
       <div class="snn-menu-heading">
@@ -13,11 +13,11 @@ import Layout from '../layouts/Layout.astro';
       <nav class="snn-test-types">
         <button type="button" data-test-type="validation">
           <span class="snn-test-index">01</span>
-          <span><strong>Validatietest</strong><small>Nog in ontwikkeling</small></span>
+          <span><strong>Validatietest</strong><small>Verantwoord in onderzoeksrapport</small></span>
         </button>
         <button type="button" data-test-type="integration">
           <span class="snn-test-index">02</span>
-          <span><strong>Integratietest</strong><small>Nog in ontwikkeling</small></span>
+          <span><strong>Integratietest</strong><small>Verantwoord in Leerpret getest</small></span>
         </button>
         <button type="button" class="active" data-test-type="practice" aria-current="page">
           <span class="snn-test-index">03</span>
@@ -31,14 +31,165 @@ import Layout from '../layouts/Layout.astro';
     </aside>
 
     <section class="snn-test-content">
-      <section class="snn-placeholder" data-test-panel="validation" hidden>
-        <nav class="snn-tabs" aria-label="Validatietest-tabbladen"><button class="active" type="button">Overzicht</button></nav>
-        <div class="development-message" role="status"><span>01</span><div><h2>Validatietest</h2><p>Nog in ontwikkeling</p></div></div>
+      <section data-test-panel="validation" hidden>
+        <nav class="snn-tabs report-tabs" data-report-tabs="validation" aria-label="Validatietest-tabbladen">
+          <button class="active" type="button" data-report-tab="conclusie">Conclusie</button>
+          <button type="button" data-report-tab="bevindingen">Bevindingen</button>
+          <button type="button" data-report-tab="aanbevelingen">Aanbevelingen</button>
+          <button type="button" data-report-tab="rapport">Rapport</button>
+        </nav>
+
+        <div class="report-panel">
+          <header class="report-header">
+            <div>
+              <span class="eyebrow">Validatietest · verantwoord in het onderzoeksrapport</span>
+              <h2>Deugt het werkingsprincipe?</h2>
+              <p>Valt uit informatiearme gedragssporen betrouwbaar af te leiden of een leeromgeving
+              leerplezier mogelijk maakt?</p>
+            </div>
+            <a class="report-download" data-report-download="onderzoeksrapport" href="#" download>
+              Rapport downloaden ↓
+            </a>
+          </header>
+
+          <div class="report-body" data-report-content="conclusie">
+            <p class="report-lead">Ja. Het werkingsprincipe is aangetoond en het concept is voldoende
+            bewezen om de inspanning te rechtvaardigen het door te ontwikkelen tot een prototype.</p>
+            <p>Uit eenvoudige registraties van gedrag — welk leerobject op welk moment wordt gebruikt —
+            valt af te leiden of en in welke mate een leeromgeving leerplezier mogelijk maakt, zonder de
+            deelnemer te onderbreken of te bevragen.</p>
+            <p>Tegelijk is de begrenzing eerlijk te benoemen: dit is een technische validatie en geen
+            wetenschappelijk bewijs. De validatie vond plaats in bureau-opstellingen en simulaties; voor
+            wetenschappelijke onderbouwing is vervolgonderzoek op grotere schaal nodig.</p>
+          </div>
+
+          <div class="report-body" data-report-content="bevindingen" hidden>
+            <ol class="report-list">
+              <li><strong>De Engine oordeelt zelfstandig en zonder voorkeur.</strong> Zij wees in de
+              bureau-opstellingen de zwakke plekken in het gesimuleerde scenario aan, op grond van een
+              vooraf vastgelegde definitie van een meetbare leeromgeving.</li>
+              <li><strong>Een interne controle bevestigde dat oordeel.</strong> Teamleden die niet bij het
+              meetmodel betrokken waren, beoordeelden dezelfde omgeving en kwamen op dezelfde punten uit.</li>
+              <li><strong>De Engine bewaakt haar eigen grenzen.</strong> Bij te weinig onderscheidbare
+              routes en stappen berekent zij geen uitkomst en meldt zij dat. Dat een methode zich inhoudt
+              in plaats van altijd een getal te produceren, is even veel bewijs van deugdelijkheid als een
+              uitkomst die zij wél geeft.</li>
+              <li><strong>Emoties voorspellen de leerhandeling niet.</strong> Per rol blijken twee
+              tegengestelde emoties tot precies hetzelfde gedrag te leiden — frustratie én opwinding leiden
+              tot veroveren, schaamte én trots tot verwerven. Wat het gedrag wél voorspelt, is de rol die
+              iemand in een bepaalde context aanneemt.</li>
+            </ol>
+          </div>
+
+          <div class="report-body" data-report-content="aanbevelingen" hidden>
+            <p>De volgende stappen vallen buiten dit project en worden afzonderlijk gefinancierd.</p>
+            <ol class="report-list">
+              <li><strong>Contextmeting toevoegen.</strong> De Engine beoordeelt nu de objecten, maar niet
+              de aantrekkelijkheid van de omgeving waarin die staan — terwijl juist die context bepalend
+              bleek.</li>
+              <li><strong>Het zelfstartende beginobject scherper definiëren.</strong> Niet slechts het
+              eerste object dat wordt gebruikt, maar een object dat een reeks opent én actief uitnodigt te
+              beginnen.</li>
+              <li><strong>De terugkoppeling omkeren.</strong> Beginnen met wat al goed werkt en
+              verbeterpunten aanbieden als kansen. Uit onderzoek naar feedback is bekend dat een aanzienlijk
+              deel van alle feedback de prestatie juist verslechtert zodra de aandacht verschuift van de
+              taak naar de persoon.</li>
+              <li><strong>Van simulatie naar digital twin</strong>, en vervolgens naar de fysieke opstelling
+              met polsbandjes en NFC-tokens.</li>
+              <li><strong>Kalibratie en validatie</strong> op een substantieel groter aantal sessies, met
+              wetenschappelijke toetsing.</li>
+            </ol>
+          </div>
+
+          <div class="report-body" data-report-content="rapport" hidden>
+            <p><strong>Onderzoeksrapport Leerpret-engine</strong> — de volledige verantwoording van deze
+            toets: opzet, uitvoering, resultaten en afbakening, met schema's en een register dat per vraag
+            aanwijst waar het antwoord staat.</p>
+            <p class="report-note">Bijbehorende bijlagen: <em>Leerpret verbeeld</em> met alle visualisaties
+            uit het project, en de <em>Handleiding Dashboard Leerpretengine</em>.</p>
+            <a class="report-download large" data-report-download="onderzoeksrapport" href="#" download>
+              Onderzoeksrapport downloaden (pdf) ↓
+            </a>
+          </div>
+        </div>
       </section>
 
-      <section class="snn-placeholder" data-test-panel="integration" hidden>
-        <nav class="snn-tabs" aria-label="Integratietest-tabbladen"><button class="active" type="button">Overzicht</button></nav>
-        <div class="development-message" role="status"><span>02</span><div><h2>Integratietest</h2><p>Nog in ontwikkeling</p></div></div>
+      <section data-test-panel="integration" hidden>
+        <nav class="snn-tabs report-tabs" data-report-tabs="integration" aria-label="Integratietest-tabbladen">
+          <button class="active" type="button" data-report-tab="conclusie">Conclusie</button>
+          <button type="button" data-report-tab="bevindingen">Bevindingen</button>
+          <button type="button" data-report-tab="aanbevelingen">Aanbevelingen</button>
+          <button type="button" data-report-tab="rapport">Rapport</button>
+        </nav>
+
+        <div class="report-panel">
+          <header class="report-header">
+            <div>
+              <span class="eyebrow">Integratietest · verantwoord in Leerpret getest</span>
+              <h2>Houdt het oordeel van de Engine stand?</h2>
+              <p>Komt het oordeel over een volledige leeromgeving overeen met een onafhankelijke
+              beoordeling?</p>
+            </div>
+            <a class="report-download" data-report-download="leerpret-getest" href="#" download>
+              Rapport downloaden ↓
+            </a>
+          </header>
+
+          <div class="report-body" data-report-content="conclusie">
+            <p class="report-lead">Ja. De Engine wees dezelfde tekortkomingen aan als onafhankelijke
+            waarnemers, en deed dat eerder en preciezer.</p>
+            <p>Een volledige leeromgeving is doorgemeten. De Engine benoemde neutraal en technisch waar het
+            schortte; waarnemers zonder kennis van het meetmodel kwamen in hun eigen bewoordingen op
+            dezelfde punten uit. Twee onafhankelijke beoordelingen die zonder overleg samenvallen, maken de
+            bevinding aanzienlijk sterker dan elk van beide afzonderlijk.</p>
+            <p>Voor een proof of concept is dat voldoende: het concept is bewezen genoeg om door te
+            ontwikkelen tot een prototype. De verbeterpunten hoeven nu niet te worden doorgevoerd.</p>
+          </div>
+
+          <div class="report-body" data-report-content="bevindingen" hidden>
+            <ol class="report-list">
+              <li><strong>Drie noodzakelijke elementen ontbraken.</strong> Een herkenbaar succesobject — er
+              viel niets te bereiken. Een zelfstartend beginobject — niemand begon uit eigen keuze. En
+              voldoende variatie — één vaste rol gaf één vaste route.</li>
+              <li><strong>De context was het kernprobleem.</strong> De omgeving leefde nog volledig in een
+              begeleide setting: de begeleider start en stuurt, waardoor de regie niet bij de lerende ligt.
+              Een vaste, opgelegde rol maakt vaste routes onvermijdelijk.</li>
+              <li><strong>De meetvoorwaarde werd niet gehaald.</strong> De Engine meldde dat zij geen
+              betrouwbare uitkomst kon berekenen. Dat is geen storing maar een meetresultaat.</li>
+              <li><strong>Blinde vlekken bij eigen werk.</strong> Het instrument maakte zichtbaar wat
+              ervaren vakmensen in hun eigen ontwerp niet meer zagen. Wie lang aan iets werkt, raakt eraan
+              gehecht en verliest de blik van de buitenstaander — een goed onderzocht verschijnsel, dat ook
+              binnen het team bleek te gelden.</li>
+            </ol>
+          </div>
+
+          <div class="report-body" data-report-content="aanbevelingen" hidden>
+            <p>Deze punten zijn bestemd voor de fase na dit project.</p>
+            <ol class="report-list">
+              <li><strong>Keer de presentatie om.</strong> Het dashboard toont nu vooral wat ontbreekt,
+              waardoor een maker in de verdediging schiet. De voorgestelde standaardbenadering luidt:
+              <em>„U voldoet prima — zullen we daar nog meer gebruik van maken?”</em> Die zin erkent eerst,
+              ontkracht de aanval, bouwt voort op bestaande kracht en laat de keuze bij de ander.</li>
+              <li><strong>Meet ook de context.</strong> De aantrekkelijkheid van de omgeving bleek
+              doorslaggevend en wordt nu niet meegewogen.</li>
+              <li><strong>Scherp de eisen aan het beginobject aan</strong>, inclusief de drempel van
+              leernut: de deelnemer moet het nut ervan inzien voordat hij begint.</li>
+              <li><strong>Bied vele routes en leg niets op.</strong> Accepteer dat een maker niet alle
+              voorstellen overneemt. Ook advies geven is vrij leren.</li>
+            </ol>
+          </div>
+
+          <div class="report-body" data-report-content="rapport" hidden>
+            <p><strong>Leerpret getest</strong> — het integratietestrapport: de volledige beschrijving van
+            de doorgemeten leeromgeving, het oordeel van de Engine, de onafhankelijke bevestiging en de
+            psychologische onderbouwing van waarom makers hun eigen tekortkomingen niet zien.</p>
+            <p class="report-note">Het rapport is nadrukkelijk geen verwijt aan de maker. Het beschrijft een
+            patroon dat bij vrijwel iedereen optreedt, inclusief het projectteam zelf.</p>
+            <a class="report-download large" data-report-download="leerpret-getest" href="#" download>
+              Leerpret getest downloaden (pdf) ↓
+            </a>
+          </div>
+        </div>
       </section>
 
       <section data-test-panel="practice">
@@ -136,6 +287,19 @@ import Layout from '../layouts/Layout.astro';
   .snn-test-types{display:grid;gap:8px}.snn-test-types button{align-items:center;background:#102c34;border:1px solid #2b4e57;border-radius:12px;color:#d8eff1;cursor:pointer;display:grid;font:inherit;gap:10px;grid-template-columns:34px 1fr;min-height:62px;padding:9px;text-align:left}.snn-test-types button:hover{background:#153740;border-color:#4b7780}.snn-test-types button.active{background:linear-gradient(135deg,#0c494c,#123d46);border-color:#48c7bb;box-shadow:inset 4px 0 #4ee2d3}.snn-test-types button>span:last-child{display:grid;gap:2px}.snn-test-types strong{font-size:.76rem}.snn-test-types small{color:#91afb5;font-size:.61rem}.snn-test-types button.active small{color:#a8e9e3}.snn-test-index{align-items:center;background:#071b21;border:1px solid #315660;border-radius:8px;color:#63d8cd;display:flex;font-family:'Share Tech Mono',monospace;font-size:.7rem;height:32px;justify-content:center;width:32px}.snn-chain-note{align-items:center;border-top:1px solid #2b4e57;display:flex;gap:10px;padding-top:14px}.snn-chain-note .live-dot{background:#34d399;border-radius:50%;box-shadow:0 0 0 5px rgba(52,211,153,.12);height:8px;width:8px}.snn-chain-note strong{font-size:.68rem}.snn-chain-note p{color:#99bec4;font-family:'Share Tech Mono',monospace;font-size:.62rem;margin:2px 0 0}
   .snn-test-content{display:grid}.snn-tabs{align-items:end;border-bottom:1px solid var(--line);display:flex;gap:4px;min-height:47px;padding:0 10px}.snn-tabs button{background:transparent;border:0;border-bottom:3px solid transparent;color:var(--muted);font:inherit;font-size:.72rem;font-weight:800;padding:13px 17px 11px}.snn-tabs button.active{border-color:var(--teal);color:var(--ink)}
   .development-message{align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;display:flex;gap:18px;margin-top:18px;min-height:260px;padding:30px}.development-message>span{align-items:center;background:#e6fffb;border:1px solid #99f6e4;border-radius:50%;color:#0f766e;display:flex;font-family:'Share Tech Mono',monospace;font-size:1.2rem;height:68px;justify-content:center;width:68px}.development-message h2{margin:0}.development-message p{color:var(--muted);margin:5px 0 0}
+  .report-panel{display:grid;gap:16px;padding-top:18px}
+  .report-header{align-items:center;background:linear-gradient(135deg,#082127,#0e333a);border:1px solid #2a5660;border-radius:16px;color:#eaffff;display:flex;gap:20px;justify-content:space-between;padding:18px}
+  .report-header h2{font-size:1.3rem;margin:3px 0}.report-header p{color:#a4c5ca;font-size:.71rem;margin:0;max-width:60ch}.report-header .eyebrow{color:#58dace}
+  .report-download{align-items:center;background:#e8fffc;border:1px solid #83e8df;border-radius:999px;color:#075e59;display:inline-flex;font-size:.66rem;font-weight:800;padding:9px 14px;text-decoration:none;white-space:nowrap}
+  .report-download:hover{background:#fff}
+  .report-download.large{font-size:.72rem;justify-self:start;margin-top:6px;padding:12px 18px}
+  .report-body{background:var(--panel);border:1px solid var(--line);border-radius:16px;display:grid;gap:11px;padding:24px 26px}
+  .report-body[hidden]{display:none}
+  .report-body p{margin:0}
+  .report-lead{font-size:1.02rem;font-weight:700;line-height:1.5}
+  .report-note{color:var(--muted);font-size:.72rem}
+  .report-list{display:grid;gap:11px;margin:0;padding-left:22px}
+  .report-list li{line-height:1.6}
   .phile-live-panel{display:grid;gap:14px;padding-top:18px}.live-header{align-items:center;background:linear-gradient(135deg,#082127,#0e333a);border:1px solid #2a5660;border-radius:16px;color:#eaffff;display:flex;gap:20px;justify-content:space-between;padding:18px}.live-header h2{font-size:1.35rem;margin:3px 0}.live-header p{color:#a4c5ca;font-size:.71rem;margin:0}.live-header .eyebrow{color:#58dace}.live-header-actions{align-items:center;display:flex;gap:9px}.connection-pill,.open-phile-button{align-items:center;border-radius:999px;display:flex;font-size:.66rem;font-weight:800;gap:7px;padding:8px 11px;white-space:nowrap}.connection-pill{background:#1b3940;border:1px solid #41636a;color:#bdd4d8}.connection-pill i{background:#f59e0b;border-radius:50%;height:7px;width:7px}.connection-pill.live{background:#0d453f;border-color:#2aa99e;color:#c9fff9}.connection-pill.live i{animation:pulse 1.6s infinite;background:#34d399}.connection-pill.error{background:#4a2026;border-color:#9f4451;color:#ffd5da}.connection-pill.error i{background:#fb7185}.open-phile-button{background:#e8fffc;border:1px solid #83e8df;color:#075e59;text-decoration:none}.open-phile-button:hover{background:white}
   .live-metrics{display:grid;gap:10px;grid-template-columns:repeat(4,minmax(0,1fr))}.live-metrics article{background:var(--panel);border:1px solid var(--line);border-radius:12px;display:grid;gap:2px;padding:12px}.live-metrics span{color:var(--muted);font-size:.59rem;font-weight:800;text-transform:uppercase}.live-metrics strong{font-family:'Share Tech Mono',monospace;font-size:1.05rem}.live-metrics small{color:var(--muted);font-size:.58rem}
   .processing-pipeline{align-items:stretch;display:grid;gap:8px;grid-template-columns:minmax(0,1fr) 24px minmax(0,1.08fr) 24px minmax(0,1fr)}.pipeline-step{background:var(--panel);border:1px solid var(--line);border-radius:15px;display:grid;gap:14px;padding:14px;position:relative}.pipeline-step.active{border-color:color-mix(in srgb,var(--step-color) 55%,var(--line));box-shadow:0 8px 28px color-mix(in srgb,var(--step-color) 11%,transparent)}.pipeline-step.receiving{--step-color:#2563eb}.pipeline-step.transforming{--step-color:#7c3aed}.pipeline-step.measuring{--step-color:#0d9488}.pipeline-step>header{align-items:center;border-bottom:1px solid var(--line);display:grid;gap:9px;grid-template-columns:32px 1fr 8px;padding-bottom:11px}.step-number{align-items:center;background:color-mix(in srgb,var(--step-color) 11%,white);border-radius:9px;color:var(--step-color);display:flex;font-family:'Share Tech Mono',monospace;font-weight:800;height:32px;justify-content:center}.pipeline-step header small{color:var(--muted);font-size:.55rem;font-weight:850;letter-spacing:.04em;text-transform:uppercase}.pipeline-step h3{font-size:.78rem;margin:2px 0 0}.step-state{background:#cbd5e1;border-radius:50%;height:7px;width:7px}.pipeline-step.active .step-state{background:var(--step-color);box-shadow:0 0 0 4px color-mix(in srgb,var(--step-color) 12%,transparent)}.pipeline-arrow{align-items:center;color:#94a3b8;display:flex;font-size:1.2rem;justify-content:center}.pipeline-step dl{display:grid;gap:8px;margin:0}.pipeline-step dl div{display:grid;gap:2px}.pipeline-step dt{color:var(--muted);font-size:.55rem;font-weight:800;text-transform:uppercase}.pipeline-step dd{font-family:'Share Tech Mono',monospace;font-size:.68rem;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.marker-grid{display:grid;gap:5px;grid-template-columns:repeat(5,1fr)}.marker-grid div{background:var(--surface-soft);border:1px solid var(--line);border-radius:9px;display:grid;gap:2px;justify-items:center;padding:7px 3px}.marker-grid span{color:#6d28d9;font-family:'Share Tech Mono',monospace;font-size:.7rem;font-weight:900}.marker-grid strong{font-family:'Share Tech Mono',monospace;font-size:.73rem}.marker-grid small{color:var(--muted);font-size:.46rem;text-align:center}.series-status{background:#f8fafc;border-radius:8px;color:var(--muted);font-size:.59rem;line-height:1.45;margin:0;padding:8px}.score-result{align-items:center;display:grid;gap:12px;grid-template-columns:76px 1fr}.score-orb{align-items:center;background:conic-gradient(var(--teal) var(--score-angle,0deg),#e2e8f0 0);border-radius:50%;display:flex;height:74px;justify-content:center;position:relative;width:74px}.score-orb::before{background:var(--panel);border-radius:50%;content:'';inset:7px;position:absolute}.score-orb strong,.score-orb small{position:absolute;z-index:1}.score-orb strong{font-family:'Share Tech Mono',monospace;font-size:1rem;top:20px}.score-orb small{bottom:16px;color:var(--muted);font-size:.48rem}.score-result>div:last-child{display:grid;gap:3px}.score-result span{color:var(--muted);font-size:.57rem;font-weight:800;text-transform:uppercase}.score-result>div:last-child>strong{font-size:.74rem}.score-result p{color:var(--muted);font-size:.55rem;line-height:1.4;margin:0}.evidence-progress{background:#e2e8f0;border-radius:999px;height:6px;overflow:hidden}.evidence-progress span{background:linear-gradient(90deg,#0d9488,#34d399);display:block;height:100%;transition:width .3s;width:0}
@@ -145,6 +309,9 @@ import Layout from '../layouts/Layout.astro';
   .snn-test-content{--snn-panel:#0c2026;--snn-panel-raised:#10262d;--snn-surface:#07171c;--snn-border:#294b54;--snn-track:#1c3941;--snn-ink:#eaf8f7;--snn-muted:#9db4b8;color:var(--snn-ink)}
   .snn-test-content h2,.snn-test-content h3,.snn-test-content strong{color:var(--snn-ink)}
   .development-message{background:var(--snn-panel);border-color:var(--snn-border)}.development-message>span{background:#10343a;border-color:#2f806d;color:#8cece5}
+  .report-body{background:var(--snn-panel);border-color:var(--snn-border);box-shadow:0 8px 22px rgba(0,0,0,.18)}
+  .report-note{color:var(--snn-muted)}
+  .report-download{background:#10343a;border-color:#2aa99e;color:#8cece5}.report-download:hover{background:#164d4d;color:#fff}
   .snn-tabs{background:var(--snn-surface);border-color:var(--snn-border)}.snn-tabs button{color:var(--snn-muted)}.snn-tabs button:hover{background:#10262d;color:#d9f8f5}.snn-tabs button.active{background:#10343a;border-color:var(--teal);color:#8cece5}
   .live-metrics article,.pipeline-step,.live-feed-card{background:var(--snn-panel);border-color:var(--snn-border);box-shadow:0 8px 22px rgba(0,0,0,.18)}
   .live-metrics span,.live-metrics small,.pipeline-step header small,.pipeline-step dt,.score-result span,.score-result p,.live-feed-card>header>span,.live-feed time,.feed-role{color:var(--snn-muted)}

@@ -98,19 +98,19 @@ test.describe('SNN Innovatietest', () => {
     });
   });
 
-  test('shows LOM Live first, followed by Phile and seven historical games', async ({ page }) => {
+  test('shows LOM first, followed by Phile and seven historical games', async ({ page }) => {
     await page.goto('/snn-innovation-test?role=technologist');
-    await expect(page.getByRole('heading', { name: 'LOM Live' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'LOM', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: /Simulatietest/ })).toBeVisible();
     await expect(page.locator('[data-open-game-id]')).toHaveCount(7);
     await expect(page.getByRole('tab')).toHaveCount(9);
-    await expect(page.getByRole('tab').first()).toHaveText('LOM Live');
+    await expect(page.getByRole('tab').first()).toHaveText('LOM');
     await expect(page.locator('[data-simulation-step]')).toHaveCount(3);
     await expect(page.locator('[data-marker="A"]')).toHaveText('0.200');
     await expect(page.locator('#simulation-score')).toHaveText('0.710');
     await expect(page.locator('#simulation-archetype')).toHaveText('Veroveraar');
-    await page.getByRole('tab', { name: 'Phile Live' }).click();
-    await expect(page.getByRole('heading', { name: 'Phile Live' })).toBeVisible();
+    await page.getByRole('tab', { name: 'Phile', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Phile', exact: true })).toBeVisible();
     await expect(page.locator('#simulation-score')).toHaveText('0.640');
     await page.getByRole('tab', { name: 'Lakeland' }).click();
     await expect(page.getByRole('heading', { name: 'Lakeland' })).toBeVisible();
@@ -118,8 +118,19 @@ test.describe('SNN Innovatietest', () => {
     await expect(page.locator('#simulation-score')).toHaveText('0.670');
 
     await page.getByRole('button', { name: /Validatietest/ }).click();
-    await expect(page.locator('[data-test-panel="validation"] .development-message')).toContainText('Nog in ontwikkeling');
+    const validation = page.locator('[data-test-panel="validation"]');
+    await expect(validation.locator('[data-report-content="conclusie"]')).toContainText('werkingsprincipe is aangetoond');
+    await validation.getByRole('button', { name: 'Bevindingen' }).click();
+    await expect(validation.locator('[data-report-content="bevindingen"]')).toBeVisible();
+    await expect(validation.locator('[data-report-content="conclusie"]')).toBeHidden();
+    await validation.getByRole('button', { name: 'Rapport' }).click();
+    await expect(validation.locator('[data-report-download].large')).toHaveAttribute(
+      'href', /innovation-tests\/reports\/Onderzoeksrapport/);
+
     await page.getByRole('button', { name: /Integratietest/ }).click();
-    await expect(page.getByRole('heading', { name: 'Integratietest' })).toBeVisible();
+    const integration = page.locator('[data-test-panel="integration"]');
+    await expect(integration.locator('[data-report-content="conclusie"]')).toContainText('onafhankelijke waarnemers');
+    await integration.getByRole('button', { name: 'Aanbevelingen' }).click();
+    await expect(integration.locator('[data-report-content="aanbevelingen"]')).toContainText('U voldoet prima');
   });
 });
