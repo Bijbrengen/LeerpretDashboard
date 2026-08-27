@@ -321,18 +321,6 @@ import Layout from '../layouts/Layout.astro';
       }
     }
 
-    function requestGeneratedPreview() {
-      const iframe = document.getElementById('editor-page-iframe');
-      if (!iframe?.contentWindow || !iframe.src) return;
-      iframe.contentWindow.postMessage({ type: 'leerpret-editor-generate-preview' }, new URL(iframe.src).origin);
-    }
-
-    function clickEmbeddedEditorControl(selector) {
-      const iframe = document.getElementById('editor-page-iframe');
-      if (!iframe?.contentWindow || !iframe.src) return;
-      iframe.contentWindow.postMessage({ type: 'leerpret-editor-click-control', selector }, new URL(iframe.src).origin);
-    }
-
     function sendSimulationControl(mode) {
       if (!simulationEnabled) return;
       const iframe = document.getElementById('editor-page-iframe');
@@ -521,40 +509,10 @@ import Layout from '../layouts/Layout.astro';
         toggleAdvisorPanel(false);
         selectEditorView('agent', '', '', { toggle: true });
       });
-      const embeddedControls = {
-        'hud-new-action': '#newCaptureButton',
-        'hud-prompt-action': '#promptButton',
-        'hud-preview-action': '#previewWebappButton',
-        'hud-export-action': '#exportButton',
-        'hud-report-action': '#canvasReportToggle',
-        'hud-step-action': '#addStepButton',
-        'hud-dependency-action': '#addDependencyButton'
-      };
-      // Gereedschap opent een eigen dialoogvenster; ruim eerst het openstaande venster op,
-      // anders stapelen Plan, Structuur of Code zich op achter de dialoog.
-      const toolActions = new Set(['hud-step-action', 'hud-dependency-action']);
-      Object.entries(embeddedControls).forEach(([id, selector]) => {
-        document.getElementById(id)?.addEventListener('click', () => {
-          if (toolActions.has(id)) closeEditorWindow();
-          clickEmbeddedEditorControl(selector);
-        });
-      });
       document.getElementById('hud-upload-action')?.addEventListener('click', (event) => {
         event.stopPropagation();
         selectEditorView('sources', '', '', { toggle: true });
       });
-      // De leerobjecttypes staan altijd in beeld; er valt niets meer uit te klappen.
-      const objectSubtools = document.getElementById('editor-object-subtools');
-      objectSubtools?.querySelectorAll('[data-object-preset]').forEach((button) => {
-        button.addEventListener('click', (event) => {
-          event.stopPropagation();
-          closeEditorWindow();
-          const iframe = document.getElementById('editor-page-iframe');
-          if (!iframe?.contentWindow || !iframe.src) return;
-          iframe.contentWindow.postMessage({ type: 'leerpret-editor-add-object-preset', preset: button.dataset.objectPreset }, new URL(iframe.src).origin);
-        });
-      });
-      document.getElementById('generate-preview-action')?.addEventListener('click', requestGeneratedPreview);
       const simulationValues = { actions: 100, duration: 30 };
       const simulationInput = document.getElementById('simulation-action-count');
       const simulationUnit = document.getElementById('simulation-unit');
