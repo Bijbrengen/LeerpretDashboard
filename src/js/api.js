@@ -117,21 +117,90 @@ export function authHeaders(extra = {}) {
   return headers;
 }
 
+let sdkBootstrapPromise;
+const sdkLoaderPromises = new Map();
+const sdkComponentPromises = new Map();
 let sdkClientPromise;
+let sdkClientBase = "";
+
+function sdkBase() {
+  return String(state.apiBase || "").replace(/\/$/, "");
+}
+
+function sdkBootstrap() {
+  if (window.LeerpretSDK?.Loader?.create) return Promise.resolve(window.LeerpretSDK);
+  if (!sdkBootstrapPromise) {
+    const base = sdkBase();
+    sdkBootstrapPromise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = `${base}/sdk/sdk-loader/loader.js?bootstrap=${Date.now()}`;
+      script.onload = () => {
+        if (window.LeerpretSDK?.Loader?.create) {
+          resolve(window.LeerpretSDK);
+          return;
+        }
+        reject(new Error("LeerpretSDK-loader is geladen zonder Loader-contract."));
+      };
+      script.onerror = () => reject(new Error("LeerpretSDK-loader kon niet worden geladen."));
+      document.head.appendChild(script);
+    }).catch((error) => {
+      sdkBootstrapPromise = null;
+      throw error;
+    });
+  }
+  return sdkBootstrapPromise;
+}
+
+function sdkLoader(base) {
+  if (!sdkLoaderPromises.has(base)) {
+    const promise = sdkBootstrap()
+      .then(sdk => sdk.Loader.create({ base }))
+      .catch((error) => {
+        sdkLoaderPromises.delete(base);
+        throw error;
+      });
+    sdkLoaderPromises.set(base, promise);
+  }
+  return sdkLoaderPromises.get(base);
+}
+
+export async function loadSdkComponents(...requestedComponents) {
+  const componentNames = [...new Set(
+    requestedComponents
+      .flat(Infinity)
+      .map(name => String(name || "").trim())
+      .filter(Boolean)
+  )];
+  if (!componentNames.length) return Object.freeze({});
+
+  const base = sdkBase();
+  const loader = await sdkLoader(base);
+  await Promise.all(componentNames.map(name => {
+    const key = `${base}\n${name}`;
+    if (!sdkComponentPromises.has(key)) {
+      const promise = Promise.resolve(loader.load(name)).catch((error) => {
+        sdkComponentPromises.delete(key);
+        throw error;
+      });
+      sdkComponentPromises.set(key, promise);
+    }
+    return sdkComponentPromises.get(key);
+  }));
+
+  return Object.freeze(Object.fromEntries(componentNames.map(name => [
+    name,
+    window.LeerpretSDK?.components?.[name],
+  ])));
+}
 
 async function sdkClient() {
-  if (!sdkClientPromise) {
+  const base = sdkBase();
+  if (!sdkClientPromise || sdkClientBase !== base) {
+    sdkClientBase = base;
     sdkClientPromise = (async () => {
-      await new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-        script.src = `${state.apiBase}/sdk/sdk-loader/loader.js?bootstrap=${Date.now()}`;
-        script.onload = resolve;
-        script.onerror = () => reject(new Error("LeerpretSDK-loader kon niet worden geladen."));
-        document.head.appendChild(script);
-      });
-      await window.LeerpretSDK.Loader.create({ base: state.apiBase }).load("api-client");
+      await loadSdkComponents("api-client");
       return window.LeerpretSDK.create({
-        apiBase: state.apiBase,
+        apiBase: base,
         clientId: "dashboard",
         loginUrl: "/login",
       });

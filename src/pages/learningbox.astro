@@ -297,7 +297,8 @@ import Layout from '../layouts/Layout.astro';
   </div>
 
   <script>
-    import { apiGet, apiPost, state, initSettings, escapeHtml, formatBytes, safeJsonParse, apiRootUrl, editorRootUrl, renderMath } from '../js/api.js';
+    import { apiGet, apiPost, state, initSettings, escapeHtml, formatBytes, safeJsonParse, apiRootUrl, editorRootUrl, loadSdkComponents, renderMath } from '../js/api.js';
+    import { objectClockLabelGeometry, ringSegmentPath } from '../js/objectClockGeometry.js';
 
     /* Welke rol welk tabblad ziet. Bezoekverhaal en Catalogus zijn er voor iedereen;
        de analysetabbladen voor de twee bouwrollen; de ruwe data alleen voor de
@@ -328,6 +329,7 @@ import Layout from '../layouts/Layout.astro';
     let activeRoleGlobal = 'architect';
     let loadedPersonas = [];
     let loadedValidationDatasets = [];
+    let objectClockSpatialComponent = null;
     let currentEditorView = localStorage.getItem('leerpret.leerbox.editor.view') || 'description';
 
     async function initWorkbench() {
@@ -350,6 +352,11 @@ import Layout from '../layouts/Layout.astro';
         const base = window.location.pathname.startsWith('/LeerpretDashboard') ? '/LeerpretDashboard' : '';
         window.location.replace(`${base}/preview?${previewQuery.toString()}`);
         return;
+      }
+      const components = await loadSdkComponents('lego-spatial');
+      objectClockSpatialComponent = components['lego-spatial'];
+      if (!objectClockSpatialComponent?.radialPoint) {
+        throw new Error('De centrale LeerpretSDK-radiale puntgeometrie is niet beschikbaar.');
       }
       const editAction = document.getElementById('edit-leerbox-action');
       if (editAction) editAction.hidden = !['architect', 'technologist'].includes(activeRole);
@@ -950,19 +957,13 @@ import Layout from '../layouts/Layout.astro';
     }
 
     function ringSegment(cx, cy, rBuiten, rBinnen, hoekStart, hoekEind) {
-      const naarPunt = (r, graden) => {
-        const rad = ((graden - 90) * Math.PI) / 180;
-        return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
-      };
-      const groot = hoekEind - hoekStart > 180 ? 1 : 0;
-      const [bx1, by1] = naarPunt(rBuiten, hoekStart);
-      const [bx2, by2] = naarPunt(rBuiten, hoekEind);
-      const [ix2, iy2] = naarPunt(rBinnen, hoekEind);
-      const [ix1, iy1] = naarPunt(rBinnen, hoekStart);
-      return `M ${bx1.toFixed(2)} ${by1.toFixed(2)}`
-        + ` A ${rBuiten} ${rBuiten} 0 ${groot} 1 ${bx2.toFixed(2)} ${by2.toFixed(2)}`
-        + ` L ${ix2.toFixed(2)} ${iy2.toFixed(2)}`
-        + ` A ${rBinnen} ${rBinnen} 0 ${groot} 0 ${ix1.toFixed(2)} ${iy1.toFixed(2)} Z`;
+      return ringSegmentPath(objectClockSpatialComponent, {
+        center: [cx, cy],
+        outerRadius: rBuiten,
+        innerRadius: rBinnen,
+        startDegrees: hoekStart,
+        endDegrees: hoekEind,
+      });
     }
 
     function renderObjectClock(payload) {
@@ -1013,18 +1014,16 @@ import Layout from '../layouts/Layout.astro';
 
       // Labels buiten de ring, met een dunne gidslijn naar het bijbehorende segment.
       const labels = delen.map(deel => {
-        const rad = ((deel.midden - 90) * Math.PI) / 180;
-        const rechts = Math.cos(rad) >= 0;
-        const x1 = cx + (rBuiten + 7) * Math.cos(rad);
-        const y1 = cy + (rBuiten + 7) * Math.sin(rad);
-        const x2 = cx + (rBuiten + 31) * Math.cos(rad);
-        const y2 = cy + (rBuiten + 31) * Math.sin(rad);
-        const x3 = x2 + (rechts ? 22 : -22);
+        const label = objectClockLabelGeometry(objectClockSpatialComponent, {
+          center: [cx, cy],
+          outerRadius: rBuiten,
+          angleDegrees: deel.midden,
+        });
         return `
           <g class="objectklok-label" data-index="${deel.index}" style="--segment-color:${deel.kleur};">
-            <path d="M ${x1.toFixed(1)} ${y1.toFixed(1)} L ${x2.toFixed(1)} ${y2.toFixed(1)} L ${x3.toFixed(1)} ${y2.toFixed(1)}" />
-            <text x="${(x3 + (rechts ? 5 : -5)).toFixed(1)}" y="${(y2 + 3.5).toFixed(1)}"
-                  text-anchor="${rechts ? 'start' : 'end'}">${escapeHtml(kortLabel(deel.naam))}</text>
+            <path d="M ${label.x1.toFixed(1)} ${label.y1.toFixed(1)} L ${label.x2.toFixed(1)} ${label.y2.toFixed(1)} L ${label.x3.toFixed(1)} ${label.y2.toFixed(1)}" />
+            <text x="${label.textX.toFixed(1)}" y="${label.textY.toFixed(1)}"
+                  text-anchor="${label.right ? 'start' : 'end'}">${escapeHtml(kortLabel(deel.naam))}</text>
           </g>
         `;
       }).join('');

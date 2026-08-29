@@ -433,7 +433,8 @@ import SourceCodeBrowser from '../components/SourceCodeBrowser.astro';
   </div>
 
   <script>
-    import { apiGet, apiPost, initSettings, renderMath } from '../js/api.js';
+    import { apiGet, apiPost, initSettings, loadSdkComponents, renderMath } from '../js/api.js';
+    import { generateRadarSvg as generateSdkRadarSvg } from '../js/serviceRadar.js';
 
     // Static mapping of the archetypes
     const ARCHETYPES = {
@@ -831,87 +832,12 @@ import SourceCodeBrowser from '../components/SourceCodeBrowser.astro';
       renderMath(breakdownTarget);
     }
 
-    // Helper: dynamic SVG Radar creator
+    let radarSpatialComponent = null;
+
+    // De pagina levert uitsluitend waarden en SVG-presentatie; assen en
+    // reeksposities komen uit de centrale Engine-SDK.
     function generateRadarSvg(markers) {
-      const center = 60;
-      const maxRadius = 45;
-      const axes = ['T', 'A', 'V', 'R', 'S'];
-      const angles = axes.map((_, i) => (i * 2 * Math.PI / 5) - Math.PI / 2);
-
-      const archetypeVectors = {
-        "Veroveraar": { T: 0.818, A: 0.880, V: 0.581, R: 0.907, S: 0.807 },
-        "Verwerver": { T: 0.740, A: 0.778, V: 0.556, R: 0.615, S: 0.765 },
-        "Verkenner": { T: 0.830, A: 0.833, V: 0.854, R: 0.719, S: 0.790 },
-        "Volger": { T: 0.764, A: 0.700, V: 0.359, R: 0.553, S: 0.594 }
-      };
-
-      const archetypeColors = {
-        "Veroveraar": "#FF4B4B",
-        "Verwerver": "#0068C9",
-        "Verkenner": "#FF8C00",
-        "Volger": "#29B09D"
-      };
-
-      const points = axes.map((axis, i) => {
-        const val = markers[axis] ?? 0;
-        const r = val * maxRadius;
-        const x = center + r * Math.cos(angles[i]);
-        const y = center + r * Math.sin(angles[i]);
-        return { x, y, label: axis };
-      });
-
-      let gridHtml = '';
-      [0.25, 0.5, 0.75, 1.0].forEach(level => {
-        const levelPoints = angles.map(angle => {
-          const r = level * maxRadius;
-          const x = center + r * Math.cos(angle);
-          const y = center + r * Math.sin(angle);
-          return `${x.toFixed(1)},${y.toFixed(1)}`;
-        }).join(' ');
-        gridHtml += `<polygon points="${levelPoints}" class="radar-grid-line" stroke="#cbd5e1" stroke-width="0.75" fill="none" />`;
-      });
-
-      let standardPolysHtml = '';
-      Object.entries(archetypeVectors).forEach(([name, vec]) => {
-        const polyPoints = axes.map((axis, i) => {
-          const val = vec[axis];
-          const r = val * maxRadius;
-          const x = center + r * Math.cos(angles[i]);
-          const y = center + r * Math.sin(angles[i]);
-          return `${x.toFixed(1)},${y.toFixed(1)}`;
-        }).join(' ');
-        standardPolysHtml += `
-          <polygon points="${polyPoints}" stroke="${archetypeColors[name]}" stroke-width="1.2" stroke-dasharray="1.5,1.5" fill="none" style="opacity: 0.65;" />
-        `;
-      });
-
-      let axesHtml = '';
-      points.forEach((pt, i) => {
-        const angle = angles[i];
-        const lineX = center + maxRadius * Math.cos(angle);
-        const lineY = center + maxRadius * Math.sin(angle);
-        
-        const labelDistance = maxRadius + 10;
-        const labelX = center + labelDistance * Math.cos(angle);
-        const labelY = center + labelDistance * Math.sin(angle) + 3;
-        
-        axesHtml += `
-          <line x1="${center}" y1="${center}" x2="${lineX.toFixed(1)}" y2="${lineY.toFixed(1)}" class="radar-axis-line" stroke="#94a3b8" stroke-width="0.75" stroke-dasharray="2,2" />
-          <text x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" class="radar-axis-label" text-anchor="middle" font-size="8" font-weight="800" fill="#475569">${pt.label}</text>
-        `;
-      });
-
-      const polyPoints = points.map(pt => `${pt.x.toFixed(1)},${pt.y.toFixed(1)}`).join(' ');
-
-      return `
-        <svg class="radar-chart-svg" viewBox="0 0 120 120" style="width: 100%; height: 100%;">
-          ${gridHtml}
-          ${standardPolysHtml}
-          ${axesHtml}
-          <polygon points="${polyPoints}" class="radar-value-poly" fill="rgba(15, 118, 110, 0.22)" stroke="var(--green)" stroke-width="2.5" />
-          ${points.map(pt => `<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="2.5" fill="var(--green)" />`).join('')}
-        </svg>
-      `;
+      return generateSdkRadarSvg(markers, radarSpatialComponent);
     }
 
     // Helper: dynamic Archetype Mix list creator
@@ -1814,20 +1740,38 @@ import SourceCodeBrowser from '../components/SourceCodeBrowser.astro';
     }
 
     let isInitialized = false;
+    let serviceInitializationPromise = null;
+
+    function syncInitializedServiceView() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const activeRole = urlParams.get('role') || localStorage.getItem('active_role') || localStorage.getItem('leerpret.poc.role') || 'architect';
+      const serviceMode = currentServiceMode(activeRole);
+      localStorage.setItem('active_role', activeRole);
+      localStorage.setItem('leerpret.poc.role', activeRole);
+      setServicePaneMode(serviceMode, activeRole);
+    }
 
     function initServiceView() {
       if (isInitialized) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const activeRole = urlParams.get('role') || localStorage.getItem('active_role') || localStorage.getItem('leerpret.poc.role') || 'architect';
-        const serviceMode = currentServiceMode(activeRole);
-        localStorage.setItem('active_role', activeRole);
-        localStorage.setItem('leerpret.poc.role', activeRole);
-        setServicePaneMode(serviceMode, activeRole);
-        return;
+        syncInitializedServiceView();
+        return Promise.resolve();
       }
-      isInitialized = true;
+      if (!serviceInitializationPromise) {
+        serviceInitializationPromise = initializeServiceView().catch(error => {
+          serviceInitializationPromise = null;
+          throw error;
+        });
+      }
+      return serviceInitializationPromise;
+    }
 
+    async function initializeServiceView() {
       initSettings();
+      const components = await loadSdkComponents('lego-spatial');
+      radarSpatialComponent = components['lego-spatial'];
+      if (!radarSpatialComponent?.radialAxes || !radarSpatialComponent?.radarSeriesPoints) {
+        throw new Error('De centrale LeerpretSDK-radargeometrie is niet beschikbaar.');
+      }
       mountUnifiedServiceWorkbench();
       setupSliders();
       setupRawInputs();
@@ -1906,6 +1850,7 @@ import SourceCodeBrowser from '../components/SourceCodeBrowser.astro';
       });
 
       // De runtabel heeft geen knop meer om uit te klappen: hij vult het hele tabblad.
+      isInitialized = true;
     }
 
     /* Een Gast kan op deze pagina niets betekenisvols doen: zonder login koppelt de
@@ -1923,13 +1868,13 @@ import SourceCodeBrowser from '../components/SourceCodeBrowser.astro';
 
     window.addEventListener('DOMContentLoaded', () => {
       if (stuurGastNaarInloggen()) return;
-      initServiceView();
+      void initServiceView().catch(error => console.error('De serviceweergave kon niet initialiseren.', error));
     });
 
     window.addEventListener('service-connection-changed', () => {
       // Ook bij een rolwissel tijdens de sessie geldt de doorverwijzing.
       if (stuurGastNaarInloggen()) return;
-      initServiceView();
+      void initServiceView().catch(error => console.error('De serviceweergave kon niet initialiseren.', error));
     });
   </script>
 </Layout>

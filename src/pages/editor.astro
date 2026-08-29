@@ -15,7 +15,8 @@ import Layout from '../layouts/Layout.astro';
   </div>
 
   <script>
-    import { apiGet, apiRootUrl, editorRootUrl, escapeHtml, initSettings, state } from '../js/api.js';
+    import { apiGet, apiRootUrl, editorRootUrl, escapeHtml, initSettings, loadSdkComponents, state } from '../js/api.js';
+    import { clockSliderY } from '../js/editorClockGeometry.js';
 
     const initialParameters = new URLSearchParams(window.location.search);
     let activeEditorView = initialParameters.get('view') || 'build';
@@ -24,6 +25,12 @@ import Layout from '../layouts/Layout.astro';
     let activeTwinId = initialParameters.get('id') || localStorage.getItem('leerpret.leerbox.id') || '';
     let loadedTwins = [];
     let simulationEnabled = false;
+    let editorSpatial = null;
+    loadSdkComponents('lego-spatial').then((components) => {
+      const spatial = components['lego-spatial'];
+      if (!spatial?.mapPointBetweenRects) throw new Error('lego-spatial mist mapPointBetweenRects');
+      editorSpatial = spatial;
+    }).catch((error) => console.warn('SDK-schermmapping kon niet laden.', error));
 
     function activeRole() {
       return new URLSearchParams(window.location.search).get('role') || localStorage.getItem('active_role') || localStorage.getItem('leerpret.poc.role') || 'guest';
@@ -560,11 +567,11 @@ import Layout from '../layouts/Layout.astro';
         updateClockValue(unit, simulationValues[unit] + direction * clockRanges[unit].step);
       }));
       const setClockFromPointer = (event, slider) => {
-        if (!clockFace || !simulationEnabled) return;
+        if (!clockFace || !simulationEnabled || !editorSpatial) return;
         const unit = slider.dataset.clockSlider;
         const range = clockRanges[unit];
         const rect = clockFace.getBoundingClientRect();
-        const y = Math.max(18, Math.min(202, -18 + (event.clientY - rect.top) / rect.height * 256));
+        const y = clockSliderY(editorSpatial, event, rect);
         const progress = (202 - y) / 184;
         const value = range.min + progress * (range.max - range.min);
         selectClockUnit(unit);

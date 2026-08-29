@@ -18,5 +18,6 @@ assert.equal(configFor('bijbrengen.github.io').editorUrl, 'https://bijbrengen.gi
 const apiSource = fs.readFileSync(new URL('../src/js/api.js', import.meta.url), 'utf8');
 assert(apiSource.includes('.trycloudflare.com'), 'De client moet oude opgeslagen tunneladressen opruimen.');
 assert.match(apiSource, /sdk-loader\/loader\.js\?bootstrap=\$\{Date\.now\(\)\}/, 'De onversieerde SDK-bootstraploader mag nooit uit een oude browsercache komen.');
+assert.match(apiSource, /export async function loadSdkComponents/, 'SDK-componenten moeten via de gedeelde Dashboard-loader worden geladen.');
 
 console.log('Runtime configuration tests passed.');
